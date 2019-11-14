@@ -1,0 +1,404 @@
+---
+title: "AWIPEV-CO2 Time Series Data"
+author: "Jean-Pierre Gattuso and Samir Alliouane"
+date:  
+
+output:
+  rmarkdown::html_document:
+    theme: paper
+    lang: "en_US"
+    fig_caption: yes
+    toc: no
+    toc_float: no
+---
+
+<p style="text-align: center;">**Note that you can pan and zoom by holding down the left click on the plot (horizontally and vertically).**</p>
+<p style="text-align: center;"><span style="color:red">
+<br>
+**Check the "Infos" tab for other important informations.** </span></p>
+</br>
+<p align="center">
+![ ](AWIPEV-Logo.jpg){width=250px}
+</p>
+
+
+```{r set-up, echo=FALSE, warning=FALSE, message=FALSE}
+Sys.setenv(TZ='UTC') # on utilise UTC
+rm(list = ls())
+library("dplyr")
+library("seacarb")
+library("kableExtra")
+library("lubridate")
+library("dygraphs")
+library("knitr")
+library("xts")
+knitr::opts_chunk$set(echo = TRUE)
+
+#################### which.closest function
+which.closest <- function(x, table, ...) {
+  round(approx(x=table, y=1:length(table), xout=x, ...)$y)
+}
+```
+
+```{r read and prepare discrete data, echo=FALSE, warning=FALSE, message=FALSE}
+d <- read.table("Discrete_sampling_AWIPEV.csv", header = T, dec = ".", as.is = T, sep = ";", fill = TRUE) 
+d$datetime <- as.POSIXct(d$sampling_date, format="%d/%m/%Y %H:%M", tz="UTC")
+d$measure_date <- dmy(d$measure_date, tz="UTC")
+
+# Add the flag location: some samples have been collected at the peer
+# Flag 1 = collected on the peer by Niskin and flag 0 = collected in the FB (normal collect)
+ # And keep data with flag 0 for FB location
+d <- d%>%
+  dplyr::mutate(location_flag = ifelse(datetime == "2016-04-21 09:25:00" | datetime == "2016-02-10 14:00:00" | datetime == "2016-02-17 09:20:00" |datetime == "2016-02-24 14:20:00" | datetime == "2016-02-04 09:30:00" |datetime == "2016-01-27 15:00:00" |datetime == "2016-01-13 13:45:00" |datetime == "2016-01-06 14:10:00" |datetime == "2015-12-24 10:45:00" |datetime == "2015-12-30 13:30:00" , 1,0)
+  )
+d <- d%>%
+  dplyr::filter(location_flag== 0)
+
+# Keep only flag = 2 for at/ct analysis
+d <- d %>% 
+  filter((qflag_ct==2) | (qflag_at==2) | (qflag_pH_s_seafet ==2) | (qflag_pH_s_durafet==2) ) 
+
+# Fill "at/ct" to all line with same day.
+at_ct_mean <- d %>% 
+  group_by(datetime)%>%
+  dplyr::summarize(at_mean = mean(at, na.rm = T),
+                   ct_mean = mean(ct, na.rm = T))
+
+d <- left_join(d, at_ct_mean, by='datetime')
+# Fill the gaps in at_mean with interpolation
+TAinterp <-approx(d$datetime, d$at_mean, xout=d$datetime, method="linear", rule=2)
+names(TAinterp) <- c("datetime", "at_mean_interp")
+TAinterp <- as.data.frame(TAinterp)
+d$at_mean_interp <- TAinterp$at_mean_interp
+
+CTinterp <-approx(d$datetime, d$ct_mean, xout=d$datetime, method="linear", rule=2)
+names(CTinterp) <- c("datetime", "ct_mean_interp")
+CTinterp <- as.data.frame(CTinterp)
+d$ct_mean_interp <- CTinterp$ct_mean_interp
+
+# Conversion of spectro pH to a same T
+pH_seafet <- d %>%
+  dplyr::filter(!is.na(pH_s_seafet))
+pH_seafet <- pH_seafet %>%
+  dplyr::mutate(pH_s_seafet_temp_field = pHinsi(pH=pH_seafet$pH_s_seafet,ALK=pH_seafet$at_mean_interp*1e-6, Tinsi=pH_seafet$temp_field, Tlab=pH_seafet$temp_s_lab, Pinsi= pH_seafet$depth/10, S=pH_seafet$salinity_field,Pt=0,Sit=0))
+                
+pH_durafet <- d %>%
+  dplyr::filter(!is.na(pH_s_durafet))
+pH_durafet <- pH_durafet %>%
+  dplyr::mutate(pH_s_durafet_temp_field = pHinsi(pH=pH_durafet$pH_s_durafet,ALK=pH_durafet$at_mean_interp*1e-6, Tinsi=pH_durafet$temp_field, Tlab=pH_durafet$temp_s_lab, Pinsi= pH_durafet$depth/10, S=pH_durafet$salinity_field,Pt=0,Sit=0))
+ 
+# create separate seafet/durafet df to join to initial "d" df
+pH_seafet_mean <- pH_seafet%>%
+  dplyr::select(datetime,pH_s_seafet_temp_field)%>% 
+  dplyr::group_by(datetime) %>% 
+  dplyr::summarize(pH_s_seafet_temp_field = mean(pH_s_seafet_temp_field, na.rm = T))
+pH_durafet_mean <- pH_durafet%>%
+  dplyr::select(datetime,pH_s_durafet_temp_field)%>% 
+  dplyr::group_by(datetime) %>% 
+  dplyr::summarize(pH_s_durafet_temp_field = mean(pH_s_durafet_temp_field, na.rm = T))
+
+#  make means in "d" to have same format and call it "discrete"
+discrete <- d %>% 
+  dplyr::group_by(datetime) %>% 
+  dplyr::summarize(sal = mean(salinity_field, na.rm = T),
+            temp = mean(temp_field, na.rm = T),
+            at_mean_interp = mean(at_mean_interp, na.rm = T),
+            at = mean(at, na.rm = T),
+            qflag_at = mean(qflag_at, na.rm = T),
+            ct_mean_interp = mean(ct_mean_interp, na.rm = T),
+            ct = mean(ct, na.rm = T),
+            qflag_ct = mean(qflag_ct, na.rm = T)
+            )
+# join discrete + seafet/durafet
+discrete <- left_join(discrete, pH_seafet_mean, by='datetime')
+discrete <- left_join(discrete, pH_durafet_mean, by='datetime')
+
+##   *****Attention, temp noted by logisticians in d is FB temp with SBE45 ******
+
+
+# discrete_steffen <- discrete[c(21:72),1:4]
+# write.table( discrete_steffen,"../fb_data/DiscreteTA_for_steffen.txt", sep= ",", dec=".", row.names = FALSE)
+
+carb <- carb(15, discrete$at*1e-6, discrete$ct*1e-6,S=discrete$sal, T=discrete$temp, P=0, Pt=0, Sit=0,k1k2="l", kf="dg", ks="d", pHscale="T", b="u74")
+discrete$phcalc<- carb$pH
+discrete$pco2calc<- carb$pCO2
+```
+
+```{r Read and prepare ferrybox data, echo=FALSE, warning=FALSE, message=FALSE}
+load(file = "../ny-alesund/data/NRT_data/all_nydata_hour.Rdata")
+#d_hour <- selected_data_hour
+d_hour <- d_hour %>%
+  dplyr::select(-date) %>%
+  dplyr::mutate(AT = ifelse(datetime > "2016-02-26 12:00:00", AT_filtered, NA), # beginning of data series for AT
+         AT_filtered = ifelse(AT_filtered == "NaN", NA, AT_filtered), #3 columns are character
+         #pH_AT = ifelse(pH_AT == "NaN", NA, pH_AT),
+         #PCO2_Corr_Zero2 = ifelse(PCO2_Corr_Zero2 %in% c("NaN", 66666), NA, PCO2_Corr_Zero2)
+         ) %>%
+  dplyr::rename(at_contros=AT_filtered, pco2_contros=PCO2_corr_contros_filtered, sal_fb=Salinity_filtered, temp_fb=Temperature_filtered, pH_durafet=HW_pH1_filtered, temp_insitu=Temp_SBE38_filtered)
+```
+
+```{r Combine discrete and continous data, echo=FALSE}
+d_all <- d_hour #d_all will be the merger
+# at
+closest <- which.closest(discrete$datetime, d_all$datetime) # closest date and time
+discrete$closest_datetime <- d_all$datetime[closest]
+# if the closest value is more than 30 min away, then we do not take it
+discrete$closest_datetime[abs(discrete$datetime - d_all$datetime[closest]) > 30*60] <- NA
+# remove the drop_na() because of seafet/durafet line with na
+discrete2merge <- discrete %>%
+  #drop_na() %>%
+  dplyr::select(closest_datetime, at, qflag_at) %>%
+  dplyr::filter(!is.na(closest_datetime)) %>%
+  rename(datetime=closest_datetime)
+d_all <- full_join(d_all, discrete2merge, by="datetime")
+
+# ct
+# closest <- which.closest(discrete$datetime, d$datetime) # closest date and time
+# discrete$closest_datetime <- d$datetime[closest]
+# # if the closest value is more than 30 min away, then we do not take it
+# discrete$closest_datetime[abs(discrete$datetime - d$datetime[closest]) > 30*60] <- NA
+discrete2merge <- discrete %>%
+  #drop_na() %>%
+  dplyr::select(closest_datetime, ct, qflag_ct) %>%
+  dplyr::filter(!is.na(closest_datetime)) %>%
+  rename(datetime=closest_datetime)
+d_all <- full_join(d_all, discrete2merge, by="datetime")
+
+# pH calculated
+# closest <- which.closest(discrete$datetime, d_all$datetime) # closest date and time
+# discrete$closest_datetime <- d_all$datetime[closest]
+# # if the closest value is more than 30 min away, then we do not take it
+# discrete$closest_datetime[abs(discrete$datetime - d_all$datetime[closest]) > 30*60] <- NA
+discrete2merge <- discrete %>%
+  #drop_na() %>%
+  dplyr::select(closest_datetime, phcalc) %>%
+  dplyr::filter(!is.na(closest_datetime)) %>%
+  rename(datetime=closest_datetime)
+d_all <- full_join(d_all, discrete2merge, by="datetime")
+
+# seaFET pH 
+# closest <- which.closest(discrete$datetime, d_all$datetime) # closest date and time
+# discrete$closest_datetime <- d_all$datetime[closest]
+# # if the closest value is more than 30 min away, then we do not take it
+# discrete$closest_datetime[abs(discrete$datetime - d_all$datetime[closest]) > 30*60] <- NA
+discrete2merge <- discrete %>%
+  #drop_na() %>%
+  dplyr::select(closest_datetime, pH_s_seafet_temp_field) %>%
+  dplyr::filter(!is.na(closest_datetime)) %>%
+  rename(datetime=closest_datetime)
+d_all <- full_join(d_all, discrete2merge, by="datetime")
+
+# duraFET pH 
+# closest <- which.closest(discrete$datetime, d_all$datetime) # closest date and time
+# discrete$closest_datetime <- d_all$datetime[closest]
+# # if the closest value is more than 30 min away, then we do not take it
+# discrete$closest_datetime[abs(discrete$datetime - d_all$datetime[closest]) > 30*60] <- NA
+discrete2merge <- discrete %>%
+  #drop_na() %>%
+  dplyr::select(closest_datetime, pH_s_durafet_temp_field) %>%
+  dplyr::filter(!is.na(closest_datetime)) %>%
+  rename(datetime=closest_datetime)
+d_all <- full_join(d_all, discrete2merge, by="datetime")
+
+# pCO2
+# closest <- which.closest(discrete$datetime, d_all$datetime) # closest date and time
+# discrete$closest_datetime <- d_all$datetime[closest]
+# # if the closest value is more than 30 min away, then we do not take it
+# discrete$closest_datetime[abs(discrete$datetime - d_all$datetime[closest]) > 30*60] <- NA
+discrete2merge <- discrete %>%
+  #drop_na() %>%
+  dplyr::select(closest_datetime, pco2calc) %>%
+  dplyr::filter(!is.na(closest_datetime)) %>%
+  rename(datetime=closest_datetime)
+d_all <- full_join(d_all, discrete2merge, by="datetime")
+
+save(file="d_all.Rdata", d_all)
+
+## bind the voltages and deployment ##
+
+# Duplicate datetime in closest_datetime to do the left_join
+d_all$closest_datetime <- d_all$datetime
+discrete <- left_join(discrete, d_all%>%dplyr::select(c(closest_datetime, voltEXT, voltINT)), by="closest_datetime")
+```
+
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 18px;
+  }
+h3{ /* Header 3 */
+  font-size: 22px;
+  <!-- font-family: "Times New Roman", Times, serif; -->
+  color: DarkBlue;
+}
+h4{ /* Header 4 */
+  font-size: 18px;
+  <!-- font-family: "Times New Roman", Times, serif; -->
+  color: DarkBlue;
+}
+h5{ /* Header 5 */
+  font-size: 16px;
+  <!-- font-family: "Times New Roman", Times, serif; -->
+  color: DarkBlue;
+}
+</style>
+
+
+# {.tabset .tabset-fade .tabset-pills}
+
+## Key plots
+```{r whole time series, fig.width=10, fig.height=4, echo=FALSE, message= FALSE}
+#SAL
+sal_fb_xts <- dplyr::select(d_all, datetime, sal_fb)%>%
+dplyr::filter(sal_fb >28)
+sal_fb_xts <- as.xts(sal_fb_xts, order.by = sal_fb_xts$datetime)
+dygraph(sal_fb_xts, group = "awipev", main="Salinity", ylab="Salinity") %>%
+      dySeries("sal_fb", color = "blue", strokeWidth = 0, label = "S") %>%
+      dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha =0.2,hideOnMouseOut =TRUE) %>%
+      dyOptions(drawGrid = TRUE, drawPoints = TRUE, pointSize = 2,useDataTimezone = TRUE) %>%
+      dyRangeSelector(height = 30)
+# TEMP Ferrybox SBE45
+temp_fb_xts <- dplyr::select(d_all, datetime, temp_fb)
+temp_fb_xts <- as.xts(temp_fb_xts, order.by = temp_fb_xts$datetime)
+dygraph(temp_fb_xts, group = "awipev", main="Temperature (in Ferrybox)", ylab="Temperature") %>%
+      dySeries("temp_fb", color = "blue", strokeWidth = 0, label = "T") %>%
+      dyAxis("y", valueRange = c(-2.5, 9.5)) %>%
+      dyHighlight(highlightCircleSize = 8,highlightSeriesBackgroundAlpha = 0.2,hideOnMouseOut = TRUE) %>%
+      dyOptions(drawGrid = TRUE, drawPoints = TRUE, pointSize = 2,useDataTimezone = TRUE) %>%
+      dyRangeSelector(height = 30)
+# TEMP insitu SBE38
+temp_insitu_xts <- dplyr::select(d_all, datetime, temp_insitu)
+temp_insitu_xts <- as.xts(temp_insitu_xts, order.by = temp_insitu_xts$datetime)
+dygraph(temp_insitu_xts, group = "awipev", main="Temperature (in situ)", ylab="Temperature") %>%
+      dySeries("temp_insitu", color = "blue", strokeWidth = 0, label = "T") %>%
+      dyAxis("y", valueRange = c(-2.5, 9.5)) %>%
+      dyHighlight(highlightCircleSize = 8,highlightSeriesBackgroundAlpha = 0.2,hideOnMouseOut = TRUE) %>%
+      dyOptions(drawGrid = TRUE, drawPoints = TRUE, pointSize = 2,useDataTimezone = TRUE) %>%
+      dyRangeSelector(height = 30)
+# PCO2 
+#+ Ajout de la pCO2 corrigé par le script contros (dans R server ny-alesund_cc.R)
+pco2_contros_xts <- dplyr::select(d_all, datetime, PCO2_Corr_filtered)
+pco2_contros_xts <- as.xts(pco2_contros_xts, order.by = d_all$datetime)
+dygraph(pco2_contros_xts, group = "awipev", main="pCO2", ylab="pCO2") %>%
+    dySeries("PCO2_Corr_filtered", label="Raw pCO2",color = "blue", strokeWidth=0, pointSize=2) %>%
+    dyAxis("y", valueRange = c(100, 450)) %>%
+    dyHighlight(highlightCircleSize = 8,highlightSeriesBackgroundAlpha = 0.2,hideOnMouseOut = TRUE) %>%
+    dyOptions(drawGrid = TRUE, drawPoints = TRUE, pointSize = c(1,8,1),useDataTimezone = TRUE) %>%
+    dyRangeSelector(height = 30)
+# DURAFET 
+durafet_contros_xts <- dplyr::select(d_all, datetime, pH_durafet)
+durafet_contros_xts <- as.xts(durafet_contros_xts, order.by = d_all$datetime)
+dygraph(durafet_contros_xts, group = "awipev", main="pH durafet (in Ferrybox)", ylab="pHT") %>%
+    dySeries("pH_durafet", label = "Raw data", color ="blue", strokeWidth=0, pointSize=2) %>%
+   dyAxis("y",valueRange = c(7.4, 8.6)) %>%
+    dyHighlight(highlightCircleSize = 8,highlightSeriesBackgroundAlpha = 0.2,hideOnMouseOut = TRUE) %>%
+    dyOptions(drawGrid = TRUE, drawPoints = TRUE, pointSize = c(1,8,1),useDataTimezone = TRUE) %>%
+    dyRangeSelector(height = 30) 
+# SEAFET 
+seafet_contros_xts <- dplyr::select(d_all, datetime, phINT_filtered)
+seafet_contros_xts <- as.xts(seafet_contros_xts, order.by = d_all$datetime)
+dygraph(seafet_contros_xts, group = "awipev", main="pH seaFET (in situ)", ylab="pHT") %>%
+  dySeries("phINT_filtered", label = "Raw data INT", color = "blue", strokeWidth=0, pointSize=2) %>%
+  dyAxis("y",valueRange = c(7.4, 8.6)) %>%
+  dyHighlight(highlightCircleSize = 8,highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
+  dyOptions(drawGrid = TRUE, drawPoints = TRUE, pointSize = c(1,8,1),useDataTimezone = TRUE) %>%
+  dyRangeSelector(height = 30) 
+# TA vs SAL
+#at_contros_cleaned_xts <- dplyr::select(d_all, datetime,AT_filtered, sal_fb)
+at_contros_cleaned_xts <- dplyr::select(d_all, datetime,at_contros, sal_fb)
+at_contros_cleaned_xts <-  as.xts(at_contros_cleaned_xts, order.by = d_all$datetime)
+dygraph(at_contros_cleaned_xts, group = "awipev", main=" Total Alkalinity (in Ferrybox) VS salinity", ylab="Total alkalinity") %>%
+  dySeries("at_contros", color = "blue", label= "filtered TA", strokeWidth = 0,pointSize=2) %>%
+  dySeries(axis= "y2", "sal_fb", color = "green", strokeWidth = 0, label = "S") %>%
+  dyAxis("y2",valueRange = c(32, 38)) %>%
+  dyEvent(as.POSIXct("2018-07-31 00:00:00", tz="GMT"), "From that date, the analyser is not behaving properly", labelLoc = "bottom", color="red") %>%
+  dyEvent(as.POSIXct("2018-10-30 18:00:00", tz="GMT"), "Cross-Flow filter maintenance", labelLoc = "bottom", color="red") %>%
+  dyAxis("y",valueRange = c(2100, 2550)) %>%
+  dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha =0.2,hideOnMouseOut =TRUE) %>%
+  dyOptions( strokeWidth= 0) %>%
+  dyOptions(drawGrid = TRUE, drawPoints = TRUE,useDataTimezone = TRUE) %>%
+  dyRangeSelector(height = 30) 
+```
+
+## Data
+
+Four last days data are shown here.
+```{r Data, fig.width=10, fig.height=4, echo=FALSE, message= FALSE}
+#table of last 4 last data days
+kable <- d_all%>%
+  dplyr::filter(datetime < Sys.Date() & datetime > Sys.Date() - days(4))%>%
+  dplyr::select(datetime,sal_fb, temp_fb,temp_insitu, pco2_contros, pH_durafet, phINT_filtered, at_contros)%>%
+  dplyr::rename(Salinity = sal_fb, Temperature_Ferrybox = temp_fb,
+                Temperature_insitu = temp_insitu, pCO2 = pco2_contros, 
+                pH_durafet = pH_durafet, pH_seaFET=phINT_filtered , TA = at_contros)
+
+kable(kable, digits = 4)%>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), full_width = F)
+
+```
+
+## Infos
+### **Introduction**
+
+
+
+The AWIPEV-CO2 project aims at starting the first time series for the carbonate chemistry in the Arctic Ocean as part of the AWIPEV Underwater Observatory. It comprises two components: 
+
+- continuous real-time measurements and
+- discrete measurements needed to calibrate and validate the sensors.
+
+### **AWIPEV Underwater Observatory**
+<p style="text-align: justify;">
+The AWIPEV Underwater Observatory has been deployed at Ny-Alesund (Spitsbergen, 78°55'18N, 11°56'31E) in June 2012. It is part of the German Project COSYNA (Coastal Observation Systems of the Northern- and Arctic Seas), which aims at increasing the availability of continuous real-time data from remote but climatically-sensitive ecosystems. The AWIPEV underwater observatory comprises a fully remote controlled FerryBox system fed with seawater pumped in front of the old peer at 12 m depth. Temperature, salinity, pressure, turbidity, oxygen, chl-*a* fluorescence are measured. Furthermore, an additional remote controlled underwater sensor unit able to profile from 12 m to the surface at any frequency carries additional sensors for salinity, pressure, turbidity, oxygen chl-*a* fluorescence and PAR. The system also comprises an ADCP for continuous measurements of currents and waves. Besides these standard sensors, the underwater unit is equipped with a webcam and stereo-optical device to remotely assess fish and jellyfish populations. The AWIPEV observatory is specifically designed for polar experimental work under extreme conditions including ice coverage and the inaccessibility for about 7 months during polar winter. During this time, the system is remotely controlled and maintained from Germany. All data sampled by the sensors are continuously sent to a central server system at Helgoland Island where the data are stored and processed. The processed data are open access and available at http://codm.hzg.de/codm.
+</p>
+### **Continuous and semi-continuous measurements**
+
+<p style="text-align: justify;">
+The Arctic version of the Contros-Kongsberg HydroC CO~2~ FT (Carbon Dioxyde partial pressure Flow Through surface water sensor) has been installed in July 2015. Molecules of dissolved CO~2~ diffuse through a thin composite membrane into the internal gas circuit leading to a detector chamber, where the partial pressure of CO~2~ is determined by means of infra-red absorption spectrometry. Concentration-dependent IR light is converted into the output signal from calibration coefficients stored in firmware and data from additional sensors within the gas circuit. The measuring range is 200-1000 uatm, resolution is < 1 uatm and accuracy is +- 1% reading. The sensor is the first instrument in the measuring loop; data are logged every minute. This instrument requires yearly factory calibration; two sensors ara available to allow a continuous time series.
+</p>
+
+<p style="text-align: justify;">
+Since February 2016, total alkalinity (AT) is measured every 90 min with a Contros-Kongsberg HydroFIA TA (Total Alkalinity analyser flow through system). Fifty ml of seawater is filtered (0.2 um) using a Contros-Kongsberg cross-flow filter and then acidified using dilute hydrochloric acid (0.1 N). CO~2~ is then flushed out (open-cell titration) and the final pH measured by means of an indicator dye (bromocresol green) and visible absorption spectrometry. Together with salinity and temperature at the time of measurement, the pH reading is used to calculate AT. According to the manufacturer, the measuring range is 400 umol/kg dynamic range, resolution 0.1 umol/kg, accuracy 25 umol/kg (+- 1%) and precision 5 umol/kg (+- 0.2%).
+</p>
+
+<p style="text-align: justify;">
+In August 2017, a seaFET Ocean pH sensor (Sea-Bird Scientific) has been added to the UWO. This new sensor continuously measures pH at 11 m using an ISFET (Ion Sensitive Field Effect Transistor). According to the manufacturer, the measuring range is between 6.5 and 9 pH units, initial accuracy is 0.02 pH units and precision is 0.004 pH units. Operating salinity and temperature range are 20 to 40 PSU and 0 to 50°C respectively.
+</p>
+
+<p style="text-align: justify;">
+In August 2017, a Durafet III pH electrode connected to a UDA2128 Analyser (Honeywell) was also implemented to the Ferrybox flow-through system. This electrode continuously measures pH, in the Ferrybox, through an ISFET. According to the manufacturer, the measuring range is between 0 and 14 pH units.
+</p>
+
+### **Discrete measurements**
+<p style="text-align: justify;">
+Seawater samples are collected weekly. They are poisoned with HgCl~2~ and stored as recommended by (Dickson et al., 2007). The Service National Analyse des Paramètres Oceaniques du CO~2~ of Sorbonne Université (Paris) determines CT and AT potentiometrically (Edmond, 1970). Samples are shipped to Paris every 6 months.
+</p>
+
+### **Shown variables**
+
+- **datetime**: Date and time of measurement (UTC).
+- **Salinity**: Salinity measured by a SBE45 sensor in the FerryBox (PSU).
+- **Temperature_Ferrybox**: Temperature measured by a SBE45 sensor in the FerryBox (°C).
+- **Temperature_insitu**: Temperature measured in situ by a SBE38 sensor (°C).
+- **pCO2**: *p*CO~2~ measured by the HydroC CO~2~ FT in the Ferrybox (µatm).
+- **pH_durafet**: pH measured by the durafet sensor in the Ferrybox (Total scale).
+- **pH_seaFET**: pH measured in situ by the internal reference electrode of the seaFET sensor (Total scale).
+- **TA**: Total Alkalinity data measured in the Ferrybox (µmoles.kg-1).
+
+
+### **Data processing and availability**
+<p style="text-align: justify;">
+All data shown in "key plots" are raw data coming out from the sensors which have not been subject to quality control. However, data are filtered from some spikes or aberrant values (cleaning, biofouling, outliers…). Quality-controlled data will eventually be uploaded on the World Data Center Pangaea.
+</p>
+
+## Acknowledgments
+<p style="text-align: justify;">
+This AWIPEV-CO~2~ project is jointly supported by the Alfred Wegener Institute for Polar and Marine Research (AWI) and the French Polar Institute (IPEV). The assistance of 4H-Jena Engineering and AWIPEV staff is essential to the project.
+</p>
+
+## Further information
+
+**Carbonate chemistry**: Samir Alliouane (alliouane@obs-vlfr.fr) and Jean-Pierre Gattuso (gattuso@obs-vlfr.fr)
+
+**Underwater Observatory**: Philipp Fischer (philipp.fischer@awi.de)
+
