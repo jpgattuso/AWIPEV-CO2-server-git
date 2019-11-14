@@ -53,7 +53,7 @@ if (file.exists(paste0(path, "all_nydata_minute.Rdata")) == TRUE) {
 # days_back <- 2
 # start_date <- (end_date - (days_back *(3600*24)))
 # start_date <- ymd_hms("2018-01-01 00:00:00")
-end_date <- ymd_hms(paste0(Sys.Date(), " 05:00:00 UTC"))
+end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
 enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 # start_date = Open the last "year" file (minute fomat) and take the last line date - 1 day. like that we avoid NA to interpolate Sprim2beamZ (pCO2) later.
 #list_last_year <- list.files(path  = path), pattern = "*all_nydata_minute.*")
