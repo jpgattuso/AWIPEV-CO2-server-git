@@ -51,13 +51,13 @@ if (file.exists(paste0(path, "all_nydata_minute.Rdata")) == TRUE) {
 
 # end_date <- ymd_hms("2019-10-01 23:59:59")
 # days_back <- 2
-# start_date <- (end_date - (days_back *(3600*24)))
-# start_date <- ymd_hms("2018-01-01 00:00:00")
 end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
 enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 # start_date = Open the last "year" file (minute fomat) and take the last line date - 1 day. like that we avoid NA to interpolate Sprim2beamZ (pCO2) later.
 #list_last_year <- list.files(path  = path), pattern = "*all_nydata_minute.*")
 #list_last_year <- list_last_year[length(list_last_year)]
+# start_date <- (end_date - (days_back *(3600*24)))
+# start_date <- ymd_hms("2019-09-03 17:00:00")
 load(file = paste0(path, "all_nydata_minute.Rdata"))
 start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1])
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
@@ -182,10 +182,15 @@ data <- data %>%
 # Extract the first and last S'2beamZ of each periode of deployment.
 # the s dataframe needs to be created again with the new pco2 period when the periode will be known.
 
-# s <- ddply(data[,c("datetime","PeriodDeplpCO2","Sprim2beamZ_interp")], .(PeriodDeplpCO2), function(x) x[c(1, nrow(x)), ])
-# write.table(s,file= paste0(path, "fb_data/NRT_data/" ),  sep=",", dec=".")
+# ss <- ddply(data[,c("datetime","PeriodDeplpCO2","Sprim2beamZ_interp")], .(PeriodDeplpCO2), function(x) x[c(1, nrow(x)), ])
+
 
 s <- read.table(file= paste0(path, "SpreambeamZ_extraction.csv"), header = TRUE, dec = ".", sep=",")
+#s <- s[-c(nrow(s), nrow(s)-1),]
+#s$datetime <- ymd_hms(s$datetime)
+#ss <- ddply(data[,c("datetime","PeriodDeplpCO2","Sprim2beamZ_interp")], .(PeriodDeplpCO2), function(x) x[c(1, nrow(x)), ])
+#s <- rbind(s, ss)
+#write.table(s,file= paste0(path, "SpreambeamZ_extraction.csv" ),  sep=",", dec=".", row.names = F)
 
 data <- data %>%
   dplyr::mutate(k1t = ifelse(PeriodDeplpCO2 == 1, k1 + ((s[1,3] - Sprim2beamZ_interp) / (s[1,3]  - s[2,3] )) * k1_post,
@@ -328,6 +333,9 @@ selected_data_hour <- dplyr::group_by(selected_data_minute, date, hour) %>%
   dplyr::select(-c( hour)) %>% # not needed in the shiny display
   dplyr::arrange(desc(datetime))
 
+# despike is run a 2nd time ON HOUR FORMAT DATA for TA in order to remove wrong flush measurements
+selected_data_hour <- selected_data_hour %>%     
+  dplyr::mutate(AT_filtered = despike(selected_data_hour$AT_filtered, reference= "median", n=0.3, k=217, replace="NA")) 
 
 #### Saving data #### 
 # MINUTE format
@@ -340,17 +348,17 @@ save(file= paste0(path, "all_nydata_hour.Rdata"), d_hour)
 #@@@@@@@@@@@@@@@@@@@@@@@@
 #load(file = paste0(path, "fb_data/NRT_data/2017_awipev_data_minute.Rdata"))
 
-# #PLOT TEST
-# at_contros_cleaned_xts <- dplyr::select(selected_data_hour,datetime,PCO2_corr_contros_filtered)
-# at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = selected_data_hour$datetime)
-# dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
-#   #dySeries("phINT_filtered", color = "red", strokeWidth = 0, pointSize=2) %>%
-#   #dySeries("PCO2_corr_contros_filtered", color = "black", strokeWidth = 0, pointSize=2) %>%
-#   dySeries("PCO2_corr_contros_filtered", color = "blue", strokeWidth = 0, pointSize=2) %>%
-#   #dySeries("AT_filtered", color = RColorBrewer::brewer.pal(5, "Set2"), strokeWidth = 0, pointSize=2) %>%
-#   #dySeries("despikemed5", color = RColorBrewer::brewer.pal(5, "Set2"), strokeWidth = 0, pointSize=1) %>%
-#   #dyAxis("y",valueRange = c(10, 3000)) %>%
-#   dyLimit(0,color = "black", strokePattern ="dashed") %>%
-#   dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
-#   dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0) %>%
-#   dyRangeSelector(height = 30)
+# # #PLOT TEST
+#  at_contros_cleaned_xts <- dplyr::select(selected_data_hour,datetime,AT_filtered)
+#  at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = selected_data_hour$datetime)
+#  dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
+#    #dySeries("phINT_filtered", color = "red", strokeWidth = 0, pointSize=2) %>%
+#    #dySeries("PCO2_corr_contros_filtered", color = "black", strokeWidth = 0, pointSize=2) %>%
+#    dySeries("AT_filtered", color = "blue", strokeWidth = 0, pointSize=2) %>%
+#    #dySeries("AT_filtered", color = RColorBrewer::brewer.pal(5, "Set2"), strokeWidth = 0, pointSize=2) %>%
+#    #dySeries("despikemed5", color = RColorBrewer::brewer.pal(5, "Set2"), strokeWidth = 0, pointSize=1) %>%
+#    #dyAxis("y",valueRange = c(10, 3000)) %>%
+#    dyLimit(0,color = "black", strokePattern ="dashed") %>%
+#    dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
+#    dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0) %>%
+#    dyRangeSelector(height = 30)
