@@ -59,8 +59,8 @@ enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 #list_last_year <- list.files(path  = path), pattern = "*all_nydata_minute.*")
 #list_last_year <- list_last_year[length(list_last_year)]
 load(file = paste0(path, "all_nydata_minute.Rdata"))
-start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1])
-startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
+start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(1)
+startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S") 
 # if enddate - startdate < 1 d one skips everything until the end of this script
 
 if (end_date-start_date <= days(1)) {
@@ -104,11 +104,8 @@ code <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdat
                )
 
 data <- data.table::fread(code, encoding = "UTF-8", showProgress	= TRUE)
-#dataa <- data
-#data <- dataa
 colnames(data) <- c("datetime", "Salinity", "Temperature", "pH_AT", "AT", "InvSal", "InvpH",  "InvAT", "Temp_SBE38", "phINT","phEXT","voltINT","voltEXT", "T_seaF", "Humidity", "State_Zero", "Signal_Proc", "Signal_Raw", "Signal_Ref", "State_Flush", "P_In", "P_NDIR", "T_Gas", "PCO2_Corr", "PCO2_Corr_Flush","PCO2_Corr_Zero", "HW_pH1", "HW_Temperature1" )
 data$datetime <- ymd_hms(data$datetime)
-
 
 #datarows <- nrow(data)
 # if (datarows == 0){
@@ -116,7 +113,6 @@ data$datetime <- ymd_hms(data$datetime)
 #      }  else {
 #       cat("Number of datarows downloaded from ",startdate," to ",enddate,": ",datarows,sep="","\n","\n")
 #      }
-
 
  ########### Correction pCO2 Contros ########### 
  # Data processing for pCO2 HydroC CO2 Contros in Ny-Alesund.
@@ -184,7 +180,6 @@ data <- data %>%
 
 # s <- ddply(data[,c("datetime","PeriodDeplpCO2","Sprim2beamZ_interp")], .(PeriodDeplpCO2), function(x) x[c(1, nrow(x)), ])
 # write.table(s,file= paste0(path, "fb_data/NRT_data/" ),  sep=",", dec=".")
-
 s <- read.table(file= paste0(path, "SpreambeamZ_extraction.csv"), header = TRUE, dec = ".", sep=",")
 
 data <- data %>%
@@ -222,7 +217,6 @@ data <- data %>%
                 xco2wet = (k3t*Sproct^3 + k2t*Sproct^2 + k1t*Sproct)* (P0*(T_Gas + 273.15))/(T0 * P_NDIR),
                 PCO2_corr_contros = xco2wet *( P_In / 1013.25)
   )
-
 
 ##### First data cleaning ####
 ## pCO2 
@@ -338,7 +332,7 @@ save(file= paste0(path, "all_nydata_hour.Rdata"), d_hour)
 #save(file= paste0(path, "fb_awipev-co2_server/ny-alesund/data/processed/all_nydata_hour.Rdata"), d_hour)
 
 #@@@@@@@@@@@@@@@@@@@@@@@@
-#load(file = paste0(path, "fb_data/NRT_data/2017_awipev_data_minute.Rdata"))
+#load(file = paste0(path, "all_nydata_hour.Rdata"))
 
 # #PLOT TEST
 # at_contros_cleaned_xts <- dplyr::select(selected_data_hour,datetime,PCO2_corr_contros_filtered)
