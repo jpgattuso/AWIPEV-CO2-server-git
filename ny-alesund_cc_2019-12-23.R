@@ -57,7 +57,7 @@ enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 #list_last_year <- list.files(path  = path), pattern = "*all_nydata_minute.*")
 #list_last_year <- list_last_year[length(list_last_year)]
 # start_date <- (end_date - (days_back *(3600*24)))
-# start_date <- ymd_hms("2015-07-23 17:00:00")
+# start_date <- ymd_hms("2018-01-01 00:00:00")
 load(file = paste0(path, "all_nydata_minute.Rdata"))
 start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(1)
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S") 
@@ -371,7 +371,13 @@ selected_data_minute <-  selected_data_minute %>%
   distinct(datetime, .keep_all = T)
 
 #### HOUR format ####
-selected_data_hour <- dplyr::group_by(selected_data_minute, date, hour) %>%
+# to add instrument S/N columns
+selected_data_minute$pco2_inst <- as.numeric(selected_data_minute$pco2_inst)
+selected_data_minute$ta_inst <- as.numeric(selected_data_minute$ta_inst)
+selected_data_minute$seafet_inst <- as.numeric(selected_data_minute$seafet_inst)
+
+selected_data_hour <- selected_data_minute%>%
+  dplyr::group_by( date, hour) %>%
   dplyr::summarise(Salinity_filtered = mean(Salinity_filtered, na.rm = TRUE),
                    Temperature_filtered = mean(Temperature_filtered, na.rm = TRUE),
                    Temp_SBE38_filtered= mean(Temp_SBE38_filtered, na.rm = TRUE),
@@ -386,7 +392,9 @@ selected_data_hour <- dplyr::group_by(selected_data_minute, date, hour) %>%
                    phEXT_filtered= mean(phEXT_filtered, na.rm = TRUE),
                    voltINT= mean(voltINT, na.rm = TRUE),
                    voltEXT= mean(voltEXT, na.rm = TRUE),
-  ) %>%
+                   pco2_inst= mean(pco2_inst, na.rm = TRUE),
+                   ta_inst= mean(ta_inst, na.rm = TRUE),
+                   seafet_inst= mean(seafet_inst, na.rm = TRUE) ) %>%
   dplyr::mutate(datetime = ymd_h(paste(date, hour, sep=" ", tz = "UTC"))) %>%
   dplyr::ungroup() %>% # this is to be able to perform the following changes
   dplyr::select(datetime, everything()) %>%
@@ -410,7 +418,7 @@ save(file= paste0(path, "all_nydata_hour.Rdata"), d_hour)
 
 
 #PLOT TEST
-at_contros_cleaned_xts <- dplyr::select(selected_data_hour,datetime,HW_pH1_filtered)
+#at_contros_cleaned_xts <- dplyr::select(selected_data_hour,datetime,HW_pH1_filtered)
 # at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = selected_data_hour$datetime)
 # dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
 #   #dySeries("phINT_filtered", color = "red", strokeWidth = 0, pointSize=2) %>%
