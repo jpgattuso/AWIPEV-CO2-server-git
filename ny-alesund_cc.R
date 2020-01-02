@@ -49,7 +49,7 @@ if (file.exists(paste0(path, "all_nydata_minute.Rdata")) == TRUE) {
 # Generally data from yesterday
 # Create end_date (data until yesterday 23:59:59) and start_date (last data from previous data minute).
 
-# end_date <- ymd_hms("2019-10-01 23:59:59")
+# end_date <- ymd_hms("2017-12-31 23:59:59")
 # days_back <- 2
 end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
 enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
@@ -57,7 +57,7 @@ enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 #list_last_year <- list.files(path  = path), pattern = "*all_nydata_minute.*")
 #list_last_year <- list_last_year[length(list_last_year)]
 # start_date <- (end_date - (days_back *(3600*24)))
-# start_date <- ymd_hms("2019-09-03 17:00:00")
+# start_date <- ymd_hms("2018-01-01 00:00:00")
 load(file = paste0(path, "all_nydata_minute.Rdata"))
 start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(1)
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S") 
@@ -80,6 +80,11 @@ code <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdat
                "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:invalid_salinity",
                "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:invalid_ph",
                "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:invalid_ta",
+               "&sensors=station:svluwobs:fb_731101:hydrofia_awi_1215000:ph",
+               "&sensors=station:svluwobs:fb_731101:hydrofia_awi_1215000:total_alcalinity",
+               "&sensors=station:svluwobs:fb_731101:hydrofia_awi_1215000:invalid_salinity",
+               "&sensors=station:svluwobs:fb_731101:hydrofia_awi_1215000:invalid_ph",
+               "&sensors=station:svluwobs:fb_731101:hydrofia_awi_1215000:invalid_ta",
                "&sensors=station:svluwobs:svluw2:sbe38_awi_0657:temperature",
                "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_007:ph_internal",
                "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_007:ph_external",
@@ -87,6 +92,12 @@ code <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdat
                "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_007:voltage_external",
                "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_007:ph_temperature",
                "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_007:internal_relative_humidity",
+               "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:ph_internal",
+               "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:ph_external",
+               "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:volt_internal",
+               "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:volt_external",
+               "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:ph_temperature",
+               "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:internal_relative_humidity",
                "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:zero",
                "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:signal_proc",
                "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:signal_raw",
@@ -104,8 +115,27 @@ code <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdat
                )
 
 data <- data.table::fread(code, encoding = "UTF-8", showProgress	= TRUE)
-colnames(data) <- c("datetime", "Salinity", "Temperature", "pH_AT", "AT", "InvSal", "InvpH",  "InvAT", "Temp_SBE38", "phINT","phEXT","voltINT","voltEXT", "T_seaF", "Humidity", "State_Zero", "Signal_Proc", "Signal_Raw", "Signal_Ref", "State_Flush", "P_In", "P_NDIR", "T_Gas", "PCO2_Corr", "PCO2_Corr_Flush","PCO2_Corr_Zero", "HW_pH1", "HW_Temperature1" )
+colnames(data) <- c("datetime", "Salinity", "Temperature", "pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317",  "InvAT_0317",  "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215",  "InvAT_1215","Temp_SBE38", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005", "State_Zero", "Signal_Proc", "Signal_Raw", "Signal_Ref", "State_Flush", "P_In", "P_NDIR", "T_Gas", "PCO2_Corr", "PCO2_Corr_Flush","PCO2_Corr_Zero", "HW_pH1", "HW_Temperature1" )
 data$datetime <- ymd_hms(data$datetime)
+
+# Create instrument column as flag
+data <- data %>%
+  dplyr::mutate( pco2_inst = ifelse(datetime >= "2015-07-19 00:00:00" & datetime <= "2016-02-23 12:00:00", "0215", 
+                               ifelse(datetime >= "2016-02-23 23:00:00" & datetime <= "2017-02-04 23:00:00", "0515" ,
+                               ifelse(datetime >= "2017-02-09 00:00:00" & datetime <= "2018-02-09 00:00:00", "0215" ,
+                                ifelse(datetime >= "2018-04-14 00:00:00" & datetime <= "2018-10-31 00:00:00", "0515" , 
+                                ifelse(datetime >= "2018-10-31 15:00:00" & datetime <= "2019-09-03 12:00:00", "0215" ,
+                                ifelse(datetime >= "2019-09-03 17:00:00" & datetime <= "2099-12-02 23:59:59", "0515" ,NA )))))),
+                 
+                 seafet_inst = ifelse(datetime >= "2017-08-24 12:00:00" & datetime <= "2018-04-17 12:00:00", "1005", 
+                               ifelse(datetime >= "2018-04-17 12:00:00" & datetime <= "2099-12-02 23:59:59", "007" ,NA )),
+                 
+                 ta_inst = ifelse(datetime >= "2016-02-26 00:00:00" & datetime <= "2017-03-21 12:00:00", "1215", 
+                          ifelse(datetime >= "2018-01-08 12:55:00" & datetime <= "2018-06-20 00:00:00", "0317",
+                           ifelse(datetime >= "2018-07-31 00:00:00" & datetime <= "2018-10-30 18:00:00", "1215",
+                           ifelse(datetime >= "2018-10-30 18:00:00" & datetime <= "2099-12-02 23:59:59", "0317" ,NA ))))
+                 )
+
 
 #datarows <- nrow(data)
 # if (datarows == 0){
@@ -237,15 +267,46 @@ data <- data %>%
                 PCO2_corr_contros = ifelse(Time >= "01:30:00" & Time < "12:00:00" | Time >= "13:00:00", PCO2_corr_contros, NA),
                 Sproct2 = ifelse(Sproct > 1000 | Sproct < -1 , NA, Sproct),
                 PCO2_Corr_Zero2 = ifelse(PCO2_Corr_Zero > 20000, NA, PCO2_Corr_Zero))
-## TA 
+## TA ##
+# TA_1215
 data <- data %>%
-  dplyr::mutate(AT= ifelse(datetime >= "2016-02-26 12:00:00" & AT > 100 & InvSal == 0 & InvpH == 0 & InvAT ==0 , AT, NA))
+  dplyr::mutate(AT_1215= ifelse(datetime >= "2016-02-26 12:00:00" & AT_1215 > 100 & InvSal_1215 == 0 & InvpH_1215 == 0 & InvAT_1215 ==0 , AT_1215, NA))
 data <- data %>%
-  dplyr::mutate(AT = ifelse(datetime == "2017-05-23 21:07:00", NA, AT)) 
-## seaFET 
+  dplyr::mutate(AT = ifelse(datetime == "2017-05-23 21:07:00", NA, AT_1215)) 
+# TA 0317
 data <- data %>%
-  dplyr::mutate(phINT = ifelse(phINT >7.5  & phINT <8.5, phINT, NA), 
-                phEXT = ifelse(phEXT >7.5  & phEXT <8.5, phEXT, NA) )
+  dplyr::mutate(AT_0317= ifelse(datetime >= "2016-02-26 12:00:00" & AT_0317 > 100 & InvSal_0317 == 0 & InvpH_0317 == 0 & InvAT_0317 ==0 , AT_0317, NA))
+# bind TA 0317 and TA 1215 data = AT
+data <- data %>%
+  dplyr::mutate(AT= ifelse(!is.na(AT_1215), AT_1215,
+                           ifelse(!is.na(AT_0317), AT_0317,NA)))
+ 
+## seaFET ##
+# phINT et ph_EXT _007 et _1005
+data <- data %>%
+  dplyr::mutate(phINT_007 = ifelse(phINT_007 >7.5  & phINT_007 <8.5, phINT_007, NA), 
+                phEXT_007 = ifelse(phEXT_007 >7.5  & phEXT_007 <8.5, phEXT_007, NA),
+                phINT_1005 = ifelse(phINT_1005 >7.5  & phINT_1005 <8.5, phINT_1005, NA),
+                phEXT_1005 = ifelse(phEXT_1005 >7.5  & phEXT_1005 <8.5, phEXT_1005, NA))
+
+data <- data %>%
+  dplyr::mutate(phINT = ifelse(!is.na(phINT_007),phINT_007,
+                        ifelse(!is.na(phINT_1005),phINT_1005, NA)),
+                phEXT = ifelse(!is.na(phEXT_007),phEXT_007,
+                               ifelse(!is.na(phEXT_1005),phEXT_1005, NA))
+                )
+# voltINT et voltEXT _007 et _1005
+data <- data %>%
+  dplyr::mutate(voltINT = ifelse(!is.na(voltINT_007),voltINT_007,
+                               ifelse(!is.na(voltINT_1005),voltINT_1005, NA)),
+                voltEXT = ifelse(!is.na(voltEXT_007),voltEXT_007,
+                               ifelse(!is.na(voltEXT_1005),voltEXT_1005, NA))
+  )
+# T_seaF _007 et _1005
+data <- data %>%
+  dplyr::mutate(T_seaF = ifelse(!is.na(T_seaF_007),T_seaF_007,
+                                 ifelse(!is.na(T_seaF_1005),T_seaF_1005, NA))
+  )         
 
 ##########   Second data cleaning : despike()  ###########
 #PCO2_Corr_filtered = raw pco2 data from sensor + despike.
@@ -297,6 +358,9 @@ selected_data_minute <- data  %>%
                    phINT_filtered,
                    phEXT_filtered,
                    T_seaF,
+                   pco2_inst,
+                   ta_inst,
+                   seafet_inst,
                    date,
                    hour)
 
@@ -307,7 +371,13 @@ selected_data_minute <-  selected_data_minute %>%
   distinct(datetime, .keep_all = T)
 
 #### HOUR format ####
-selected_data_hour <- dplyr::group_by(selected_data_minute, date, hour) %>%
+# to add instrument S/N columns
+selected_data_minute$pco2_inst <- as.numeric(selected_data_minute$pco2_inst)
+selected_data_minute$ta_inst <- as.numeric(selected_data_minute$ta_inst)
+selected_data_minute$seafet_inst <- as.numeric(selected_data_minute$seafet_inst)
+
+selected_data_hour <- selected_data_minute%>%
+  dplyr::group_by( date, hour) %>%
   dplyr::summarise(Salinity_filtered = mean(Salinity_filtered, na.rm = TRUE),
                    Temperature_filtered = mean(Temperature_filtered, na.rm = TRUE),
                    Temp_SBE38_filtered= mean(Temp_SBE38_filtered, na.rm = TRUE),
@@ -322,7 +392,9 @@ selected_data_hour <- dplyr::group_by(selected_data_minute, date, hour) %>%
                    phEXT_filtered= mean(phEXT_filtered, na.rm = TRUE),
                    voltINT= mean(voltINT, na.rm = TRUE),
                    voltEXT= mean(voltEXT, na.rm = TRUE),
-  ) %>%
+                   pco2_inst= mean(pco2_inst, na.rm = TRUE),
+                   ta_inst= mean(ta_inst, na.rm = TRUE),
+                   seafet_inst= mean(seafet_inst, na.rm = TRUE) ) %>%
   dplyr::mutate(datetime = ymd_h(paste(date, hour, sep=" ", tz = "UTC"))) %>%
   dplyr::ungroup() %>% # this is to be able to perform the following changes
   dplyr::select(datetime, everything()) %>%
@@ -345,13 +417,13 @@ save(file= paste0(path, "all_nydata_hour.Rdata"), d_hour)
 #load(file = paste0(path, "all_nydata_hour.Rdata"))
 
 
-# #PLOT TEST
-# at_contros_cleaned_xts <- dplyr::select(selected_data_hour,datetime,PCO2_corr_contros_filtered)
+#PLOT TEST
+#at_contros_cleaned_xts <- dplyr::select(selected_data_hour,datetime,HW_pH1_filtered)
 # at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = selected_data_hour$datetime)
 # dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
 #   #dySeries("phINT_filtered", color = "red", strokeWidth = 0, pointSize=2) %>%
 #   #dySeries("PCO2_corr_contros_filtered", color = "black", strokeWidth = 0, pointSize=2) %>%
-#   dySeries("PCO2_corr_contros_filtered", color = "blue", strokeWidth = 0, pointSize=2) %>%
+#   dySeries("HW_pH1_filtered", color = "blue", strokeWidth = 0, pointSize=2) %>%
 #   #dySeries("AT_filtered", color = RColorBrewer::brewer.pal(5, "Set2"), strokeWidth = 0, pointSize=2) %>%
 #   #dySeries("despikemed5", color = RColorBrewer::brewer.pal(5, "Set2"), strokeWidth = 0, pointSize=1) %>%
 #   #dyAxis("y",valueRange = c(10, 3000)) %>%
