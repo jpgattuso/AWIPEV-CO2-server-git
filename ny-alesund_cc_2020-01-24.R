@@ -44,12 +44,11 @@ if (file.exists(paste0(path, "all_nydata_minute.Rdata")) == TRUE) {
  rm(selected_data_minute)
 }
 
-
 #### Download current data ####
 # Generally data from yesterday
 # Create end_date (data until yesterday 23:59:59) and start_date (last data from previous data minute).
 
-# end_date <- ymd_hms("2017-12-31 23:59:59")
+# end_date <- ymd_hms("2018-12-31 23:59:59") 
 # days_back <- 2
 end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
 enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
@@ -57,7 +56,7 @@ enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 #list_last_year <- list.files(path  = path), pattern = "*all_nydata_minute.*")
 #list_last_year <- list_last_year[length(list_last_year)]
 # start_date <- (end_date - (days_back *(3600*24)))
-# start_date <- ymd_hms("2020-01-10 00:00:00")
+# start_date <- ymd_hms("2017-08-09 00:00:00")
 load(file = paste0(path, "all_nydata_minute.Rdata"))
 start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(1)
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S") 
@@ -106,7 +105,7 @@ code <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdat
                "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:p_in",
                "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:p_ndir",
                "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:t_gas",
-               "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:pco2",
+               "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:pco2_corr",
                "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:pco2_corr_flush",
                "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:pco2_corr_zero",
                "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:zero",
@@ -117,7 +116,7 @@ code <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdat
                "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:p_in",
                "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:p_ndir",
                "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:t_gas",
-               "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:pco2",
+               "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:pco2_corr",
                "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:pco2_corr_flush",
                "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:pco2_corr_zero",
                "&sensors=station:svluwobs:fb_731101:durafet_obsvlfr_01:hw_ph",
@@ -157,7 +156,7 @@ data <- data %>%
 
  ########### Correction pCO2 Contros ########### 
 
-# Bind different pCO2 sensors in the same column : pCO2 0215 + 0515
+# Bind different pCO2 sensors (column with S/N) in the same column (without S/N): 0215 + 0515
 data <- data %>%
   dplyr::mutate(State_Zero=  ifelse(pco2_inst == "0215", State_Zero_0215,
                              ifelse(pco2_inst == "0515", State_Zero_0515,NA)),
@@ -317,7 +316,6 @@ data <- data %>%
 data <- data %>%
   dplyr::mutate(AT= ifelse(!is.na(AT_1215), AT_1215,
                            ifelse(!is.na(AT_0317), AT_0317,NA)))
- 
 ## seaFET ##
 # phINT et ph_EXT _007 et _1005
 data <- data %>%
@@ -339,6 +337,12 @@ data <- data %>%
                 voltEXT = ifelse(!is.na(voltEXT_007),voltEXT_007,
                                ifelse(!is.na(voltEXT_1005),voltEXT_1005, NA))
   )
+# clean voltage data. if > 0 put NA
+data <- data %>%
+  dplyr::mutate(voltINT = ifelse(voltINT > 0, NA,voltINT),
+                voltEXT = ifelse(voltEXT> 0, NA, voltEXT)
+  )
+
 # T_seaF _007 et _1005
 data <- data %>%
   dplyr::mutate(T_seaF = ifelse(!is.na(T_seaF_007),T_seaF_007,
@@ -407,6 +411,14 @@ selected_data_minute <- rbind(previous_data_minute, selected_data_minute)
 selected_data_minute <-  selected_data_minute %>%
   distinct(datetime, .keep_all = T)
 
+## FB Temp ##
+# outliers from 2017-03-22 08:00 to 2017-03-23 16:00 to remove : T° > 20°C
+data <- data %>%
+  dplyr::mutate(Temperature = ifelse(datetime >= "2017-03-22 08:00:00" & datetime >= "2017-03-23 16:00:00",NA,Temperature))
+#d_hour <- d_hour %>%
+#  dplyr::mutate(Temperature_filtered = ifelse(datetime >= "2017-03-22 08:00:00" & datetime <= "2017-03-23 16:00:00",NA,Temperature_filtered))
+
+
 #### HOUR format ####
 # to add instrument S/N columns
 selected_data_minute$pco2_inst <- as.numeric(selected_data_minute$pco2_inst)
@@ -454,17 +466,17 @@ save(file= paste0(path, "all_nydata_hour.Rdata"), d_hour)
 #load(file = paste0(path, "all_nydata_hour.Rdata"))
 
 
-#PLOT TEST
-#at_contros_cleaned_xts <- dplyr::select(selected_data_hour,datetime,HW_pH1_filtered)
-# at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = selected_data_hour$datetime)
-# dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
-#   #dySeries("phINT_filtered", color = "red", strokeWidth = 0, pointSize=2) %>%
-#   #dySeries("PCO2_corr_contros_filtered", color = "black", strokeWidth = 0, pointSize=2) %>%
-#   dySeries("HW_pH1_filtered", color = "blue", strokeWidth = 0, pointSize=2) %>%
-#   #dySeries("AT_filtered", color = RColorBrewer::brewer.pal(5, "Set2"), strokeWidth = 0, pointSize=2) %>%
-#   #dySeries("despikemed5", color = RColorBrewer::brewer.pal(5, "Set2"), strokeWidth = 0, pointSize=1) %>%
-#   #dyAxis("y",valueRange = c(10, 3000)) %>%
-#   dyLimit(0,color = "black", strokePattern ="dashed") %>%
-#   dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
-#   dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0) %>%
-#   dyRangeSelector(height = 30)
+PLOT TEST
+at_contros_cleaned_xts <- dplyr::select(data,datetime,Sproct, PCO2_corr_contros, SprimDCt, xco2wet, k1t, k2t,k3t, Sprim2beamZ_interp, Sprim2beamZ, S2beam, Signal_RawZ, Signal_RefZ)
+at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = data$datetime)
+dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
+  dySeries("PCO2_corr_contros",  label = "PCO2_corr_contros", color = "red", strokeWidth = 0, pointSize=2) %>%
+  dySeries("Sproct", label="Sproct", color = "black", strokeWidth = 0, pointSize=2) %>%
+  dySeries("SprimDCt", label = "SprimDCt",  color = "blue", strokeWidth = 0, pointSize=2) %>%
+  dySeries("xco2wet", label = " xco2wet",color = "green", strokeWidth = 0, pointSize=2) %>%
+  #dySeries("despikemed5", color = RColorBrewer::brewer.pal(5, "Set2"), strokeWidth = 0, pointSize=1) %>%
+ dyAxis("y",valueRange = c(0, 1000)) %>%
+  dyLimit(0,color = "black", strokePattern ="dashed") %>%
+  dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
+  dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0, digitsAfterDecimal = 5) %>%
+  dyRangeSelector(height = 30)

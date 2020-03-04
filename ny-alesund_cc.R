@@ -57,7 +57,7 @@ enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 #list_last_year <- list.files(path  = path), pattern = "*all_nydata_minute.*")
 #list_last_year <- list_last_year[length(list_last_year)]
 # start_date <- (end_date - (days_back *(3600*24)))
-# start_date <- ymd_hms("2018-01-01 00:00:00")
+# start_date <- ymd_hms("2020-01-14 00:00:00")
 load(file = paste0(path, "all_nydata_minute.Rdata"))
 start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(1)
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S") 
