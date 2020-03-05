@@ -49,7 +49,7 @@ if (file.exists(paste0(path, "all_nydata_minute.Rdata")) == TRUE) {
 # Generally data from yesterday
 # Create end_date (data until yesterday 23:59:59) and start_date (last data from previous data minute).
 
-# end_date <- ymd_hms("2017-12-31 23:59:59")
+# end_date <- ymd_hms("2018-12-31 23:59:59")
 # days_back <- 2
 end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
 enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
@@ -57,7 +57,7 @@ enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 #list_last_year <- list.files(path  = path), pattern = "*all_nydata_minute.*")
 #list_last_year <- list_last_year[length(list_last_year)]
 # start_date <- (end_date - (days_back *(3600*24)))
-# start_date <- ymd_hms("2020-01-14 00:00:00")
+# start_date <- ymd_hms("2017-11-30 00:00:00")
 load(file = paste0(path, "all_nydata_minute.Rdata"))
 start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(1)
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S") 

@@ -48,7 +48,7 @@ if (file.exists(paste0(path, "all_nydata_minute.Rdata")) == TRUE) {
 # Generally data from yesterday
 # Create end_date (data until yesterday 23:59:59) and start_date (last data from previous data minute).
 
-# end_date <- ymd_hms("2018-12-31 23:59:59") 
+# end_date <- ymd_hms("2020-02-29 23:59:59") 
 # days_back <- 2
 end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
 enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
@@ -56,7 +56,7 @@ enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 #list_last_year <- list.files(path  = path), pattern = "*all_nydata_minute.*")
 #list_last_year <- list_last_year[length(list_last_year)]
 # start_date <- (end_date - (days_back *(3600*24)))
-# start_date <- ymd_hms("2017-08-09 00:00:00")
+# start_date <- ymd_hms("2020-01-01 00:00:00")
 load(file = paste0(path, "all_nydata_minute.Rdata"))
 start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(1)
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S") 
@@ -411,14 +411,6 @@ selected_data_minute <- rbind(previous_data_minute, selected_data_minute)
 selected_data_minute <-  selected_data_minute %>%
   distinct(datetime, .keep_all = T)
 
-## FB Temp ##
-# outliers from 2017-03-22 08:00 to 2017-03-23 16:00 to remove : T° > 20°C
-data <- data %>%
-  dplyr::mutate(Temperature = ifelse(datetime >= "2017-03-22 08:00:00" & datetime >= "2017-03-23 16:00:00",NA,Temperature))
-#d_hour <- d_hour %>%
-#  dplyr::mutate(Temperature_filtered = ifelse(datetime >= "2017-03-22 08:00:00" & datetime <= "2017-03-23 16:00:00",NA,Temperature_filtered))
-
-
 #### HOUR format ####
 # to add instrument S/N columns
 selected_data_minute$pco2_inst <- as.numeric(selected_data_minute$pco2_inst)
@@ -466,17 +458,57 @@ save(file= paste0(path, "all_nydata_hour.Rdata"), d_hour)
 #load(file = paste0(path, "all_nydata_hour.Rdata"))
 
 
-PLOT TEST
-at_contros_cleaned_xts <- dplyr::select(data,datetime,Sproct, PCO2_corr_contros, SprimDCt, xco2wet, k1t, k2t,k3t, Sprim2beamZ_interp, Sprim2beamZ, S2beam, Signal_RawZ, Signal_RefZ)
-at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = data$datetime)
-dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
-  dySeries("PCO2_corr_contros",  label = "PCO2_corr_contros", color = "red", strokeWidth = 0, pointSize=2) %>%
-  dySeries("Sproct", label="Sproct", color = "black", strokeWidth = 0, pointSize=2) %>%
-  dySeries("SprimDCt", label = "SprimDCt",  color = "blue", strokeWidth = 0, pointSize=2) %>%
-  dySeries("xco2wet", label = " xco2wet",color = "green", strokeWidth = 0, pointSize=2) %>%
-  #dySeries("despikemed5", color = RColorBrewer::brewer.pal(5, "Set2"), strokeWidth = 0, pointSize=1) %>%
- dyAxis("y",valueRange = c(0, 1000)) %>%
-  dyLimit(0,color = "black", strokePattern ="dashed") %>%
-  dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
-  dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0, digitsAfterDecimal = 5) %>%
-  dyRangeSelector(height = 30)
+# PLOT TEST
+# 
+# data <- data %>%     
+#   dplyr::mutate(date = as.Date(data$datetime),
+# hour = hour(data$datetime))
+# 
+# data_hour <- data%>%
+#   dplyr::group_by( date, hour) %>%
+#   dplyr::summarise( State_Zero = mean(State_Zero, na.rm = TRUE),
+#                    State_Flush = mean(State_Flush, na.rm = TRUE),
+#                    Signal_Ref= mean(Signal_Ref, na.rm = TRUE),
+#                    Signal_Raw = mean(Signal_Raw, na.rm = TRUE),
+#                    Signal_Proc = mean(Signal_Proc, na.rm = TRUE),
+#                    P_In= mean(P_In, na.rm = TRUE),
+#                    P_NDIR= mean(P_NDIR, na.rm = TRUE),
+#                    T_Gas= mean(T_Gas, na.rm = TRUE),
+#                    PCO2_Corr= mean(PCO2_Corr, na.rm = TRUE),
+#                    PCO2_Corr_Flush= mean(PCO2_Corr_Flush, na.rm = TRUE),
+#                    PCO2_Corr_Zero= mean(PCO2_Corr_Zero, na.rm = TRUE),
+#                    Signal_RefZ= mean(Signal_RefZ, na.rm = TRUE),
+#                    Signal_RawZ= mean(Signal_RawZ, na.rm = TRUE),
+#                    Signal_ProcZ= mean(Signal_ProcZ, na.rm = TRUE),
+#                    S2beam= mean(S2beam, na.rm = TRUE),
+#                    Sprim2beam= mean(Sprim2beamZ, na.rm = TRUE),
+#                    Sprim2beamZ= mean(Sprim2beam, na.rm = TRUE),
+#                    Sprim2beamZ_interp= mean(Sprim2beamZ_interp, na.rm = TRUE),
+#                    k1t= mean(k1t, na.rm = TRUE),
+#                    k2t= mean(k2t, na.rm = TRUE) ,
+#                    k3t= mean(k3t, na.rm = TRUE) ,
+#                    SprimDCt= mean(SprimDCt, na.rm = TRUE) ,
+#                    Sproct= mean(Sproct, na.rm = TRUE) ,
+#                    xco2wet= mean(xco2wet, na.rm = TRUE) ,
+#                    PCO2_corr_contros= mean(PCO2_corr_contros, na.rm = TRUE) ) %>%
+#   dplyr::mutate(datetime = ymd_h(paste(date, hour, sep=" ", tz = "UTC"))) %>%
+#   dplyr::ungroup() %>% # this is to be able to perform the following changes
+#   dplyr::select(datetime, everything()) %>%
+#   dplyr::arrange(desc(datetime))
+# 
+# 
+# 
+# 
+# at_contros_cleaned_xts <- dplyr::select(data_hour,datetime, Sprim2beamZ_interp, Sprim2beam, Sprim2beamZ,S2beam, PCO2_corr_contros )
+# at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = data_hour$datetime)
+# dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
+#   dySeries("Sprim2beamZ",  label = "Sprim2beamZ", color = "red", strokeWidth = 0, pointSize=2) %>%
+#   dySeries("Sprim2beamZ_interp", label="Sprim2beamZ_interp", color = "black", strokeWidth = 0, pointSize=2) %>%
+#   dySeries("Sprim2beam", label = "Sprim2beam",  color = "blue", strokeWidth = 0, pointSize=2) %>%
+#   dySeries("S2beam", label = " S2beam",color = "green", strokeWidth = 0, pointSize=2) %>%
+#   dySeries("PCO2_corr_contros", label = "PCO2_corr_contros",color =" grey", strokeWidth = 0, pointSize=1) %>%
+#  #dyAxis("y",valueRange = c(0, 1000)) %>%
+#   dyLimit(0,color = "black", strokePattern ="dashed") %>%
+#   dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
+#   dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0, digitsAfterDecimal = 5) %>%
+#   dyRangeSelector(height = 30)
