@@ -44,12 +44,11 @@ if (file.exists(paste0(path, "all_nydata_minute.Rdata")) == TRUE) {
  rm(selected_data_minute)
 }
 
-
 #### Download current data ####
 # Generally data from yesterday
 # Create end_date (data until yesterday 23:59:59) and start_date (last data from previous data minute).
 
-# end_date <- ymd_hms("2018-12-31 23:59:59")
+# end_date <- ymd_hms("2020-02-29 23:59:59") 
 # days_back <- 2
 end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
 enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
@@ -57,7 +56,7 @@ enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 #list_last_year <- list.files(path  = path), pattern = "*all_nydata_minute.*")
 #list_last_year <- list_last_year[length(list_last_year)]
 # start_date <- (end_date - (days_back *(3600*24)))
-# start_date <- ymd_hms("2017-11-30 00:00:00")
+# start_date <- ymd_hms("2020-01-01 00:00:00")
 load(file = paste0(path, "all_nydata_minute.Rdata"))
 start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(1)
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S") 
@@ -106,16 +105,27 @@ code <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdat
                "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:p_in",
                "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:p_ndir",
                "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:t_gas",
-               "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:pco2",
+               "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:pco2_corr",
                "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:pco2_corr_flush",
                "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:pco2_corr_zero",
+               "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:zero",
+               "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:signal_proc",
+               "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:signal_raw",
+               "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:signal_ref",
+               "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:flush",
+               "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:p_in",
+               "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:p_ndir",
+               "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:t_gas",
+               "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:pco2_corr",
+               "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:pco2_corr_flush",
+               "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:pco2_corr_zero",
                "&sensors=station:svluwobs:fb_731101:durafet_obsvlfr_01:hw_ph",
                "&sensors=station:svluwobs:fb_731101:durafet_obsvlfr_01:hw_temperature"
                
                )
 
 data <- data.table::fread(code, encoding = "UTF-8", showProgress	= TRUE)
-colnames(data) <- c("datetime", "Salinity", "Temperature", "pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317",  "InvAT_0317",  "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215",  "InvAT_1215","Temp_SBE38", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005", "State_Zero", "Signal_Proc", "Signal_Raw", "Signal_Ref", "State_Flush", "P_In", "P_NDIR", "T_Gas", "PCO2_Corr", "PCO2_Corr_Flush","PCO2_Corr_Zero", "HW_pH1", "HW_Temperature1" )
+colnames(data) <- c("datetime", "Salinity", "Temperature", "pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317",  "InvAT_0317",  "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215",  "InvAT_1215","Temp_SBE38", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "PCO2_Corr_0215", "PCO2_Corr_Flush_0215","PCO2_Corr_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "PCO2_Corr_0515", "PCO2_Corr_Flush_0515","PCO2_Corr_Zero_0515", "HW_pH1", "HW_Temperature1" )
 data$datetime <- ymd_hms(data$datetime)
 
 # Create instrument column as flag
@@ -145,6 +155,32 @@ data <- data %>%
 #      }
 
  ########### Correction pCO2 Contros ########### 
+
+# Bind different pCO2 sensors (column with S/N) in the same column (without S/N): 0215 + 0515
+data <- data %>%
+  dplyr::mutate(State_Zero=  ifelse(pco2_inst == "0215", State_Zero_0215,
+                             ifelse(pco2_inst == "0515", State_Zero_0515,NA)),
+                Signal_Proc=ifelse(pco2_inst == "0215", Signal_Proc_0215,
+                             ifelse(pco2_inst == "0515", Signal_Proc_0515,NA)),
+                Signal_Raw=ifelse(pco2_inst == "0215", Signal_Raw_0215,
+                             ifelse(pco2_inst == "0515", Signal_Raw_0515,NA)),
+                Signal_Ref=  ifelse(pco2_inst == "0215", Signal_Ref_0215,
+                             ifelse(pco2_inst == "0515", Signal_Ref_0515,NA)),
+                State_Flush= ifelse(pco2_inst == "0215", State_Flush_0215,
+                             ifelse(pco2_inst == "0515", State_Flush_0515,NA)),
+                P_In=        ifelse(pco2_inst == "0215", P_In_0215,
+                             ifelse(pco2_inst == "0515", P_In_0515,NA)),
+                P_NDIR=      ifelse(pco2_inst == "0215", P_NDIR_0215,
+                             ifelse(pco2_inst == "0515", P_NDIR_0515,NA)),
+                T_Gas=       ifelse(pco2_inst == "0215", T_Gas_0215,
+                             ifelse(pco2_inst == "0515", T_Gas_0515,NA)),
+                PCO2_Corr=   ifelse(pco2_inst == "0215", PCO2_Corr_0215,
+                             ifelse(pco2_inst == "0515", PCO2_Corr_0515,NA)),
+                PCO2_Corr_Flush= ifelse(pco2_inst == "0215", PCO2_Corr_Flush_0215,
+                                 ifelse(pco2_inst == "0515", PCO2_Corr_Flush_0515,NA)),
+                PCO2_Corr_Zero= ifelse(pco2_inst == "0215", PCO2_Corr_Zero_0215,
+                                ifelse(pco2_inst == "0515", PCO2_Corr_Zero_0515,NA)))
+
  # Data processing for pCO2 HydroC CO2 Contros in Ny-Alesund.
  # Documentation received by Steffen Assmann on the 2016-09-15/19 and 
  # stored on /fb_doc/Calibration/pCO2_#0215_#0515
@@ -175,14 +211,14 @@ data <- data %>%
 data <- left_join(data,data_process%>%dplyr::select(PeriodDeplpCO2,T0,P0,F, fTsensor,k1,k2,k3, T0_post, P0_post, F_post, fTsensor_post, k1_post,  k2_post, k3_post), by = "PeriodDeplpCO2")
 
 data <- data %>%
-dplyr::mutate(Signal_RawZ = ifelse(State_Zero == 1 ,Signal_Raw, NA),
-Signal_RefZ = ifelse(State_Zero == 1 ,Signal_Ref, NA),
-Signal_ProcZ = ifelse(State_Zero == 1 ,Signal_Proc, NA),
-S2beam = Signal_Raw / Signal_Ref,
-S2beamZ = Signal_RawZ / Signal_RefZ,
-Sprim2beam = S2beam * fTsensor,
-Sprim2beamZ = S2beamZ * fTsensor
-)  
+  dplyr::mutate(Signal_RawZ = ifelse(State_Zero == 1 ,Signal_Raw, NA),
+                Signal_RefZ = ifelse(State_Zero == 1 ,Signal_Ref, NA),
+                Signal_ProcZ = ifelse(State_Zero == 1 ,Signal_Proc, NA),
+                S2beam = Signal_Raw / Signal_Ref,
+                S2beamZ = Signal_RawZ / Signal_RefZ,
+                Sprim2beam = S2beam * fTsensor,
+                Sprim2beamZ = S2beamZ * fTsensor)
+
 # We remove the 3rd value of Sprim2beamZ during the zeroing (at 00:03:00 and 12:03:00)
 # We keep in Sprim2beamZ the 2nd value of the zeroing (at 00:02:00 and 12:02:00) when it exists 
 # if it does not, we keep the 1st value (at 00:01:00 and 12:01:00) of the zeroing 
@@ -280,7 +316,6 @@ data <- data %>%
 data <- data %>%
   dplyr::mutate(AT= ifelse(!is.na(AT_1215), AT_1215,
                            ifelse(!is.na(AT_0317), AT_0317,NA)))
- 
 ## seaFET ##
 # phINT et ph_EXT _007 et _1005
 data <- data %>%
@@ -302,6 +337,12 @@ data <- data %>%
                 voltEXT = ifelse(!is.na(voltEXT_007),voltEXT_007,
                                ifelse(!is.na(voltEXT_1005),voltEXT_1005, NA))
   )
+# clean voltage data. if > 0 put NA
+data <- data %>%
+  dplyr::mutate(voltINT = ifelse(voltINT > 0, NA,voltINT),
+                voltEXT = ifelse(voltEXT> 0, NA, voltEXT)
+  )
+
 # T_seaF _007 et _1005
 data <- data %>%
   dplyr::mutate(T_seaF = ifelse(!is.na(T_seaF_007),T_seaF_007,
@@ -417,17 +458,57 @@ save(file= paste0(path, "all_nydata_hour.Rdata"), d_hour)
 #load(file = paste0(path, "all_nydata_hour.Rdata"))
 
 
-#PLOT TEST
-#at_contros_cleaned_xts <- dplyr::select(selected_data_hour,datetime,HW_pH1_filtered)
-# at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = selected_data_hour$datetime)
+# PLOT TEST
+# 
+# data <- data %>%     
+#   dplyr::mutate(date = as.Date(data$datetime),
+# hour = hour(data$datetime))
+# 
+# data_hour <- data%>%
+#   dplyr::group_by( date, hour) %>%
+#   dplyr::summarise( State_Zero = mean(State_Zero, na.rm = TRUE),
+#                    State_Flush = mean(State_Flush, na.rm = TRUE),
+#                    Signal_Ref= mean(Signal_Ref, na.rm = TRUE),
+#                    Signal_Raw = mean(Signal_Raw, na.rm = TRUE),
+#                    Signal_Proc = mean(Signal_Proc, na.rm = TRUE),
+#                    P_In= mean(P_In, na.rm = TRUE),
+#                    P_NDIR= mean(P_NDIR, na.rm = TRUE),
+#                    T_Gas= mean(T_Gas, na.rm = TRUE),
+#                    PCO2_Corr= mean(PCO2_Corr, na.rm = TRUE),
+#                    PCO2_Corr_Flush= mean(PCO2_Corr_Flush, na.rm = TRUE),
+#                    PCO2_Corr_Zero= mean(PCO2_Corr_Zero, na.rm = TRUE),
+#                    Signal_RefZ= mean(Signal_RefZ, na.rm = TRUE),
+#                    Signal_RawZ= mean(Signal_RawZ, na.rm = TRUE),
+#                    Signal_ProcZ= mean(Signal_ProcZ, na.rm = TRUE),
+#                    S2beam= mean(S2beam, na.rm = TRUE),
+#                    Sprim2beam= mean(Sprim2beamZ, na.rm = TRUE),
+#                    Sprim2beamZ= mean(Sprim2beam, na.rm = TRUE),
+#                    Sprim2beamZ_interp= mean(Sprim2beamZ_interp, na.rm = TRUE),
+#                    k1t= mean(k1t, na.rm = TRUE),
+#                    k2t= mean(k2t, na.rm = TRUE) ,
+#                    k3t= mean(k3t, na.rm = TRUE) ,
+#                    SprimDCt= mean(SprimDCt, na.rm = TRUE) ,
+#                    Sproct= mean(Sproct, na.rm = TRUE) ,
+#                    xco2wet= mean(xco2wet, na.rm = TRUE) ,
+#                    PCO2_corr_contros= mean(PCO2_corr_contros, na.rm = TRUE) ) %>%
+#   dplyr::mutate(datetime = ymd_h(paste(date, hour, sep=" ", tz = "UTC"))) %>%
+#   dplyr::ungroup() %>% # this is to be able to perform the following changes
+#   dplyr::select(datetime, everything()) %>%
+#   dplyr::arrange(desc(datetime))
+# 
+# 
+# 
+# 
+# at_contros_cleaned_xts <- dplyr::select(data_hour,datetime, Sprim2beamZ_interp, Sprim2beam, Sprim2beamZ,S2beam, PCO2_corr_contros )
+# at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = data_hour$datetime)
 # dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
-#   #dySeries("phINT_filtered", color = "red", strokeWidth = 0, pointSize=2) %>%
-#   #dySeries("PCO2_corr_contros_filtered", color = "black", strokeWidth = 0, pointSize=2) %>%
-#   dySeries("HW_pH1_filtered", color = "blue", strokeWidth = 0, pointSize=2) %>%
-#   #dySeries("AT_filtered", color = RColorBrewer::brewer.pal(5, "Set2"), strokeWidth = 0, pointSize=2) %>%
-#   #dySeries("despikemed5", color = RColorBrewer::brewer.pal(5, "Set2"), strokeWidth = 0, pointSize=1) %>%
-#   #dyAxis("y",valueRange = c(10, 3000)) %>%
+#   dySeries("Sprim2beamZ",  label = "Sprim2beamZ", color = "red", strokeWidth = 0, pointSize=2) %>%
+#   dySeries("Sprim2beamZ_interp", label="Sprim2beamZ_interp", color = "black", strokeWidth = 0, pointSize=2) %>%
+#   dySeries("Sprim2beam", label = "Sprim2beam",  color = "blue", strokeWidth = 0, pointSize=2) %>%
+#   dySeries("S2beam", label = " S2beam",color = "green", strokeWidth = 0, pointSize=2) %>%
+#   dySeries("PCO2_corr_contros", label = "PCO2_corr_contros",color =" grey", strokeWidth = 0, pointSize=1) %>%
+#  #dyAxis("y",valueRange = c(0, 1000)) %>%
 #   dyLimit(0,color = "black", strokePattern ="dashed") %>%
 #   dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
-#   dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0) %>%
+#   dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0, digitsAfterDecimal = 5) %>%
 #   dyRangeSelector(height = 30)
