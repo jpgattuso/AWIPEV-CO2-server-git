@@ -291,14 +291,29 @@ data <- data %>%
                 PCO2_corr_contros = xco2wet *( P_In / 1013.25)
   )
 
+##### First cleaning
 ##### Binding several S/N data in one for each parameter ####
-
+## pCO2 
+# Removing outliers due to acid flush in the FB at 12:00 and 00:00 
+# PCO2_Corr = Raw data from the sensor
+# PCO2_corr_contros = Final corrected data from Contros "data processing document"
+data <- data %>%
+  dplyr::mutate(PCO2_Corr = ifelse(State_Zero >= 1 | State_Flush >= 1 | PCO2_Corr >= 600 | PCO2_Corr <= 50 ,NA, PCO2_Corr),
+                PCO2_Corr = ifelse(Time >= "01:30:00" & Time < "12:00:00" | Time >= "13:00:00", PCO2_Corr, NA),
+                PCO2_corr_contros = ifelse(State_Zero >= 1 | State_Flush >= 1 | PCO2_corr_contros >= 600 | PCO2_corr_contros <= 50,NA, PCO2_corr_contros),
+                PCO2_corr_contros = ifelse(Time >= "01:30:00" & Time < "12:00:00" | Time >= "13:00:00", PCO2_corr_contros, NA),
+                Sproct2 = ifelse(Sproct > 1000 | Sproct < -1 , NA, Sproct),
+                PCO2_Corr_Zero2 = ifelse(PCO2_Corr_Zero > 20000, NA, PCO2_Corr_Zero))
 ## TA ##
 # bind TA_0317 and TA_1215 data = AT
 data <- data %>%
   dplyr::mutate(AT= ifelse(!is.na(AT_1215), AT_1215,
                            ifelse(!is.na(AT_0317), AT_0317,NA)))
-
+# TA
+d_all <- d_all %>%
+  dplyr::mutate(AT= ifelse(datetime >= "2016-02-26 12:00:00" & AT > 100 & InvSal == 0 & InvpH == 0 & InvAT ==0 , AT, NA))
+d_all <- d_all %>%
+  dplyr::mutate(AT = ifelse(datetime == "2017-05-23 21:07:00", NA, AT)) 
 
 ## seaFET ##
 # phINT et ph_EXT _007 et _1005
@@ -308,6 +323,9 @@ data <- data %>%
                 phEXT = ifelse(!is.na(phEXT_007),phEXT_007,
                                ifelse(!is.na(phEXT_1005),phEXT_1005, NA))
   )
+d_all <- d_all %>%
+  dplyr::mutate(phINT = ifelse(phINT >7.5  & phINT <8.5, phINT, NA), 
+                phEXT = ifelse(phEXT >7.5  & phEXT <8.5, phEXT, NA))
 # voltINT et voltEXT _007 et _1005
 data <- data %>%
   dplyr::mutate(voltINT = ifelse(!is.na(voltINT_007),voltINT_007,
