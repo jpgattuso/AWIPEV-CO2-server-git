@@ -48,7 +48,7 @@ if (file.exists(paste0(path, "all_nydata_minute.Rdata")) == TRUE) {
 # Generally data from yesterday
 # Create end_date (data until yesterday 23:59:59) and start_date (last data from previous data minute).
 
-# end_date <- ymd_hms("2020-02-29 23:59:59") 
+# end_date <- ymd_hms("2019-12-31 23:59:59") 
 # days_back <- 2
 end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
 enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
@@ -291,56 +291,29 @@ data <- data %>%
                 PCO2_corr_contros = xco2wet *( P_In / 1013.25)
   )
 
-##### First data cleaning ####
-## pCO2 
-# Removing outliers due to acid flush in the FB at 12:00 and 00:00 
-# PCO2_Corr = Raw data from the sensor
-# PCO2_corr_contros = Final corrected data from Contros "data processing document"
-data <- data %>%
-  dplyr::mutate(PCO2_Corr = ifelse(State_Zero >= 1 | State_Flush >= 1 | PCO2_Corr >= 600 | PCO2_Corr <= 50 ,NA, PCO2_Corr),
-                PCO2_Corr = ifelse(Time >= "01:30:00" & Time < "12:00:00" | Time >= "13:00:00", PCO2_Corr, NA),
-                PCO2_corr_contros = ifelse(State_Zero >= 1 | State_Flush >= 1 | PCO2_corr_contros >= 600 | PCO2_corr_contros <= 50,NA, PCO2_corr_contros),
-                PCO2_corr_contros = ifelse(Time >= "01:30:00" & Time < "12:00:00" | Time >= "13:00:00", PCO2_corr_contros, NA),
-                Sproct2 = ifelse(Sproct > 1000 | Sproct < -1 , NA, Sproct),
-                PCO2_Corr_Zero2 = ifelse(PCO2_Corr_Zero > 20000, NA, PCO2_Corr_Zero))
+##### Binding several S/N data in one for each parameter ####
+
 ## TA ##
-# TA_1215
-data <- data %>%
-  dplyr::mutate(AT_1215= ifelse(datetime >= "2016-02-26 12:00:00" & AT_1215 > 100 & InvSal_1215 == 0 & InvpH_1215 == 0 & InvAT_1215 ==0 , AT_1215, NA))
-data <- data %>%
-  dplyr::mutate(AT = ifelse(datetime == "2017-05-23 21:07:00", NA, AT_1215)) 
-# TA 0317
-data <- data %>%
-  dplyr::mutate(AT_0317= ifelse(datetime >= "2016-02-26 12:00:00" & AT_0317 > 100 & InvSal_0317 == 0 & InvpH_0317 == 0 & InvAT_0317 ==0 , AT_0317, NA))
-# bind TA 0317 and TA 1215 data = AT
+# bind TA_0317 and TA_1215 data = AT
 data <- data %>%
   dplyr::mutate(AT= ifelse(!is.na(AT_1215), AT_1215,
                            ifelse(!is.na(AT_0317), AT_0317,NA)))
+
+
 ## seaFET ##
 # phINT et ph_EXT _007 et _1005
 data <- data %>%
-  dplyr::mutate(phINT_007 = ifelse(phINT_007 >7.5  & phINT_007 <8.5, phINT_007, NA), 
-                phEXT_007 = ifelse(phEXT_007 >7.5  & phEXT_007 <8.5, phEXT_007, NA),
-                phINT_1005 = ifelse(phINT_1005 >7.5  & phINT_1005 <8.5, phINT_1005, NA),
-                phEXT_1005 = ifelse(phEXT_1005 >7.5  & phEXT_1005 <8.5, phEXT_1005, NA))
-
-data <- data %>%
   dplyr::mutate(phINT = ifelse(!is.na(phINT_007),phINT_007,
-                        ifelse(!is.na(phINT_1005),phINT_1005, NA)),
+                               ifelse(!is.na(phINT_1005),phINT_1005, NA)),
                 phEXT = ifelse(!is.na(phEXT_007),phEXT_007,
                                ifelse(!is.na(phEXT_1005),phEXT_1005, NA))
-                )
+  )
 # voltINT et voltEXT _007 et _1005
 data <- data %>%
   dplyr::mutate(voltINT = ifelse(!is.na(voltINT_007),voltINT_007,
-                               ifelse(!is.na(voltINT_1005),voltINT_1005, NA)),
+                                 ifelse(!is.na(voltINT_1005),voltINT_1005, NA)),
                 voltEXT = ifelse(!is.na(voltEXT_007),voltEXT_007,
-                               ifelse(!is.na(voltEXT_1005),voltEXT_1005, NA))
-  )
-# clean voltage data. if > 0 put NA
-data <- data %>%
-  dplyr::mutate(voltINT = ifelse(voltINT > 0, NA,voltINT),
-                voltEXT = ifelse(voltEXT> 0, NA, voltEXT)
+                                 ifelse(!is.na(voltEXT_1005),voltEXT_1005, NA))
   )
 
 # T_seaF _007 et _1005
@@ -349,7 +322,7 @@ data <- data %>%
                                  ifelse(!is.na(T_seaF_1005),T_seaF_1005, NA))
   )         
 
-##########   Second data cleaning : despike()  ###########
+##########   first data cleaning : despike()  ###########
 #PCO2_Corr_filtered = raw pco2 data from sensor + despike.
 #PCO2_corr_contros_filtered = final pco2 data from sensor corrected by "contros" document correction + despike.
 
@@ -499,14 +472,14 @@ save(file= paste0(path, "all_nydata_hour.Rdata"), d_hour)
 # 
 # 
 # 
-# at_contros_cleaned_xts <- dplyr::select(data_hour,datetime, Sprim2beamZ_interp, Sprim2beam, Sprim2beamZ,S2beam, PCO2_corr_contros )
-# at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = data_hour$datetime)
+# at_contros_cleaned_xts <- dplyr::select(d_hour,datetime, voltINT,voltEXT )
+# at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = d_hour$datetime)
 # dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
-#   dySeries("Sprim2beamZ",  label = "Sprim2beamZ", color = "red", strokeWidth = 0, pointSize=2) %>%
-#   dySeries("Sprim2beamZ_interp", label="Sprim2beamZ_interp", color = "black", strokeWidth = 0, pointSize=2) %>%
-#   dySeries("Sprim2beam", label = "Sprim2beam",  color = "blue", strokeWidth = 0, pointSize=2) %>%
-#   dySeries("S2beam", label = " S2beam",color = "green", strokeWidth = 0, pointSize=2) %>%
-#   dySeries("PCO2_corr_contros", label = "PCO2_corr_contros",color =" grey", strokeWidth = 0, pointSize=1) %>%
+#   dySeries("voltINT",  label = "voltINT", color = "red", strokeWidth = 0, pointSize=2) %>%
+#   dySeries("voltEXT", label="voltEXT", color = "black", strokeWidth = 0, pointSize=2) %>%
+#   #dySeries("Sprim2beam", label = "Sprim2beam",  color = "blue", strokeWidth = 0, pointSize=2) %>%
+#   #dySeries("S2beam", label = " S2beam",color = "green", strokeWidth = 0, pointSize=2) %>%
+#   #dySeries("PCO2_corr_contros", label = "PCO2_corr_contros",color =" grey", strokeWidth = 0, pointSize=1) %>%
 #  #dyAxis("y",valueRange = c(0, 1000)) %>%
 #   dyLimit(0,color = "black", strokePattern ="dashed") %>%
 #   dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
