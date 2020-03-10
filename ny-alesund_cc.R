@@ -37,18 +37,11 @@ agg_fun_2 = "STDDEV"
 agg_fun_3 = "N"
 #*********************************
 
-#### Download previous data ####
-if (file.exists(paste0(path, "all_nydata_minute.Rdata")) == TRUE) {
- load(paste0(path, "all_nydata_minute.Rdata"))
- previous_data_minute <- as_tibble(selected_data_minute)
- rm(selected_data_minute)
-}
-
 #### Download current data ####
 # Generally data from yesterday
 # Create end_date (data until yesterday 23:59:59) and start_date (last data from previous data minute).
 
-# end_date <- ymd_hms("2019-12-31 23:59:59") 
+#end_date <- ymd_hms("2020-02-15 23:59:59") 
 # days_back <- 2
 end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
 enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
@@ -56,8 +49,8 @@ enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 #list_last_year <- list.files(path  = path), pattern = "*all_nydata_minute.*")
 #list_last_year <- list_last_year[length(list_last_year)]
 # start_date <- (end_date - (days_back *(3600*24)))
-# start_date <- ymd_hms("2020-01-01 00:00:00")
-load(file = paste0(path, "all_nydata_minute.Rdata"))
+# start_date <- ymd_hms("2018-01-01 00:00:00")
+selected_data_minute <- readRDS(file = paste0(path, "all_nydata_minute.rds"))
 start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(1)
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S") 
 # if enddate - startdate < 1 d one skips everything until the end of this script
@@ -305,16 +298,18 @@ data <- data %>%
                 Sproct2 = ifelse(Sproct > 1000 | Sproct < -1 , NA, Sproct),
                 PCO2_Corr_Zero2 = ifelse(PCO2_Corr_Zero > 20000, NA, PCO2_Corr_Zero))
 ## TA ##
+
+# TA
+data <- data %>%
+  dplyr::mutate(AT= ifelse(datetime >= "2016-02-26 12:00:00" & AT_1215 > 100 & InvSal_1215 == 0 & InvpH_1215 == 0 & InvAT_1215 ==0 , AT_1215, NA))
+data <- data %>%
+  dplyr::mutate(AT= ifelse(datetime >= "2016-02-26 12:00:00" & AT_0317 > 100 & InvSal_0317 == 0 & InvpH_0317 == 0 & InvAT_0317 ==0 , AT_0317, NA))
+data <- data %>%
+  dplyr::mutate(AT = ifelse(datetime == "2017-05-23 21:07:00", NA, AT)) 
 # bind TA_0317 and TA_1215 data = AT
 data <- data %>%
   dplyr::mutate(AT= ifelse(!is.na(AT_1215), AT_1215,
                            ifelse(!is.na(AT_0317), AT_0317,NA)))
-# TA
-d_all <- d_all %>%
-  dplyr::mutate(AT= ifelse(datetime >= "2016-02-26 12:00:00" & AT > 100 & InvSal == 0 & InvpH == 0 & InvAT ==0 , AT, NA))
-d_all <- d_all %>%
-  dplyr::mutate(AT = ifelse(datetime == "2017-05-23 21:07:00", NA, AT)) 
-
 ## seaFET ##
 # phINT et ph_EXT _007 et _1005
 data <- data %>%
@@ -323,7 +318,7 @@ data <- data %>%
                 phEXT = ifelse(!is.na(phEXT_007),phEXT_007,
                                ifelse(!is.na(phEXT_1005),phEXT_1005, NA))
   )
-d_all <- d_all %>%
+data <- data %>%
   dplyr::mutate(phINT = ifelse(phINT >7.5  & phINT <8.5, phINT, NA), 
                 phEXT = ifelse(phEXT >7.5  & phEXT <8.5, phEXT, NA))
 # voltINT et voltEXT _007 et _1005
@@ -373,7 +368,68 @@ data <- data %>%
 #                 phEXT_filtered= "NA"
 #               )
 
-#### MINUTE format ####
+#MINUTE
+# save all parameters in long format (not selected data)
+if (file.exists(paste0(path, "all_parameters_nydata_minute.rds")) == TRUE) {
+  previous_all_parameters_data_minute <- readRDS(paste0(path, "all_parameters_nydata_minute.rds"))
+  #### Binding data (previous + new) ####
+  data <- rbind(previous_all_parameters_data_minute, data)
+  #Remove duplicate due to binding
+  data <-  data %>%
+  distinct(datetime, .keep_all = T)
+saveRDS(file= paste0(path, "all_parameters_nydata_minute.rds"), data)
+} else {
+  saveRDS(file= paste0(path, "all_parameters_nydata_minute.rds"), data)
+}
+
+# HOUR
+data_hour <- data%>%
+  dplyr::group_by( date, hour) %>%
+  dplyr::summarise( State_Zero = mean(State_Zero, na.rm = TRUE),
+                    State_Flush = mean(State_Flush, na.rm = TRUE),
+                    Signal_Ref= mean(Signal_Ref, na.rm = TRUE),
+                    Signal_Raw = mean(Signal_Raw, na.rm = TRUE),
+                    Signal_Proc = mean(Signal_Proc, na.rm = TRUE),
+                    P_In= mean(P_In, na.rm = TRUE),
+                    P_NDIR= mean(P_NDIR, na.rm = TRUE),
+                    T_Gas= mean(T_Gas, na.rm = TRUE),
+                    PCO2_Corr= mean(PCO2_Corr, na.rm = TRUE),
+                    PCO2_Corr_Flush= mean(PCO2_Corr_Flush, na.rm = TRUE),
+                    PCO2_Corr_Zero= mean(PCO2_Corr_Zero, na.rm = TRUE),
+                    Signal_RefZ= mean(Signal_RefZ, na.rm = TRUE),
+                    Signal_RawZ= mean(Signal_RawZ, na.rm = TRUE),
+                    Signal_ProcZ= mean(Signal_ProcZ, na.rm = TRUE),
+                    S2beam= mean(S2beam, na.rm = TRUE),
+                    S2beamZ= mean(S2beamZ, na.rm = TRUE),
+                    Sprim2beam= mean(Sprim2beamZ, na.rm = TRUE),
+                    Sprim2beamZ= mean(Sprim2beam, na.rm = TRUE),
+                    Sprim2beamZ_interp= mean(Sprim2beamZ_interp, na.rm = TRUE),
+                    k1t= mean(k1t, na.rm = TRUE),
+                    k2t= mean(k2t, na.rm = TRUE) ,
+                    k3t= mean(k3t, na.rm = TRUE) ,
+                    SprimDCt= mean(SprimDCt, na.rm = TRUE) ,
+                    Sproct= mean(Sproct, na.rm = TRUE) ,
+                    xco2wet= mean(xco2wet, na.rm = TRUE) ,
+                    PCO2_corr_contros= mean(PCO2_corr_contros, na.rm = TRUE) ) %>%
+  dplyr::mutate(datetime = ymd_h(paste(date, hour, sep=" ", tz = "UTC"))) %>%
+  dplyr::ungroup() %>% # this is to be able to perform the following changes
+  dplyr::select(datetime, everything()) %>%
+  dplyr::arrange(desc(datetime))
+
+#### Download previous data ####
+if (file.exists(paste0(path, "all_parameters_nydata_hour.rds")) == TRUE) {
+  previous_all_parameters_data_hour <- readRDS(paste0(path, "all_parameters_nydata_hour.rds"))
+  #### Binding data (previous + new) ####
+  data_hour <- rbind(previous_all_parameters_data_hour, data_hour)
+  #Remove duplicate due to binding
+  data_hour <-  data_hour %>%
+    distinct(datetime, .keep_all = T)
+  saveRDS(file= paste0(path, "all_parameters_nydata_hour.rds"), data_hour)
+} else {
+  saveRDS(file= paste0(path, "all_parameters_nydata_hour.rds"), data_hour)
+}
+
+#### MINUTE format (small format) ####
 selected_data_minute <- data  %>%
     dplyr::select( datetime,
                    PCO2_Corr_filtered,
@@ -396,11 +452,17 @@ selected_data_minute <- data  %>%
                    date,
                    hour)
 
-#### Binding data (previous + new) ####
-selected_data_minute <- rbind(previous_data_minute, selected_data_minute)
-#Remove duplicate due to binding
-selected_data_minute <-  selected_data_minute %>%
-  distinct(datetime, .keep_all = T)
+if (file.exists(paste0(path, "all_nydata_minute.rds")) == TRUE) {
+  previous_data_minute <- readRDS(paste0(path, "all_nydata_minute.rds"))
+  #### Binding data (previous + new) ####
+  selected_data_minute <- rbind(previous_data_minute, selected_data_minute)
+  #Remove duplicate due to binding
+  selected_data_minute <-  selected_data_minute %>%
+    distinct(datetime, .keep_all = T)
+  saveRDS(file= paste0(path, "all_nydata_minute.rds"), selected_data_minute)
+} else {
+  saveRDS(file= paste0(path, "all_nydata_minute.rds"), selected_data_minute)
+}
 
 #### HOUR format ####
 # to add instrument S/N columns
@@ -437,12 +499,21 @@ selected_data_hour <- selected_data_minute%>%
 selected_data_hour <- selected_data_hour %>%     
   dplyr::mutate(AT_filtered = despike(selected_data_hour$AT_filtered, reference= "median", n=0.3, k=217, replace="NA")) 
 
-#### Saving data #### 
-# MINUTE format
-save(file= paste0(path, "all_nydata_minute.Rdata"), selected_data_minute)
 # HOUR format
 d_hour <- selected_data_hour
-save(file= paste0(path, "all_nydata_hour.Rdata"), d_hour)
+
+if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
+  previous_data_hour <- readRDS(paste0(path, "all_nydata_hour.rds"))
+  #### Binding data (previous + new) ####
+  d_hour <- rbind(previous_data_hour, d_hour)
+  #Remove duplicate due to binding
+  d_hour <-  d_hour %>%
+    distinct(datetime, .keep_all = T)
+  saveRDS(file= paste0(path, "all_nydata_hour.rds"), d_hour)
+} else {
+  saveRDS(file= paste0(path, "all_nydata_hour.rds"), d_hour)
+}
+
 #save(file= paste0(path, "fb_awipev-co2_server/ny-alesund/data/processed/all_nydata_hour.Rdata"), d_hour)
 
 #@@@@@@@@@@@@@@@@@@@@@@@@
@@ -451,54 +522,19 @@ save(file= paste0(path, "all_nydata_hour.Rdata"), d_hour)
 
 # PLOT TEST
 # 
-# data <- data %>%     
-#   dplyr::mutate(date = as.Date(data$datetime),
-# hour = hour(data$datetime))
-# 
-# data_hour <- data%>%
-#   dplyr::group_by( date, hour) %>%
-#   dplyr::summarise( State_Zero = mean(State_Zero, na.rm = TRUE),
-#                    State_Flush = mean(State_Flush, na.rm = TRUE),
-#                    Signal_Ref= mean(Signal_Ref, na.rm = TRUE),
-#                    Signal_Raw = mean(Signal_Raw, na.rm = TRUE),
-#                    Signal_Proc = mean(Signal_Proc, na.rm = TRUE),
-#                    P_In= mean(P_In, na.rm = TRUE),
-#                    P_NDIR= mean(P_NDIR, na.rm = TRUE),
-#                    T_Gas= mean(T_Gas, na.rm = TRUE),
-#                    PCO2_Corr= mean(PCO2_Corr, na.rm = TRUE),
-#                    PCO2_Corr_Flush= mean(PCO2_Corr_Flush, na.rm = TRUE),
-#                    PCO2_Corr_Zero= mean(PCO2_Corr_Zero, na.rm = TRUE),
-#                    Signal_RefZ= mean(Signal_RefZ, na.rm = TRUE),
-#                    Signal_RawZ= mean(Signal_RawZ, na.rm = TRUE),
-#                    Signal_ProcZ= mean(Signal_ProcZ, na.rm = TRUE),
-#                    S2beam= mean(S2beam, na.rm = TRUE),
-#                    Sprim2beam= mean(Sprim2beamZ, na.rm = TRUE),
-#                    Sprim2beamZ= mean(Sprim2beam, na.rm = TRUE),
-#                    Sprim2beamZ_interp= mean(Sprim2beamZ_interp, na.rm = TRUE),
-#                    k1t= mean(k1t, na.rm = TRUE),
-#                    k2t= mean(k2t, na.rm = TRUE) ,
-#                    k3t= mean(k3t, na.rm = TRUE) ,
-#                    SprimDCt= mean(SprimDCt, na.rm = TRUE) ,
-#                    Sproct= mean(Sproct, na.rm = TRUE) ,
-#                    xco2wet= mean(xco2wet, na.rm = TRUE) ,
-#                    PCO2_corr_contros= mean(PCO2_corr_contros, na.rm = TRUE) ) %>%
-#   dplyr::mutate(datetime = ymd_h(paste(date, hour, sep=" ", tz = "UTC"))) %>%
-#   dplyr::ungroup() %>% # this is to be able to perform the following changes
-#   dplyr::select(datetime, everything()) %>%
-#   dplyr::arrange(desc(datetime))
 # 
 # 
 # 
 # 
-# at_contros_cleaned_xts <- dplyr::select(d_hour,datetime, voltINT,voltEXT )
-# at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = d_hour$datetime)
+# at_contros_cleaned_xts <- dplyr::select(data_hour,datetime, S2beam)
+# at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = data_hour$datetime)
 # dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
-#   dySeries("voltINT",  label = "voltINT", color = "red", strokeWidth = 0, pointSize=2) %>%
-#   dySeries("voltEXT", label="voltEXT", color = "black", strokeWidth = 0, pointSize=2) %>%
-#   #dySeries("Sprim2beam", label = "Sprim2beam",  color = "blue", strokeWidth = 0, pointSize=2) %>%
-#   #dySeries("S2beam", label = " S2beam",color = "green", strokeWidth = 0, pointSize=2) %>%
-#   #dySeries("PCO2_corr_contros", label = "PCO2_corr_contros",color =" grey", strokeWidth = 0, pointSize=1) %>%
-#  #dyAxis("y",valueRange = c(0, 1000)) %>%
+# #dySeries("Sproct",  label = "Sproct", color = "red", strokeWidth = 0, pointSize=2) %>%
+#   #dySeries("Sprim2beamZ_interp", label="Sprim2beamZ_interp", color = "black", strokeWidth = 0, pointSize=2) %>%
+# #dySeries( "S2beamZ", label = "S2beamZ",  color = "blue", strokeWidth = 0, pointSize=2) %>%
+#   dySeries("S2beam", label = " S2beam",color = "green", strokeWidth = 0, pointSize=2) %>%
+#   #dySeries("Sprim2beamZ_interp", label = "Sprim2beamZ_interp",color =" grey", strokeWidth = 0, pointSize=1) %>%
+#  dyAxis("y",valueRange = c(-2, 2)) %>%
 #   dyLimit(0,color = "black", strokePattern ="dashed") %>%
 #   dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
 #   dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0, digitsAfterDecimal = 5) %>%
