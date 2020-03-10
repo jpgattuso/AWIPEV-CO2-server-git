@@ -41,9 +41,9 @@ agg_fun_3 = "N"
 # Generally data from yesterday
 # Create end_date (data until yesterday 23:59:59) and start_date (last data from previous data minute).
 
-end_date <- ymd_hms("2020-02-15 23:59:59") 
+#end_date <- ymd_hms("2020-02-15 23:59:59") 
 # days_back <- 2
-#end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
+end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
 enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 # start_date = Open the last "year" file (minute fomat) and take the last line date - 1 day. like that we avoid NA to interpolate Sprim2beamZ (pCO2) later.
 #list_last_year <- list.files(path  = path), pattern = "*all_nydata_minute.*")
@@ -400,6 +400,7 @@ data_hour <- data%>%
                     Signal_RawZ= mean(Signal_RawZ, na.rm = TRUE),
                     Signal_ProcZ= mean(Signal_ProcZ, na.rm = TRUE),
                     S2beam= mean(S2beam, na.rm = TRUE),
+                    S2beamZ= mean(S2beamZ, na.rm = TRUE),
                     Sprim2beam= mean(Sprim2beamZ, na.rm = TRUE),
                     Sprim2beamZ= mean(Sprim2beam, na.rm = TRUE),
                     Sprim2beamZ_interp= mean(Sprim2beamZ_interp, na.rm = TRUE),
@@ -525,15 +526,15 @@ if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
 # 
 # 
 # 
-# at_contros_cleaned_xts <- dplyr::select(data_hour,datetime, voltINT,voltEXT )
-# at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = d_hour$datetime)
+# at_contros_cleaned_xts <- dplyr::select(data_hour,datetime, S2beam)
+# at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = data_hour$datetime)
 # dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
-#   dySeries("voltINT",  label = "voltINT", color = "red", strokeWidth = 0, pointSize=2) %>%
-#   dySeries("voltEXT", label="voltEXT", color = "black", strokeWidth = 0, pointSize=2) %>%
-#   #dySeries("Sprim2beam", label = "Sprim2beam",  color = "blue", strokeWidth = 0, pointSize=2) %>%
-#   #dySeries("S2beam", label = " S2beam",color = "green", strokeWidth = 0, pointSize=2) %>%
-#   #dySeries("PCO2_corr_contros", label = "PCO2_corr_contros",color =" grey", strokeWidth = 0, pointSize=1) %>%
-#  #dyAxis("y",valueRange = c(0, 1000)) %>%
+# #dySeries("Sproct",  label = "Sproct", color = "red", strokeWidth = 0, pointSize=2) %>%
+#   #dySeries("Sprim2beamZ_interp", label="Sprim2beamZ_interp", color = "black", strokeWidth = 0, pointSize=2) %>%
+# #dySeries( "S2beamZ", label = "S2beamZ",  color = "blue", strokeWidth = 0, pointSize=2) %>%
+#   dySeries("S2beam", label = " S2beam",color = "green", strokeWidth = 0, pointSize=2) %>%
+#   #dySeries("Sprim2beamZ_interp", label = "Sprim2beamZ_interp",color =" grey", strokeWidth = 0, pointSize=1) %>%
+#  dyAxis("y",valueRange = c(-2, 2)) %>%
 #   dyLimit(0,color = "black", strokePattern ="dashed") %>%
 #   dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
 #   dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0, digitsAfterDecimal = 5) %>%
