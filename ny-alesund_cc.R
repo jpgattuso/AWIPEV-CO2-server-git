@@ -9,6 +9,7 @@ library("stringr")
 library(data.table)
 library(lubridate) 
 library(curl)
+library(readxl)
 
 ####define who is the user and define path
 rm(list = ls())
@@ -41,6 +42,7 @@ agg_fun_3 = "N"
 # Generally data from yesterday
 # Create end_date (data until yesterday 23:59:59) and start_date (last data from previous data minute).
 
+#end_date <- ymd_hms("2017-12-31 23:59:59") 
 #end_date <- ymd_hms("2020-02-15 23:59:59") 
 # days_back <- 2
 end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
@@ -49,6 +51,7 @@ enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 #list_last_year <- list.files(path  = path), pattern = "*all_nydata_minute.*")
 #list_last_year <- list_last_year[length(list_last_year)]
 # start_date <- (end_date - (days_back *(3600*24)))
+# start_date <- ymd_hms("2015-07-25 00:00:00")
 # start_date <- ymd_hms("2018-01-01 00:00:00")
 selected_data_minute <- readRDS(file = paste0(path, "all_nydata_minute.rds"))
 start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(1)
@@ -183,12 +186,12 @@ data <- data %>%
  # Adding manualy data into Data_Processing_sheet_pCO2 file.
  # Open the data calibration sheet and convert the dates. 
 
- data_process <- read.csv(file = paste0(path, "Data_Processing_sheet_pCO2.csv"), header = TRUE, dec = ".", as.is = T, sep = ";")
- data_process$DateCalibration <- dmy(data_process$DateCalibration)
- data_process$DateCalibrationPost <- dmy(data_process$DateCalibrationPost)
- data_process$DateDelivery <- dmy(data_process$DateDelivery)
- data_process$StartDeployment <- ymd_hms(data_process$StartDeployment)
- data_process$EndDeployment <- ymd_hms(data_process$EndDeployment)
+ data_process <- read_excel(paste0(path, "Data_Processing_sheet_pCO2.xlsx"), col_types = c("text","text","text","text", "date","date", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "date", "date", "numeric",  "date","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric"))
+ # data_process$DateCalibration <- dmy(data_process$DateCalibration)
+ # data_process$DateCalibrationPost <- dmy(data_process$DateCalibrationPost)
+ # data_process$DateDelivery <- dmy(data_process$DateDelivery)
+ # data_process$StartDeployment <- ymd_hms(data_process$StartDeployment)
+ # data_process$EndDeployment <- ymd_hms(data_process$EndDeployment)
  # Adding the PeriodDeplpCO2 column to z first.
  # Adding the others parameters according to the Contros formula PDF
  # Adding the new period ech time we receive the pCO2 sensor from the calibration
@@ -521,21 +524,39 @@ if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
 
 
 # PLOT TEST
-# 
-# 
-# 
-# 
-# 
-# at_contros_cleaned_xts <- dplyr::select(data_hour,datetime, S2beam)
+# at_contros_cleaned_xts <- dplyr::select(d_hour,datetime,PCO2_Corr_filtered, PCO2_corr_contros_filtered)
 # at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = data_hour$datetime)
 # dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
 # #dySeries("Sproct",  label = "Sproct", color = "red", strokeWidth = 0, pointSize=2) %>%
 #   #dySeries("Sprim2beamZ_interp", label="Sprim2beamZ_interp", color = "black", strokeWidth = 0, pointSize=2) %>%
-# #dySeries( "S2beamZ", label = "S2beamZ",  color = "blue", strokeWidth = 0, pointSize=2) %>%
-#   dySeries("S2beam", label = " S2beam",color = "green", strokeWidth = 0, pointSize=2) %>%
+# dySeries( "PCO2_corr_contros_filtered", label = "PCO2_corr_contros_filtered",  color = "blue", strokeWidth = 0, pointSize=2) %>%
+#   dySeries("PCO2_Corr_filtered", label = " PCO2_Corr_filtered",color = "green", strokeWidth = 0, pointSize=2) %>%
 #   #dySeries("Sprim2beamZ_interp", label = "Sprim2beamZ_interp",color =" grey", strokeWidth = 0, pointSize=1) %>%
-#  dyAxis("y",valueRange = c(-2, 2)) %>%
+#  #dyAxis("y",valueRange = c(-2, 2)) %>%
 #   dyLimit(0,color = "black", strokePattern ="dashed") %>%
 #   dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
 #   dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0, digitsAfterDecimal = 5) %>%
 #   dyRangeSelector(height = 30)
+# 
+# # Bad period for pCO2 (N°4) - look at period 5 - 6
+# tmp <- data_hour %>%
+#   dplyr::mutate(PeriodDeplpCO2 = ifelse(datetime >= "2015-07-23 00:00:00" & datetime <= "2016-02-23 22:00:00", 1, 
+#                                         ifelse(datetime >= "2016-02-23 23:00:00" & datetime <= "2017-02-04 23:00:00", 2 ,
+#                                                ifelse(datetime >= "2017-02-09 00:00:00" & datetime <= "2018-02-09 00:00:00", 3 ,
+#                                                       ifelse(datetime >= "2018-04-14 00:00:00" & datetime <= "2018-10-31 00:00:00", 4 , 
+#                                                              ifelse(datetime >= "2018-10-31 15:00:00" & datetime <= "2019-09-03 12:00:00", 5 ,
+#                                                                     ifelse(datetime >= "2019-09-03 17:00:00" & datetime <= "2099-12-02 23:59:59", 6 ,NA )))))))
+# 
+# tmp <- tmp %>%
+#   dplyr::filter(PeriodDeplpCO2 <= 4)%>%
+# dplyr::select(-c(date, hour, PeriodDeplpCO2))
+# #Plot les parametres en facette
+# 
+# tmp_melt<- melt(tmp, id.vars="datetime")
+# 
+# several_pco2_parameters <- ggplot(tmp_melt) + geom_point(aes(x=datetime, y=value, color=variable),size=0.5) +
+#   facet_grid(variable~., scales="free_y") + 
+#   theme_bw()+ xlab("Time")+ylab("")+
+#   scale_colour_discrete(guide="none")
+# 
+# ggsave("../../pCloud Sync/exp168_AWIPEV-CO2/fb_figures/pCO2/Bad_period/several_pco2_parameters.png",several_pco2_parameters, height= 108,width = 24, units="cm")
