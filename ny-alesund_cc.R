@@ -537,7 +537,7 @@ if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
 #   dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
 #   dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0, digitsAfterDecimal = 5) %>%
 #   dyRangeSelector(height = 30)
-# 
+
 # # Bad period for pCO2 (N°4) - look at period 5 - 6
 # tmp <- data_hour %>%
 #   dplyr::mutate(PeriodDeplpCO2 = ifelse(datetime >= "2015-07-23 00:00:00" & datetime <= "2016-02-23 22:00:00", 1, 
