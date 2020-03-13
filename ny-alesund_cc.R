@@ -70,6 +70,12 @@ if(agg_time=="MINUTE"){
 code <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate,"&endDate=",enddate,"&format=text/tab-separated-values",aggregate_string,
                "&sensors=station:svluwobs:fb_731101:sbe45_awi_0403:salinity",
                "&sensors=station:svluwobs:fb_731101:sbe45_awi_0403:temperature",
+               "&sensors=station:svluwobs:svluw2:ctd_183:conductivity_awi_01:salinity", 
+               "&sensors=station:svluwobs:svluw2:ctd_181:conductivity_awi_02:salinity", 
+               "&sensors=station:svluwobs:svluw2:ctd_578:conductivity_awi_03:salinity",
+               "&sensors=station:svluwobs:svluw2:ctd_964:conductivity_awi_04:salinity",
+               "&sensors=station:svluwobs:svluw2:ctd_awi_964:salinity_004",
+               "&sensors=station:svluwobs:svluw2:ctd_103:conductivity_awi_01:salinity",
                "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:ph",
                "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:total_alcalinity",
                "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:invalid_salinity",
@@ -121,9 +127,9 @@ code <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdat
                )
 
 data <- data.table::fread(code, encoding = "UTF-8", showProgress	= TRUE)
-colnames(data) <- c("datetime", "Salinity", "Temperature", "pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317",  "InvAT_0317",  "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215",  "InvAT_1215","Temp_SBE38", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "PCO2_Corr_0215", "PCO2_Corr_Flush_0215","PCO2_Corr_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "PCO2_Corr_0515", "PCO2_Corr_Flush_0515","PCO2_Corr_Zero_0515", "HW_pH1", "HW_Temperature1" )
+colnames(data) <- c("datetime", "sal_fb", "temp_fb", "sal_insi_183", "sal_insi_181", "sal_insi_578", "sal_insi_964", "sal_insi_964b","sal_insi_103", "pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317",  "InvAT_0317",  "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215",  "InvAT_1215","Temp_SBE38", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "PCO2_Corr_0215", "PCO2_Corr_Flush_0215","PCO2_Corr_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "PCO2_Corr_0515", "PCO2_Corr_Flush_0515","PCO2_Corr_Zero_0515", "HW_pH1", "HW_Temperature1" )
 data$datetime <- ymd_hms(data$datetime)
-
+data2 <- data
 # Create instrument column as flag
 data <- data %>%
   dplyr::mutate( pco2_inst = ifelse(datetime >= "2015-07-19 00:00:00" & datetime <= "2016-02-23 12:00:00", "0215", 
@@ -150,6 +156,22 @@ data <- data %>%
 #       cat("Number of datarows downloaded from ",startdate," to ",enddate,": ",datarows,sep="","\n","\n")
 #      }
 
+########### Binding different insitu salinity in one column ########### 
+data <- data %>%
+  dplyr::mutate(sal_insi = ifelse(!is.na(sal_insi_183), sal_insi_183,
+                           ifelse(!is.na(sal_insi_181), sal_insi_181,
+                           ifelse(!is.na(sal_insi_578), sal_insi_578, 
+                            ifelse(!is.na(sal_insi_964b), sal_insi_964b,
+                            ifelse(!is.na(sal_insi_103), sal_insi_103, 
+                          ifelse(!is.na(sal_insi_964), sal_insi_964,NA)))))))
+
+########### Binding sal_fb INTO sal_insitu if we get gaps in sal_insitu = czll this new column = sal ########### 
+data <- data %>%
+  dplyr::mutate(sal = ifelse(!is.na(sal_insi), sal_insi, sal_fb))
+
+#data <- data%>%
+      #  dplyr::filter(sal > 28)
+                
  ########### Correction pCO2 Contros ########### 
 
 # Bind different pCO2 sensors (column with S/N) in the same column (without S/N): 0215 + 0515
@@ -345,8 +367,10 @@ data <- data %>%
 data <- data %>%     
    dplyr::mutate(PCO2_Corr_filtered= despike(data$PCO2_Corr, reference= "median", n=0.5, k=121, replace="NA"),
                  PCO2_corr_contros_filtered= despike(data$PCO2_corr_contros, reference= "median", n=1.8, k=155, replace="NA"),
-                 Salinity_filtered= despike(data$Salinity, reference= "median", n=1, k=65, replace="NA"),
-                 Temperature_filtered= despike(data$Temperature, reference= "median", n=1, k=65, replace="NA"),
+                 sal_filtered= despike(data$sal, reference= "median", n=1, k=65, replace="NA"),
+                 sal_fb_filtered= despike(data$sal_fb, reference= "median", n=1, k=65, replace="NA"),
+                 sal_insi_filtered= despike(data$sal_insi, reference= "median", n=1, k=65, replace="NA"),
+                 temp_fb_filtered= despike(data$temp_fb, reference= "median", n=1, k=65, replace="NA"),
                  AT_filtered= despike(data$AT, reference= "median", n=0.5, k=121, replace="NA"),
                  phINT_filtered= despike(data$phINT, reference= "median", n=8, k=241, replace="NA"),
                  phEXT_filtered= despike(data$phEXT, reference= "median", n=8, k=241, replace="NA"),
@@ -438,8 +462,10 @@ selected_data_minute <- data  %>%
                    PCO2_Corr_filtered,
                    PCO2_corr_contros_filtered,
                    PeriodDeplpCO2, 
-                   Salinity_filtered,
-                   Temperature_filtered,
+                   sal_filtered,
+                   sal_fb_filtered,
+                   sal_insi_filtered,
+                   temp_fb_filtered,
                    Temp_SBE38_filtered,
                    HW_Temperature1_filtered,
                    HW_pH1_filtered,
@@ -475,8 +501,10 @@ selected_data_minute$seafet_inst <- as.numeric(selected_data_minute$seafet_inst)
 
 selected_data_hour <- selected_data_minute%>%
   dplyr::group_by( date, hour) %>%
-  dplyr::summarise(Salinity_filtered = mean(Salinity_filtered, na.rm = TRUE),
-                   Temperature_filtered = mean(Temperature_filtered, na.rm = TRUE),
+  dplyr::summarise(sal_filtered = mean(sal_filtered, na.rm = TRUE),
+                   sal_insi_filtered = mean(sal_insi_filtered, na.rm = TRUE),
+                   sal_fb_filtered = mean(sal_fb_filtered, na.rm = TRUE),
+                   temp_fb_filtered = mean(temp_fb_filtered, na.rm = TRUE),
                    Temp_SBE38_filtered= mean(Temp_SBE38_filtered, na.rm = TRUE),
                    PCO2_Corr_filtered = mean(PCO2_Corr_filtered, na.rm = TRUE),
                    PeriodDeplpCO2 = mean(PeriodDeplpCO2, na.rm = TRUE),
@@ -524,19 +552,19 @@ if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
 
 
 # PLOT TEST
-# at_contros_cleaned_xts <- dplyr::select(d_hour,datetime,PCO2_Corr_filtered, PCO2_corr_contros_filtered)
-# at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = data_hour$datetime)
-# dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
-# #dySeries("Sproct",  label = "Sproct", color = "red", strokeWidth = 0, pointSize=2) %>%
-#   #dySeries("Sprim2beamZ_interp", label="Sprim2beamZ_interp", color = "black", strokeWidth = 0, pointSize=2) %>%
-# dySeries( "PCO2_corr_contros_filtered", label = "PCO2_corr_contros_filtered",  color = "blue", strokeWidth = 0, pointSize=2) %>%
-#   dySeries("PCO2_Corr_filtered", label = " PCO2_Corr_filtered",color = "green", strokeWidth = 0, pointSize=2) %>%
-#   #dySeries("Sprim2beamZ_interp", label = "Sprim2beamZ_interp",color =" grey", strokeWidth = 0, pointSize=1) %>%
-#  #dyAxis("y",valueRange = c(-2, 2)) %>%
-#   dyLimit(0,color = "black", strokePattern ="dashed") %>%
-#   dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
-#   dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0, digitsAfterDecimal = 5) %>%
-#   dyRangeSelector(height = 30)
+at_contros_cleaned_xts <- dplyr::select(d_hour,datetime,sal_insi_filtered, sal_fb_filtered, sal_filtered )
+at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = d_hour$datetime)
+dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
+#dySeries("Sproct",  label = "Sproct", color = "red", strokeWidth = 0, pointSize=2) %>%
+  dySeries("sal_filtered", label="sal_filtered", color = "black", strokeWidth = 0, pointSize=4) %>%
+dySeries( "sal_fb_filtered", label = "sal_fb_filtered",  color = "red", strokeWidth = 0, pointSize=2) %>%
+  dySeries("sal_insi_filtered", label = " sal_insi_filtered",color = "green", strokeWidth = 0, pointSize=0.5) %>%
+  #dySeries("Sprim2beamZ_interp", label = "Sprim2beamZ_interp",color =" grey", strokeWidth = 0, pointSize=1) %>%
+ #dyAxis("y",valueRange = c(-2, 2)) %>%
+  dyLimit(0,color = "black", strokePattern ="dashed") %>%
+  dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
+  dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0, digitsAfterDecimal = 5) %>%
+  dyRangeSelector(height = 30)
 
 # # Bad period for pCO2 (N°4) - look at period 5 - 6
 # tmp <- data_hour %>%
