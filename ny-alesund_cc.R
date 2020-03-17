@@ -168,7 +168,7 @@ data <- data %>%
 
 ########### Binding sal_fb INTO sal_insitu if we get gaps in sal_insitu = czll this new column = sal ########### 
 data <- data %>%
-  dplyr::mutate(sal = ifelse(!is.na(sal_insitu), sal_insitu, sal_fb))
+  dplyr::mutate(sal = ifelse(!is.na(sal_fb), sal_fb, sal_insitu))
 
 #data <- data%>%
       #  dplyr::filter(sal > 28)
@@ -553,19 +553,19 @@ if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
 
 
 # # PLOT TEST
-# at_contros_cleaned_xts <- dplyr::select(d_hour,datetime,sal_insitu_filtered, sal_fb_filtered, sal_filtered )
-# at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = d_hour$datetime)
-# dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
-# #dySeries("Sproct",  label = "Sproct", color = "red", strokeWidth = 0, pointSize=2) %>%
-#   dySeries("sal_filtered", label="sal_filtered", color = "black", strokeWidth = 0, pointSize=4) %>%
-# dySeries( "sal_fb_filtered", label = "sal_fb_filtered",  color = "red", strokeWidth = 0, pointSize=2) %>%
-#   dySeries("sal_insitu_filtered", label = " sal_insitu_filtered",color = "green", strokeWidth = 0, pointSize=0.5) %>%
-#   #dySeries("Sprim2beamZ_interp", label = "Sprim2beamZ_interp",color =" grey", strokeWidth = 0, pointSize=1) %>%
-#  #dyAxis("y",valueRange = c(-2, 2)) %>%
-#   dyLimit(0,color = "black", strokePattern ="dashed") %>%
-#   dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
-#   dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0, digitsAfterDecimal = 5) %>%
-#   dyRangeSelector(height = 30)
+at_contros_cleaned_xts <- dplyr::select(d_hour,datetime,sal_insitu_filtered, sal_fb_filtered, sal_filtered )
+at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = d_hour$datetime)
+dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
+#dySeries("Sproct",  label = "Sproct", color = "red", strokeWidth = 0, pointSize=2) %>%
+  dySeries("sal_filtered", label="sal_filtered", color = "black", strokeWidth = 0, pointSize=4) %>%
+dySeries( "sal_fb_filtered", label = "sal_fb_filtered",  color = "red", strokeWidth = 0, pointSize=2) %>%
+  dySeries("sal_insitu_filtered", label = " sal_insitu_filtered",color = "green", strokeWidth = 0, pointSize=0.5) %>%
+  #dySeries("Sprim2beamZ_interp", label = "Sprim2beamZ_interp",color =" grey", strokeWidth = 0, pointSize=1) %>%
+ #dyAxis("y",valueRange = c(-2, 2)) %>%
+  dyLimit(0,color = "black", strokePattern ="dashed") %>%
+  dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
+  dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0, digitsAfterDecimal = 5) %>%
+  dyRangeSelector(height = 30)
 
 # # Bad period for pCO2 (N°4) - look at period 5 - 6
 # tmp <- data_hour %>%
