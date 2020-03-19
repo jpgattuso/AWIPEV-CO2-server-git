@@ -77,6 +77,12 @@ code <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdat
                "&sensors=station:svluwobs:svluw2:ctd_964:conductivity_awi_04:salinity",
                "&sensors=station:svluwobs:svluw2:ctd_awi_964:salinity_004",
                "&sensors=station:svluwobs:svluw2:ctd_103:conductivity_awi_01:salinity",
+               "&sensors=station:svluwobs:svluw2:ctd_103:pressure_awi_01:pressure",
+               "&sensors=station:svluwobs:svluw2:ctd_181:pressure_awi_02:pressure",
+               "&sensors=station:svluwobs:svluw2:ctd_183:pressure_awi_01:pressure",
+               "&sensors=station:svluwobs:svluw2:ctd_578:pressure_awi_03:depth",
+               "&sensors=station:svluwobs:svluw2:ctd_964:pressure_awi_04:depth",
+               "&sensors=station:svluwobs:svluw2:ctd_awi_964:pressure_002",
                "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:ph",
                "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:total_alcalinity",
                "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:invalid_salinity",
@@ -128,7 +134,7 @@ code <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdat
                )
 
 data <- data.table::fread(code, encoding = "UTF-8", showProgress	= TRUE)
-colnames(data) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317",  "InvAT_0317",  "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215",  "InvAT_1215","Temp_SBE38", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "PCO2_Corr_0215", "PCO2_Corr_Flush_0215","PCO2_Corr_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "PCO2_Corr_0515", "PCO2_Corr_Flush_0515","PCO2_Corr_Zero_0515", "HW_pH1", "HW_Temperature1" )
+colnames(data) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317",  "InvAT_0317",  "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215",  "InvAT_1215","Temp_SBE38", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "PCO2_Corr_0215", "PCO2_Corr_Flush_0215","PCO2_Corr_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "PCO2_Corr_0515", "PCO2_Corr_Flush_0515","PCO2_Corr_Zero_0515", "HW_pH1", "HW_Temperature1" )
 data$datetime <- ymd_hms(data$datetime)
 data2 <- data
 # Create instrument column as flag
@@ -165,6 +171,14 @@ data <- data %>%
                             ifelse(!is.na(sal_insitu_964b), sal_insitu_964b,
                             ifelse(!is.na(sal_insitu_103), sal_insitu_103, 
                           ifelse(!is.na(sal_insitu_964), sal_insitu_964,NA)))))))
+########### Binding different insitu pressure in one column ########### 
+data <- data %>%
+  dplyr::mutate(pressure_insitu = ifelse(!is.na(pressure_insitu_183), pressure_insitu_183,
+                                  ifelse(!is.na(pressure_insitu_181), pressure_insitu_181,
+                                  ifelse(!is.na(pressure_insitu_578), pressure_insitu_578, 
+                                  ifelse(!is.na(pressure_insitu_964b), pressure_insitu_964b,
+                                  ifelse(!is.na(pressure_insitu_103), pressure_insitu_103, 
+                                  ifelse(!is.na(pressure_insitu_964), pressure_insitu_964,NA)))))))
 
 ########### Binding sal_fb INTO sal_insitu if we get gaps in sal_insitu = czll this new column = sal ########### 
 data <- data %>%
@@ -378,6 +392,7 @@ data <- data %>%
                  HW_pH1_filtered= despike(data$HW_pH1, reference= "median", n=8, k=241, replace="NA"),
                  HW_Temperature1_filtered= despike(data$HW_Temperature1, reference= "median", n=1, k=65, replace="NA"),
                  Temp_SBE38_filtered= despike(data$Temp_SBE38, reference= "median", n=0.5, k=65, replace="NA"),
+                 pressure_insitu_filtered= despike(data$pressure_insitu, reference= "median", n=1, k=65, replace="NA"),
                  date = as.Date(data$datetime),
                  hour = hour(data$datetime)
   )
@@ -462,7 +477,8 @@ selected_data_minute <- data  %>%
     dplyr::select( datetime,
                    PCO2_Corr_filtered,
                    PCO2_corr_contros_filtered,
-                   PeriodDeplpCO2, 
+                   PeriodDeplpCO2,
+                   pressure_insitu_filtered,
                    sal_filtered,
                    sal_fb_filtered,
                    sal_insitu_filtered,
@@ -502,7 +518,8 @@ selected_data_minute$seafet_inst <- as.numeric(selected_data_minute$seafet_inst)
 
 selected_data_hour <- selected_data_minute%>%
   dplyr::group_by( date, hour) %>%
-  dplyr::summarise(sal_filtered = mean(sal_filtered, na.rm = TRUE),
+  dplyr::summarise(pressure_insitu_filtered = mean(pressure_insitu_filtered, na.rm = TRUE),
+                   sal_filtered = mean(sal_filtered, na.rm = TRUE),
                    sal_insitu_filtered = mean(sal_insitu_filtered, na.rm = TRUE),
                    sal_fb_filtered = mean(sal_fb_filtered, na.rm = TRUE),
                    temp_fb_filtered = mean(temp_fb_filtered, na.rm = TRUE),
@@ -553,13 +570,13 @@ if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
 
 
 # # PLOT TEST
-at_contros_cleaned_xts <- dplyr::select(d_hour,datetime,sal_insitu_filtered, sal_fb_filtered, sal_filtered )
+at_contros_cleaned_xts <- dplyr::select(d_hour,datetime,pressure_insitu_filtered )
 at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = d_hour$datetime)
 dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
 #dySeries("Sproct",  label = "Sproct", color = "red", strokeWidth = 0, pointSize=2) %>%
-  dySeries("sal_filtered", label="sal_filtered", color = "black", strokeWidth = 0, pointSize=4) %>%
-dySeries( "sal_fb_filtered", label = "sal_fb_filtered",  color = "red", strokeWidth = 0, pointSize=2) %>%
-  dySeries("sal_insitu_filtered", label = " sal_insitu_filtered",color = "green", strokeWidth = 0, pointSize=0.5) %>%
+  dySeries("pressure_insitu_filtered", label="pressure_insitu_filtered", color = "black", strokeWidth = 0, pointSize=4) %>%
+#dySeries( "sal_fb_filtered", label = "sal_fb_filtered",  color = "red", strokeWidth = 0, pointSize=2) %>%
+ # dySeries("sal_insitu_filtered", label = " sal_insitu_filtered",color = "green", strokeWidth = 0, pointSize=0.5) %>%
   #dySeries("Sprim2beamZ_interp", label = "Sprim2beamZ_interp",color =" grey", strokeWidth = 0, pointSize=1) %>%
  #dyAxis("y",valueRange = c(-2, 2)) %>%
   dyLimit(0,color = "black", strokePattern ="dashed") %>%
