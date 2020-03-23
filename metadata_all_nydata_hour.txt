@@ -23,5 +23,5 @@
 #par_insitu_profile_filtered = in situ PAR 401 (profile) data, filtered by despike function and averaged by hour.  
 #par_insitu_10m_filtered = in situ PAR 493 data at 10 m depth, filtered by despike function and averaged by hour.  
 #par_air_filtered = in situ land PAR 495 (in the air) data, filtered by despike function and averaged by hour.           
-#turb_fb_filtered = Ferrybox tunidity data, filtered by despike function and averaged by hour.                     
+#turb_fb_filtered = Ferrybox turbidity data, filtered by despike function and averaged by hour.                     
 #temp_insitu_ctd_filtered = in situ temperature from different CTDs, filtered by despike function and averaged by hour (temp_insitu_183, temp_insitu_181, temp_insitu_578, temp_insitu_578, temp_insitu_964b, temp_insitu_103, temp_insitu_964).
