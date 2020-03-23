@@ -167,7 +167,7 @@ data <- data %>%
 
 ########### Binding different insitu salinity in one column ########### 
 data <- data %>%
-  dplyr::mutate(sal_insitu_ctds = ifelse(!is.na(sal_insitu_183), sal_insitu_183,
+  dplyr::mutate(sal_insitu_ctd = ifelse(!is.na(sal_insitu_183), sal_insitu_183,
                            ifelse(!is.na(sal_insitu_181), sal_insitu_181,
                            ifelse(!is.na(sal_insitu_578), sal_insitu_578, 
                             ifelse(!is.na(sal_insitu_964b), sal_insitu_964b,
@@ -176,7 +176,7 @@ data <- data %>%
 
 ########### Binding different insitu pressure in one column ########### 
 data <- data %>%
-  dplyr::mutate(pressure_insitu_ctds = ifelse(!is.na(pressure_insitu_183), pressure_insitu_183,
+  dplyr::mutate(pressure_insitu_ctd = ifelse(!is.na(pressure_insitu_183), pressure_insitu_183,
                                   ifelse(!is.na(pressure_insitu_181), pressure_insitu_181,
                                   ifelse(!is.na(pressure_insitu_578), pressure_insitu_578, 
                                   ifelse(!is.na(pressure_insitu_964b), pressure_insitu_964b,
@@ -184,7 +184,7 @@ data <- data %>%
                                   ifelse(!is.na(pressure_insitu_964), pressure_insitu_964,NA)))))))
 ########### Binding different insitu temp in one column ########### 
 data <- data %>%
-  dplyr::mutate(temp_insitu_ctds = ifelse(!is.na(temp_insitu_183), temp_insitu_183,
+  dplyr::mutate(temp_insitu_ctd = ifelse(!is.na(temp_insitu_183), temp_insitu_183,
                                         ifelse(!is.na(temp_insitu_181), temp_insitu_181,
                                         ifelse(!is.na(temp_insitu_578), temp_insitu_578, 
                                         ifelse(!is.na(temp_insitu_964b), temp_insitu_964b,
@@ -387,7 +387,7 @@ data <- data %>%
    dplyr::mutate(PCO2_Corr_filtered= despike(data$PCO2_Corr, reference= "median", n=0.5, k=121, replace="NA"),
                  PCO2_corr_contros_filtered= despike(data$PCO2_corr_contros, reference= "median", n=1.8, k=155, replace="NA"),
                  sal_fb_filtered= despike(data$sal_fb, reference= "median", n=1, k=65, replace="NA"),
-                 sal_insitu_ctds_filtered= despike(data$sal_insitu_ctds, reference= "median", n=1, k=65, replace="NA"),
+                 sal_insitu_ctd_filtered= despike(data$sal_insitu_ctd, reference= "median", n=1, k=65, replace="NA"),
                  temp_fb_filtered= despike(data$temp_fb, reference= "median", n=1, k=65, replace="NA"),
                  AT_filtered= despike(data$AT, reference= "median", n=0.5, k=121, replace="NA"),
                  phINT_filtered= despike(data$phINT, reference= "median", n=8, k=241, replace="NA"),
@@ -395,12 +395,12 @@ data <- data %>%
                  HW_pH1_filtered= despike(data$HW_pH1, reference= "median", n=8, k=241, replace="NA"),
                  HW_Temperature1_filtered= despike(data$HW_Temperature1, reference= "median", n=1, k=65, replace="NA"),
                  temp_insitu_11m_filtered= despike(data$temp_insitu_11m, reference= "median", n=0.5, k=65, replace="NA"),
-                 pressure_insitu_ctds_filtered= despike(data$pressure_insitu_ctds, reference= "median", n=1, k=65, replace="NA"),
+                 pressure_insitu_ctd_filtered= despike(data$pressure_insitu_ctd, reference= "median", n=1, k=65, replace="NA"),
                  par_insitu_profile_filtered= despike(data$par_insitu_profile, reference= "median", n=1, k=65, replace="NA"),
                  par_insitu_10m_filtered= despike(data$par_insitu_10m, reference= "median", n=1, k=65, replace="NA"),
                  par_air_filtered= despike(data$par_air, reference= "median", n=1, k=65, replace="NA"),
                  turb_fb_filtered= despike(data$turb_fb, reference= "median", n=1, k=65, replace="NA"),
-                 temp_insitu_ctds_filtered= despike(data$temp_insitu_ctds, reference= "median", n=1, k=65, replace="NA"),
+                 temp_insitu_ctd_filtered= despike(data$temp_insitu_ctd, reference= "median", n=1, k=65, replace="NA"),
                  date = as.Date(data$datetime),
                  hour = hour(data$datetime)
   )
@@ -486,9 +486,9 @@ selected_data_minute <- data  %>%
                    PCO2_Corr_filtered,
                    PCO2_corr_contros_filtered,
                    PeriodDeplpCO2,
-                   pressure_insitu_ctds_filtered,
+                   pressure_insitu_ctd_filtered,
                    sal_fb_filtered,
-                   sal_insitu_ctds_filtered,
+                   sal_insitu_ctd_filtered,
                    temp_fb_filtered,
                    temp_insitu_11m_filtered,
                    HW_Temperature1_filtered,
@@ -506,7 +506,7 @@ selected_data_minute <- data  %>%
                    par_insitu_10m_filtered,
                    par_air_filtered,
                    turb_fb_filtered,
-                   temp_insitu_ctds_filtered,
+                   temp_insitu_ctd_filtered,
                    date,
                    hour)
 
@@ -530,8 +530,8 @@ selected_data_minute$seafet_inst <- as.numeric(selected_data_minute$seafet_inst)
 
 selected_data_hour <- selected_data_minute%>%
   dplyr::group_by( date, hour) %>%
-  dplyr::summarise(pressure_insitu_ctds_filtered = mean(pressure_insitu_ctds_filtered, na.rm = TRUE),
-                   sal_insitu_ctds_filtered = mean(sal_insitu_ctds_filtered, na.rm = TRUE),
+  dplyr::summarise(pressure_insitu_ctd_filtered = mean(pressure_insitu_ctd_filtered, na.rm = TRUE),
+                   sal_insitu_ctd_filtered = mean(sal_insitu_ctd_filtered, na.rm = TRUE),
                    sal_fb_filtered = mean(sal_fb_filtered, na.rm = TRUE),
                    temp_fb_filtered = mean(temp_fb_filtered, na.rm = TRUE),
                    temp_insitu_11m_filtered= mean(temp_insitu_11m_filtered, na.rm = TRUE),
@@ -553,7 +553,7 @@ selected_data_hour <- selected_data_minute%>%
                    par_insitu_10m_filtered = mean(par_insitu_10m_filtered, na.rm = TRUE),
                    par_air_filtered = mean(par_air_filtered, na.rm = TRUE),
                    turb_fb_filtered = mean(turb_fb_filtered, na.rm = TRUE),
-                   temp_insitu_ctds_filtered= mean(temp_insitu_ctds_filtered, na.rm = TRUE)) %>%
+                   temp_insitu_ctd_filtered= mean(temp_insitu_ctd_filtered, na.rm = TRUE)) %>%
   dplyr::mutate(datetime = ymd_h(paste(date, hour, sep=" ", tz = "UTC"))) %>%
   dplyr::ungroup() %>% # this is to be able to perform the following changes
   dplyr::select(datetime, everything()) %>%
@@ -586,20 +586,20 @@ if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
 
 
 # # PLOT TEST
-at_contros_cleaned_xts <- dplyr::select(d_hour,datetime,sal_insitu_ctds_filtered )
-at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = d_hour$datetime)
-dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="pco2") %>%
-#dySeries("Sproct",  label = "Sproct", color = "red", strokeWidth = 0, pointSize=2) %>%
-  dySeries("sal_insitu_ctds_filtered", label="sal_insitu_ctds_filtered", color = "black", strokeWidth = 0, pointSize=4) %>%
-#dySeries( "sal_fb_filtered", label = "sal_fb_filtered",  color = "red", strokeWidth = 0, pointSize=2) %>%
- # dySeries("sal_insitu_filtered", label = " sal_insitu_filtered",color = "green", strokeWidth = 0, pointSize=0.5) %>%
-  #dySeries("Sprim2beamZ_interp", label = "Sprim2beamZ_interp",color =" grey", strokeWidth = 0, pointSize=1) %>%
- #dyAxis("y",valueRange = c(-2, 2)) %>%
-  dyLimit(0,color = "black", strokePattern ="dashed") %>%
-  dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
-  dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0, digitsAfterDecimal = 5) %>%
-  dyRangeSelector(height = 30)
-
+# at_contros_cleaned_xts <- dplyr::select(d_hour,datetime,temp_insitu_ctd_filtered )
+# at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = d_hour$datetime)
+# dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="PAR profile") %>%
+# #dySeries("Sproct",  label = "Sproct", color = "red", strokeWidth = 0, pointSize=2) %>%
+#   dySeries("temp_insitu_ctd_filtered", label="PAR profile", color = "black", strokeWidth = 0, pointSize=4) %>%
+# #dySeries( "sal_fb_filtered", label = "sal_fb_filtered",  color = "red", strokeWidth = 0, pointSize=2) %>%
+#  # dySeries("sal_insitu_filtered", label = " sal_insitu_filtered",color = "green", strokeWidth = 0, pointSize=0.5) %>%
+#   #dySeries("Sprim2beamZ_interp", label = "Sprim2beamZ_interp",color =" grey", strokeWidth = 0, pointSize=1) %>%
+#  #dyAxis("y",valueRange = c(-3, 8)) %>%
+#   dyLimit(0,color = "black", strokePattern ="dashed") %>%
+#   dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
+#   dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0, digitsAfterDecimal = 5) %>%
+#   dyRangeSelector(height = 30)
+#colnames(d_hour)
 # # Bad period for pCO2 (N°4) - look at period 5 - 6
 # tmp <- data_hour %>%
 #   dplyr::mutate(PeriodDeplpCO2 = ifelse(datetime >= "2015-07-23 00:00:00" & datetime <= "2016-02-23 22:00:00", 1, 
