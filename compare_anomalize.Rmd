@@ -1,0 +1,209 @@
+---
+title: "anomalize"
+author: "samir"
+date: '`r format(Sys.Date(), "%d %B %Y")`'
+output:
+  rmarkdown::html_document:
+    theme: paper
+    number_sections: false
+---
+
+```{r setup, include=FALSE}
+
+library("dplyr")
+library("plyr")
+library("lubridate")
+library(oce)
+library(ggplot2)
+library(dygraphs)
+library(xts)
+library("stringr")
+library(data.table)
+library(lubridate) 
+library(curl)
+library(readxl)
+if (!require("data.table")) install.packages("data.table")
+library(data.table)
+if (!require("tsibble")) install.packages("tsibble")
+library(tsibble)
+if (!require("plotly")) install.packages("plotly")
+library(plotly)
+if (!require("htmlwidgets")) install.packages("htmlwidgets")
+library(htmlwidgets)
+
+if (Sys.getenv("LOGNAME") == "gattuso") path = "../../pCloud\ Sync/Documents/experiments/exp168_AWIPEV-CO2/fb_data/compare_anomalize/"
+if (Sys.getenv("LOGNAME") == "samir") path = "../../pCloud\ Sync/exp168_AWIPEV-CO2/fb_data/compare_anomalize/"
+
+# this dataset is from ny-alesund_2020-04-01 JUST BEFORE anomalize and despike.
+
+data <- readRDS( file= paste0(path, "2016_data_compare_anomalize.rds"))
+```
+# {.tabset .tabset-fade .tabset-pills}
+
+## Introduction
+-  Comparing "Anomalize" and "Despike" using 2016 pCO2 data.
+
+
+```{r anomalize, include=FALSE}
+#### Test anomalize
+
+# approx pour remplacer les na
+data <- data %>%
+  dplyr::filter(datetime > "2016-02-29 01:30:00")
+
+data <- as_tibble(data)%>%
+  dplyr::select(datetime, PCO2_corr_contros)%>%
+  dplyr::mutate(PCO2_corr_contros_approx = na.approx(PCO2_corr_contros, na.rm = TRUE , rule=2), 
+              PCO2_corr_contros_spline = na.spline(PCO2_corr_contros, na.rm = TRUE ))
+
+# # identify outliers frequency = 1 hour, trend = 12 hour
+# data_ano1 <- data %>%
+#   dplyr::select(datetime, PCO2_corr_contros_approx) %>%
+#   dplyr::filter(datetime > "2016-02-28") %>% #remove NAs the first 2 months
+#   anomalize::time_decompose(PCO2_corr_contros_approx, frequency = "1 hour", trend = "12 hour") %>%
+#   anomalize::anomalize(remainder, alpha = 0.05, max_anoms = 0.2) %>%
+#   anomalize::time_recompose()
+# fig_ano1 <- anomalize::plot_anomalies(data_ano1, time_recomposed = TRUE, alpha_dots = 0.25) +
+#   ggtitle("frequency = 1 hour, trend = 12 hour")
+# ggsave(filename = "fig_ano1.png", fig_ano1)
+
+# identify outliers frequency = 1 day, trend = 12 month
+data_ano2 <- data %>%
+  dplyr::select(datetime, PCO2_corr_contros_approx) %>%
+  dplyr::filter(datetime > "2016-02-28") %>% #remove NAs the first 2 months
+  anomalize::time_decompose(PCO2_corr_contros_approx, frequency = "1 day", trend = "1 month") %>%
+  anomalize::anomalize(remainder, alpha = 0.05, max_anoms = 0.2) %>%
+  anomalize::time_recompose()
+#fig_ano2 <- anomalize::plot_anomalies(data_ano2, time_recomposed = TRUE, alpha_dots = 0.25) +
+#  ggtitle("frequency = 1 day, trend = 1 month")
+#ggsave(filename = "fig_ano2.png", fig_ano2)
+
+# eliminate data added with approx as well as anomalies
+data_ano2 <- data_ano2 %>%
+  dplyr::mutate(observed = ifelse(anomaly == "Yes", NA, observed)) # remove anomalies
+# bind column "observed" from data_ano2 TO data
+data <- left_join(data, data_ano2%>%dplyr::select(datetime, observed), by="datetime")
+data <- data %>%
+ dplyr::mutate(PCO2_clean = ifelse(PCO2_corr_contros == "NA", NA, observed)) # remove data added by approx
+  
+#### Anomalize 2nd time
+data <- data%>%
+  dplyr::mutate(PCO2_clean_approx = na.approx(PCO2_clean, na.rm = TRUE , rule=2))
+  #dplyr::mutate(PCO2_clean_approx = na.spline(PCO2_clean, na.rm = TRUE ))
+
+
+data_ano3 <- data %>%
+  dplyr::select(datetime, PCO2_clean_approx) %>%
+  anomalize::time_decompose(PCO2_clean_approx, frequency = "1 hour", trend = "1 day") %>%
+  anomalize::anomalize(remainder, alpha = 0.05, max_anoms = 0.2) %>%
+  anomalize::time_recompose()
+
+data_ano3 <- data_ano3 %>%
+  dplyr::mutate(observed_PCO2_clean = ifelse(anomaly == "Yes", NA, observed)) # remove anomalies
+data <- left_join(data, data_ano3%>%dplyr::select(datetime, observed_PCO2_clean), by="datetime")
+data <- data %>%
+  dplyr::mutate(PCO2_clean_2 = ifelse(PCO2_corr_contros == "NA", NA, observed_PCO2_clean)) # remove data added by approx
+
+```
+
+```{r despike, include=FALSE}
+data <- data %>%     
+   dplyr::mutate(#PCO2_Corr_filtered= despike(data$PCO2_Corr, reference= "median", n=0.5, k=121, replace="NA"),
+                 PCO2_corr_contros_filtered= despike(data$PCO2_corr_contros, reference= "median", n=1.8, k=155, replace="NA"),
+                 PCO2_clean_filtered= despike(data$PCO2_clean, reference= "median", n=1.8, k=155, replace="NA"),
+                 PCO2_clean_2_filtered= despike(data$PCO2_clean_2, reference= "median", n=1.8, k=155, replace="NA"),
+                 #temp_fb_filtered= despike(data$temp_fb, reference= "median", n=1, k=65, replace="NA"),
+                 #AT_filtered= despike(data$AT, reference= "median", n=0.5, k=121, replace="NA"),
+                 #phINT_filtered= despike(data$phINT, reference= "median", n=8, k=241, replace="NA"),
+                 #phEXT_filtered= despike(data$phEXT, reference= "median", n=8, k=241, replace="NA"),
+                 #HW_pH1_filtered= despike(data$HW_pH1, reference= "median", n=8, k=241, replace="NA"),
+                 #HW_Temperature1_filtered= despike(data$HW_Temperature1, reference= "median", n=1, k=65, replace="NA"),
+                 #temp_insitu_11m_filtered= despike(data$temp_insitu_11m, reference= "median", n=0.5, k=65, replace="NA"),
+                 #pressure_insitu_ctd_filtered= despike(data$pressure_insitu_ctd, reference= "median", n=1, k=65, replace="NA"),
+                 #par_insitu_profile_filtered= despike(data$par_insitu_profile, reference= "median", n=1, k=65, replace="NA"),
+                 #par_insitu_10m_filtered= despike(data$par_insitu_10m, reference= "median", n=1, k=65, replace="NA"),
+                 #par_air_filtered= despike(data$par_air, reference= "median", n=1, k=65, replace="NA"),
+                 #turb_fb_filtered= despike(data$turb_fb, reference= "median", n=1, k=65, replace="NA"),
+                 #temp_insitu_ctd_filtered= despike(data$temp_insitu_ctd, reference= "median", n=1, k=65, replace="NA"),
+                 date = as.Date(data$datetime),
+                 hour = hour(data$datetime)
+  )
+
+```
+
+```{r hour format, include=FALSE}
+
+# use this to make test with PCO2_clean from anomalize
+selected_data_minute <- data # %>%
+  # dplyr::select( datetime,
+  #                PCO2_corr_contros_filtered,
+  #                PCO2_corr_contros_approx,
+  #                PCO2_corr_contros,
+  #                PCO2_clean,
+  #                observed,
+  #                date,
+  #                hour)
+
+# use this to make test with PCO2_clean from anomalize
+selected_data_hour <- as_tibble(selected_data_minute)%>%
+  dplyr::group_by( date, hour) %>%
+  dplyr::summarise(PCO2_corr_contros_filtered= mean(PCO2_corr_contros_filtered, na.rm = TRUE),
+                   PCO2_clean= mean(PCO2_clean, na.rm = TRUE),
+                   observed= mean(observed, na.rm = TRUE),
+                   PCO2_corr_contros_approx= mean(PCO2_corr_contros_approx, na.rm = TRUE),
+                   observed_PCO2_clean= mean(observed_PCO2_clean, na.rm = TRUE),
+                   PCO2_clean_approx= mean(PCO2_clean_approx, na.rm = TRUE),
+                   PCO2_corr_contros= mean(PCO2_corr_contros, na.rm = TRUE),
+                   PCO2_clean_2= mean(PCO2_clean_2, na.rm = TRUE),
+                  PCO2_clean_filtered= mean(PCO2_clean_filtered, na.rm = TRUE),
+                  PCO2_clean_2_filtered = mean(PCO2_clean_2_filtered, na.rm = TRUE)) %>%
+  dplyr::mutate(datetime = ymd_h(paste(date, hour, sep=" ", tz = "UTC"))) %>%
+  dplyr::ungroup() %>% # this is to be able to perform the following changes
+  dplyr::select(datetime, everything()) %>%
+  dplyr::select(-c( hour)) %>% # not needed in the shiny display
+  dplyr::arrange(desc(datetime))
+
+# HOUR format
+d_hour <- selected_data_hour
+
+```
+
+```{r plot format, , echo=FALSE, warning=FALSE, out.width= "100%"}
+at_contros_cleaned_xts <- dplyr::select(d_hour,datetime, PCO2_corr_contros_approx, PCO2_corr_contros , PCO2_clean,PCO2_clean_2, PCO2_clean_approx, PCO2_corr_contros_filtered, PCO2_clean_filtered,  PCO2_clean_2_filtered)
+at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = d_hour$datetime)
+
+dygraph(at_contros_cleaned_xts, group = "", main=" 2 anomalize : Frq 1 day - Trend 1 month  + Frq 1 hour - Trend 1 day", ylab="Ppco2") %>%
+dySeries("PCO2_corr_contros",  label = "PCO2_corr_contros", color = "black", strokeWidth = 0, pointSize=4) %>%
+  dySeries("PCO2_corr_contros_approx", label=" PCO2_corr_contros_approx", color = "blue", strokeWidth = 0, pointSize=2) %>%
+dySeries( "PCO2_clean", label = "PCO2_clean",  color = "red", strokeWidth = 0, pointSize=2) %>%
+  dySeries("PCO2_clean_2", label = " PCO2_clean_2",color = "green", strokeWidth = 0, pointSize=1) %>%
+  dySeries("PCO2_clean_approx", label = "PCO2_clean_approx",color =" orange", strokeWidth = 0, pointSize=1) %>%
+   
+   dySeries("PCO2_corr_contros_filtered", label = " despike n = 1.8 + k = 155",color = "pink", strokeWidth = 0, pointSize=1) %>%
+      dySeries("PCO2_clean_filtered", label = " PCO2_clean_despike ",color = "grey", strokeWidth = 0, pointSize=1) %>%
+    dySeries("PCO2_clean_2_filtered", label = " PCO2_clean_2_despike",color = "yellow", strokeWidth = 0, pointSize=1) %>%
+
+ #dyAxis("y",valueRange = c(-3, 8)) %>%
+  dyLimit(0,color = "black", strokePattern ="dashed") %>%
+  dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
+  dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0, digitsAfterDecimal = 5) %>%
+  dyRangeSelector(height = 30)
+
+
+
+## plot 2
+at_contros_cleaned_xts <- dplyr::select(d_hour,datetime, PCO2_corr_contros , PCO2_clean,PCO2_clean_2)
+at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = d_hour$datetime)
+
+dygraph(at_contros_cleaned_xts, group = "", main=" 2 anomalize : Frq 1 day - Trend 1 month  + Frq 1 hour - Trend 1 day", ylab="Ppco2") %>%
+dySeries("PCO2_corr_contros",  label = "PCO2_corr_contros", color = "black", strokeWidth = 0, pointSize=4) %>%
+dySeries( "PCO2_clean", label = "PCO2_clean",  color = "red", strokeWidth = 0, pointSize=2) %>%
+dySeries("PCO2_clean_2", label = " PCO2_clean_2",color = "green", strokeWidth = 0, pointSize=1) %>%
+ #dyAxis("y",valueRange = c(-3, 8)) %>%
+  dyLimit(0,color = "black", strokePattern ="dashed") %>%
+  dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
+  dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0, digitsAfterDecimal = 5) %>%
+  dyRangeSelector(height = 30)
+```
+
+
