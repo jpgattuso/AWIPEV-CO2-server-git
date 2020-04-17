@@ -184,7 +184,7 @@ Sys.setenv(TZ="UTC")
 #                )
 # 
 # data <- data.table::fread(code, encoding = "UTF-8", showProgress	= TRUE)
-# colnames(data) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317",  "InvAT_0317",  "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215",  "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "PCO2_Corr_0215", "PCO2_Corr_Flush_0215","PCO2_Corr_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "PCO2_Corr_0515", "PCO2_Corr_Flush_0515","PCO2_Corr_Zero_0515", "HW_pH1", "HW_Temperature1","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103" )
+# colnames(data) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317",  "InvAT_0317",  "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215",  "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215","pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515","pco2_raw_Zero_0515", "HW_pH1", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103" )
 # data$datetime <- ymd_hms(data$datetime)
 # 
 # data2 <- data # just a backup
@@ -258,12 +258,12 @@ Sys.setenv(TZ="UTC")
 #                              ifelse(pco2_inst == "0515", P_NDIR_0515,NA)),
 #                 T_Gas=       ifelse(pco2_inst == "0215", T_Gas_0215,
 #                              ifelse(pco2_inst == "0515", T_Gas_0515,NA)),
-#                 PCO2_Corr=   ifelse(pco2_inst == "0215", PCO2_Corr_0215,
-#                              ifelse(pco2_inst == "0515", PCO2_Corr_0515,NA)),
-#                 PCO2_Corr_Flush= ifelse(pco2_inst == "0215", PCO2_Corr_Flush_0215,
-#                                  ifelse(pco2_inst == "0515", PCO2_Corr_Flush_0515,NA)),
-#                 PCO2_Corr_Zero= ifelse(pco2_inst == "0215", PCO2_Corr_Zero_0215,
-#                                 ifelse(pco2_inst == "0515", PCO2_Corr_Zero_0515,NA)))
+#                 pco2_raw=   ifelse(pco2_inst == "0215", pco2_raw_0215,
+#                              ifelse(pco2_inst == "0515", pco2_raw_0515,NA)),
+#                 pco2_raw_Flush= ifelse(pco2_inst == "0215", pco2_raw_Flush_0215,
+#                                  ifelse(pco2_inst == "0515", pco2_raw_Flush_0515,NA)),
+#                 pco2_raw_Zero= ifelse(pco2_inst == "0215", pco2_raw_Zero_0215,
+#                                 ifelse(pco2_inst == "0515", pco2_raw_Zero_0515,NA)))
 # 
 #  # Data processing for pCO2 HydroC CO2 Contros in Ny-Alesund.
 #  # Documentation received by Steffen Assmann on the 2016-09-15/19 and 
@@ -367,12 +367,12 @@ Sys.setenv(TZ="UTC")
 #   dplyr::mutate(k2t = ifelse(!is.na(k2t), k2t, k2)) %>%
 #   dplyr::mutate(k3t = ifelse(!is.na(k3t), k3t, k3)) 
 # 
-# # Continue to calculate parameters and FINAL PCO2 CORRECTED (PCO2_corr_contros)
+# # Continue to calculate parameters and FINAL PCO2 CORRECTED (pco2_corr)
 # data <- data %>%
 #   dplyr::mutate(SprimDCt = Sprim2beam / Sprim2beamZ_interp,
 #                 Sproct  = F*(1-SprimDCt),
 #                 xco2wet = (k3t*Sproct^3 + k2t*Sproct^2 + k1t*Sproct)* (P0*(T_Gas + 273.15))/(T0 * P_NDIR),
-#                 PCO2_corr_contros = xco2wet * (P_In / 1013.25)
+#                 pco2_corr = xco2wet * (P_In / 1013.25)
 #   )
 
 tmp <- as_tibble(
@@ -400,14 +400,14 @@ data <- data %>%
 ## pCO2 
 # Argo Global Range Test. If QF = 4 replace value by NA
 # Removing outliers due to acid flush in the FB at 12:00 and 00:00 
-# PCO2_Corr = Raw data from the sensor
-# PCO2_corr_contros = Final corrected data from Contros "data processing document"
+# pco2_raw = Raw data from the sensor
+# pco2_corr = Final corrected data from Contros "data processing document"
 
 data <- data %>% 
   dplyr::mutate(
-    PCO2_Corr_qf = ifelse(
+    pco2_raw_qf = ifelse(
       State_Zero >= 1 | State_Flush >= 1 |
-        PCO2_Corr < 100 | PCO2_Corr > 450 |
+        pco2_raw < 100 | pco2_raw > 450 |
         Time >= "00:00:00" & Time <= "01:30:00" |
         Time >= "12:00:00" & Time <= "13:00:00" |
       datetime >= "2017-03-10 08:00:00" &
@@ -415,10 +415,10 @@ data <- data %>%
       4,
       1
     ),
-    PCO2_Corr = ifelse(PCO2_Corr_qf == 4 , NA, PCO2_Corr),
-    PCO2_corr_contros_qf = ifelse(
+    pco2_raw = ifelse(pco2_raw_qf == 4 , NA, pco2_raw),
+    pco2_corr_qf = ifelse(
       State_Zero >= 1 | State_Flush >= 1 |
-        PCO2_corr_contros < 100 | PCO2_corr_contros > 450 |
+        pco2_corr < 100 | pco2_corr > 450 |
         Time >= "00:00:00" & Time <= "01:30:00" |
         Time >= "12:00:00" & Time <= "13:00:00" |
       datetime >= "2017-03-10 08:00:00" &
@@ -426,19 +426,21 @@ data <- data %>%
       4,
       1
     ),
-    PCO2_corr_contros = ifelse(PCO2_corr_contros_qf == 4 , NA, PCO2_corr_contros)
+    pco2_corr = ifelse(pco2_corr_qf == 4 , NA, pco2_corr)
     )
 
 ## filter salinities above 28
-d_all <- d_all%>%
+data <- data %>%
   dplyr::mutate( sal_fb = ifelse(sal_fb < 28 | sal_fb > 36, NA, sal_fb),
                  sal_insitu_ctd = ifelse(sal_insitu_ctd < 28 | sal_fb > 36, NA, sal_insitu_ctd))
- d_all <- d_all%>%
+ data <- data %>%
   dplyr::mutate(sal_insitu_ctd = ifelse(datetime > "2019-12-26 00:00:00", NA, sal_insitu_ctd))
 
  ## filter temperatures above 10
-d_all <- d_all%>%
-  dplyr::mutate( temp_fb = ifelse(temp_fb > 10 | temp_fb < -2 , NA, temp_fb))
+data <- data %>%
+  dplyr::mutate( temp_dur = ifelse(temp_dur > 10 | temp_dur < -2 , NA, temp_dur))
+data <- data %>%
+  dplyr::mutate( temp_fb = ifelse(temp_dur > 10 | temp_dur < -2 , NA, temp_dur))
 
 ## seaFET
 data <- data %>%
@@ -463,7 +465,7 @@ One reads data from the NRT and then focus on pCO2:
         * n <- c(0.01, 0.1, 1, 2) # number of times sd
         * k <- c(5, 31, 121, 1441, $1440*4+1$, $1440*6+1$) # time window in min
 
-There are `r length(data$PCO2_corr_contros)` data in this 2016 file. `r sum(!is.na(data$PCO2_corr_contros))` are not NAs (the first 2 months or so have NAs). 
+There are `r length(data$pco2_corr)` data in this 2016 file. `r sum(!is.na(data$pco2_corr))` are not NAs (the first 2 months or so have NAs). 
 
 TO DO in RMD: 
 (ph seafet dans Rmd)
@@ -520,41 +522,41 @@ plot_despike <- function(data = res, var=var){ # car is the variable name, a tex
 
 d <- res %>%
   select(datetime, starts_with("n0.5")) %>%
-  pivot_longer(-datetime, names_to = "params", values_to = "pCO2") %>%
+  pivot_longer(-datetime, names_to = "params", values_to = var) %>%
   dplyr::mutate(params = factor(params)) %>%
   dplyr::mutate(params = factor(params, levels=levels(params)[c(4, 3, 1, 2, 5, 6)]))
 plt_n0.5 <- d %>%
   ggplot() +
-  geom_point(aes(x=datetime, y=pCO2, col=params), na.rm= TRUE, size=0.25) +
+  geom_point(aes(x=datetime, y=var, col=params), na.rm= TRUE, size=0.25) +
   facet_wrap(vars(params), ncol = 1) +
   theme_bw()
-ggsave(filename = paste0(var,"_plt_n0.5.png"), plt_n0.5, dpi=80)
+ggsave(filename = paste0(var,"_plt_n0.5.png"), plt_n0.5, dpi=150)
 print(plt_n0.5)
 
 d <- res %>%
   select(datetime, starts_with("n1")) %>%
-  pivot_longer(-datetime, names_to = "params", values_to = "pCO2") %>%
+  pivot_longer(-datetime, names_to = "params", values_to = var) %>%
   dplyr::mutate(params = factor(params)) %>%
   dplyr::mutate(params = factor(params, levels=levels(params)[c(4, 3, 1, 2, 5, 6)]))
 plt_n1 <- d %>%
   ggplot() +
-  geom_point(aes(x=datetime, y=pCO2, col=params), na.rm= TRUE, size=0.25) +
+  geom_point(aes(x=datetime, y=var, col=params), na.rm= TRUE, size=0.25) +
   facet_wrap(vars(params), ncol = 1) +
   theme_bw()
-ggsave(filename = paste0(var,"_plt_n1.png"), plt_n1, dpi=80)
+ggsave(filename = paste0(var,"_plt_n1.png"), plt_n1, dpi=150)
 print(plt_n1)
 
 d <- res %>%
   select(datetime, starts_with("n2")) %>%
-  pivot_longer(-datetime, names_to = "params", values_to = "pCO2") %>%
+  pivot_longer(-datetime, names_to = "params", values_to = var) %>%
   dplyr::mutate(params = factor(params)) %>%
   dplyr::mutate(params = factor(params, levels=levels(params)[c(4, 3, 1, 2, 5, 6)]))
 plt_n2 <- d %>%
   ggplot() +
-  geom_point(aes(x=datetime, y=pCO2, col=params), na.rm= TRUE, size=0.25) +
+  geom_point(aes(x=datetime, y=var, col=params), na.rm= TRUE, size=0.25) +
   facet_wrap(vars(params), ncol = 1) +
   theme_bw()
-ggsave(filename = paste0(var,"_plt_n2.png"), plt_n2, dpi=80)
+ggsave(filename = paste0(var,"_plt_n2.png"), plt_n2, dpi=150)
 print(plt_n2)
 }
 ```
@@ -571,6 +573,8 @@ d_hour <- d %>%
     n0.5k8641h = mean(n0.5k8641, na.rm = TRUE),
     n1k5761h = mean(n1k5761, na.rm = TRUE),
     n1k8641h = mean(n1k8641, na.rm = TRUE)
+    n2k5761h = mean(n2k5761, na.rm = TRUE),
+    n2k8641h = mean(n2k8641, na.rm = TRUE)
   )
 summary_d_hour <- summary(d_hour)
 return(list(d_hour=d_hour, summary_d_hour = summary_d_hour))
@@ -613,6 +617,21 @@ dygraph(d_hour_xts,
     strokeWidth = 0,
     pointSize = 2
   ) %>%
+  dySeries(
+    "n2k5761h",
+    label = "n2k5761h",
+    color = "green",
+    strokeWidth = 0,
+    pointSize = 2
+  ) %>%
+  dySeries(
+    "n2k8641h",
+    label = "n2k8641h",
+    color = "purple",
+    strokeWidth = 0,
+    pointSize = 2
+  ) %>%
+  dyAxis("y", valueRange = c(min(var), max(var))) %>%
   dyLimit(0, color = "black", strokePattern = "dashed") %>%
   dyHighlight(
     highlightCircleSize = 8,
@@ -635,11 +654,11 @@ dygraph(d_hour_xts,
 ## *p*CO~2~
 
 
-### PCO2_corr_contros
+### pco2_corr
 
 #### Cleaning 
-```{r clean PCO2_corr_contros, echo=FALSE, results = 'asis'}
-tmp <- clean(data$PCO2_corr_contros)
+```{r clean pco2_corr, echo=FALSE, results = 'asis'}
+tmp <- clean(data$pco2_corr)
 res <- tmp[[1]]
 nNAs <- tmp[[2]]
 knitr::kable(nNAs, caption = "NAs added by the despike treatment") %>%
@@ -647,13 +666,13 @@ knitr::kable(nNAs, caption = "NAs added by the despike treatment") %>%
 ``` 
 
 #### Plot despike 
-```{r plot despike PCO2_corr_contros, echo=FALSE, results = 'asis'}
-plot_despike(data = res, var = "data$PCO2_corr_contros")
+```{r plot despike pco2_corr, echo=FALSE, results = 'asis'}
+plot_despike(data = res, var = "data$pco2_corr")
 ``` 
 
 #### Hour format
-```{r hour format PCO2_corr_contros, include=FALSE}
-tmp <- agg_hour(data = res, var = "data$PCO2_corr_contros")
+```{r hour format pco2_corr, include=FALSE}
+tmp <- agg_hour(data = res, var = "data$pco2_corr")
 d_hour <- tmp[[1]]
 summary_d_hour <- tmp[[2]]
 knitr::kable(summary_d_hour, caption = "") %>%
@@ -661,8 +680,8 @@ knitr::kable(summary_d_hour, caption = "") %>%
 ```
 
 #### Dygraphs
-```{r dygraphs PCO2_corr_contros, , echo=FALSE, warning=FALSE, out.width= "100%"}
-dygraphs_despike(var="data$PCO2_corr_contros")
+```{r dygraphs pco2_corr, , echo=FALSE, warning=FALSE, out.width= "100%"}
+dygraphs_despike(var="data$pco2_corr")
 ```
 
 n0.5k5761	and n0.5k8641	remove a lot of data points (> 300,000), many of them seem legitimate. n1k5761	and n1k8641 remove much less data points (124000 to 134000) and therefore seem more appropriate. Although very subjective, it seems that n1k8641 cuts some spikes, which appears unnecessary. One settles for **n1k5761**.
@@ -736,7 +755,7 @@ One keeps **n1k8641** which adds less NAs and seems satisfactory.
 
 ### temp_fb
 
-#### Cleanning 
+#### Cleaning 
 ```{r clean temp_fb, echo=FALSE, results = 'asis'}
 tmp <- clean(data$temp_fb)
 res <- tmp[[1]]
@@ -764,11 +783,11 @@ knitr::kable(summary_d_hour, caption = "") %>%
 dygraphs_despike(var="data$temp_fb")
 ```
 
-### HW_Temperature1 (durafet)
+### temp_dur (durafet)
 
-#### Cleanning  
-```{r clean HW_Temperature1, echo=FALSE, results = 'asis'}
-tmp <- clean(data$HW_Temperature1)
+#### Cleaning  
+```{r clean temp_dur, echo=FALSE, results = 'asis'}
+tmp <- clean(data$temp_dur)
 res <- tmp[[1]]
 nNAs <- tmp[[2]]
 knitr::kable(nNAs, caption = "NAs added by the despike treatment") %>%
@@ -776,13 +795,13 @@ knitr::kable(nNAs, caption = "NAs added by the despike treatment") %>%
 ``` 
 
 #### Plot despike 
-```{r plot despike HW_Temperature1, echo=FALSE, results = 'asis'}
-plot_despike(data = res, var = "data$HW_Temperature1")
+```{r plot despike temp_dur, echo=FALSE, results = 'asis'}
+plot_despike(data = res, var = "data$temp_dur")
 ``` 
 
 #### Hour format
-```{r hour format HW_Temperature1, include=FALSE}
-tmp <- agg_hour(data = res, var = "data$HW_Temperature1")
+```{r hour format temp_dur, include=FALSE}
+tmp <- agg_hour(data = res, var = "data$temp_dur")
 d_hour <- tmp[[1]]
 summary_d_hour <- tmp[[2]]
 knitr::kable(summary_d_hour, caption = "") %>%
@@ -790,13 +809,13 @@ knitr::kable(summary_d_hour, caption = "") %>%
 ```
 
 #### Dygraphs
-```{r dygraphs HW_Temperature1, , echo=FALSE, warning=FALSE, out.width= "100%"}
-dygraphs_despike(var="data$HW_Temperature1")
+```{r dygraphs temp_dur, , echo=FALSE, warning=FALSE, out.width= "100%"}
+dygraphs_despike(var="data$temp_dur")
 ```
 
 ### temp_insitu_11m
 
-#### Cleanning 
+#### Cleaning 
 ```{r clean temp_insitu_11m, echo=FALSE, results = 'asis'}
 tmp <- clean(data$temp_insitu_11m)
 res <- tmp[[1]]
@@ -826,156 +845,156 @@ dygraphs_despike(var="data$temp_insitu_11m")
 
 ### temp_insitu_ctd
 
-#### Cleanning 
-```{r clean temp_insitu_ctd, echo=FALSE, results = 'asis'}
-tmp <- clean(data$temp_insitu_ctd)
-res <- tmp[[1]]
-nNAs <- tmp[[2]]
-knitr::kable(nNAs, caption = "NAs added by the despike treatment") %>%
-  kable_styling(bootstrap_options = "striped", full_width = F)
-``` 
+<!-- #### Cleanning  -->
+<!-- ```{r clean temp_insitu_ctd, echo=FALSE, results = 'asis'} -->
+<!-- tmp <- clean(data$temp_insitu_ctd) -->
+<!-- res <- tmp[[1]] -->
+<!-- nNAs <- tmp[[2]] -->
+<!-- knitr::kable(nNAs, caption = "NAs added by the despike treatment") %>% -->
+<!--   kable_styling(bootstrap_options = "striped", full_width = F) -->
+<!-- ```  -->
 
-#### Plot despike 
-```{r plot despike temp_insitu_ctd, echo=FALSE, results = 'asis'}
-plot_despike(data = res, var = "data$temp_insitu_ctd")
-``` 
+<!-- #### Plot despike  -->
+<!-- ```{r plot despike temp_insitu_ctd, echo=FALSE, results = 'asis'} -->
+<!-- plot_despike(data = res, var = "data$temp_insitu_ctd") -->
+<!-- ```  -->
 
-#### Hour format
-```{r hour format temp_insitu_ctd, include=FALSE}
-tmp <- agg_hour(data = res, var = "data$temp_insitu_ctd")
-d_hour <- tmp[[1]]
-summary_d_hour <- tmp[[2]]
-knitr::kable(summary_d_hour, caption = "") %>%
-  kable_styling(bootstrap_options = "striped", full_width = F)
-```
+<!-- #### Hour format -->
+<!-- ```{r hour format temp_insitu_ctd, include=FALSE} -->
+<!-- tmp <- agg_hour(data = res, var = "data$temp_insitu_ctd") -->
+<!-- d_hour <- tmp[[1]] -->
+<!-- summary_d_hour <- tmp[[2]] -->
+<!-- knitr::kable(summary_d_hour, caption = "") %>% -->
+<!--   kable_styling(bootstrap_options = "striped", full_width = F) -->
+<!-- ``` -->
 
-#### Dygraphs
-```{r dygraphs temp_insitu_ctd, , echo=FALSE, warning=FALSE, out.width= "100%"}
-dygraphs_despike(var="data$temp_insitu_ctd")
-```
+<!-- #### Dygraphs -->
+<!-- ```{r dygraphs temp_insitu_ctd, , echo=FALSE, warning=FALSE, out.width= "100%"} -->
+<!-- dygraphs_despike(var="data$temp_insitu_ctd") -->
+<!-- ``` -->
 
 ## PAR
 
 ### par_insitu_profile
 
-#### Cleanning 
-```{r clean par_insitu_profile, echo=FALSE, results = 'asis'}
-tmp <- clean(data$par_insitu_profile)
-res <- tmp[[1]]
-nNAs <- tmp[[2]]
-knitr::kable(nNAs, caption = "NAs added by the despike treatment") %>%
-  kable_styling(bootstrap_options = "striped", full_width = F)
-``` 
+<!-- #### Cleanning  -->
+<!-- ```{r clean par_insitu_profile, echo=FALSE, results = 'asis'} -->
+<!-- tmp <- clean(data$par_insitu_profile) -->
+<!-- res <- tmp[[1]] -->
+<!-- nNAs <- tmp[[2]] -->
+<!-- knitr::kable(nNAs, caption = "NAs added by the despike treatment") %>% -->
+<!--   kable_styling(bootstrap_options = "striped", full_width = F) -->
+<!-- ```  -->
 
-#### Plot despike 
-```{r plot despike par_insitu_profile, echo=FALSE, results = 'asis'}
-plot_despike(data = res, var = "data$par_insitu_profile")
-``` 
+<!-- #### Plot despike  -->
+<!-- ```{r plot despike par_insitu_profile, echo=FALSE, results = 'asis'} -->
+<!-- plot_despike(data = res, var = "data$par_insitu_profile") -->
+<!-- ```  -->
 
-#### Hour format
-```{r hour format par_insitu_profile, include=FALSE}
-tmp <- agg_hour(data = res, var = "data$par_insitu_profile")
-d_hour <- tmp[[1]]
-summary_d_hour <- tmp[[2]]
-knitr::kable(summary_d_hour, caption = "") %>%
-  kable_styling(bootstrap_options = "striped", full_width = F)
-```
+<!-- #### Hour format -->
+<!-- ```{r hour format par_insitu_profile, include=FALSE} -->
+<!-- tmp <- agg_hour(data = res, var = "data$par_insitu_profile") -->
+<!-- d_hour <- tmp[[1]] -->
+<!-- summary_d_hour <- tmp[[2]] -->
+<!-- knitr::kable(summary_d_hour, caption = "") %>% -->
+<!--   kable_styling(bootstrap_options = "striped", full_width = F) -->
+<!-- ``` -->
 
-#### Dygraphs
-```{r dygraphs par_insitu_profile, , echo=FALSE, warning=FALSE, out.width= "100%"}
-dygraphs_despike(var="data$par_insitu_profile")
-```
+<!-- #### Dygraphs -->
+<!-- ```{r dygraphs par_insitu_profile, , echo=FALSE, warning=FALSE, out.width= "100%"} -->
+<!-- dygraphs_despike(var="data$par_insitu_profile") -->
+<!-- ``` -->
 
-### par_insitu_10m
+<!-- ### par_insitu_10m -->
 
-#### Cleanning 
-```{r clean par_insitu_10m, echo=FALSE, results = 'asis'}
-tmp <- clean(data$par_insitu_10m)
-res <- tmp[[1]]
-nNAs <- tmp[[2]]
-knitr::kable(nNAs, caption = "NAs added by the despike treatment") %>%
-  kable_styling(bootstrap_options = "striped", full_width = F)
-``` 
+<!-- #### Cleanning  -->
+<!-- ```{r clean par_insitu_10m, echo=FALSE, results = 'asis'} -->
+<!-- tmp <- clean(data$par_insitu_10m) -->
+<!-- res <- tmp[[1]] -->
+<!-- nNAs <- tmp[[2]] -->
+<!-- knitr::kable(nNAs, caption = "NAs added by the despike treatment") %>% -->
+<!--   kable_styling(bootstrap_options = "striped", full_width = F) -->
+<!-- ```  -->
 
-#### Plot despike 
-```{r plot despike par_insitu_10m, echo=FALSE, results = 'asis'}
-plot_despike(data = res, var = "data$par_insitu_10m")
-``` 
+<!-- #### Plot despike  -->
+<!-- ```{r plot despike par_insitu_10m, echo=FALSE, results = 'asis'} -->
+<!-- plot_despike(data = res, var = "data$par_insitu_10m") -->
+<!-- ```  -->
 
-#### Hour format
-```{r hour format par_insitu_10m, include=FALSE}
-tmp <- agg_hour(data = res, var = "data$par_insitu_10m")
-d_hour <- tmp[[1]]
-summary_d_hour <- tmp[[2]]
-knitr::kable(summary_d_hour, caption = "") %>%
-  kable_styling(bootstrap_options = "striped", full_width = F)
-```
+<!-- #### Hour format -->
+<!-- ```{r hour format par_insitu_10m, include=FALSE} -->
+<!-- tmp <- agg_hour(data = res, var = "data$par_insitu_10m") -->
+<!-- d_hour <- tmp[[1]] -->
+<!-- summary_d_hour <- tmp[[2]] -->
+<!-- knitr::kable(summary_d_hour, caption = "") %>% -->
+<!--   kable_styling(bootstrap_options = "striped", full_width = F) -->
+<!-- ``` -->
 
-#### Dygraphs
-```{r dygraphs par_insitu_10m, , echo=FALSE, warning=FALSE, out.width= "100%"}
-dygraphs_despike(var="data$par_insitu_10m")
-```
+<!-- #### Dygraphs -->
+<!-- ```{r dygraphs par_insitu_10m, , echo=FALSE, warning=FALSE, out.width= "100%"} -->
+<!-- dygraphs_despike(var="data$par_insitu_10m") -->
+<!-- ``` -->
 
-### par_air
-
-#### Cleanning 
-```{r clean par_air, echo=FALSE, results = 'asis'}
-tmp <- clean(data$par_air)
-res <- tmp[[1]]
-nNAs <- tmp[[2]]
-knitr::kable(nNAs, caption = "NAs added by the despike treatment") %>%
-  kable_styling(bootstrap_options = "striped", full_width = F)
-``` 
-
-#### Plot despike 
-```{r plot despike par_air, echo=FALSE, results = 'asis'}
-plot_despike(data = res, var = "data$par_air")
-``` 
-
-#### Hour format
-```{r hour format par_air, include=FALSE}
-tmp <- agg_hour(data = res, var = "data$par_air")
-d_hour <- tmp[[1]]
-summary_d_hour <- tmp[[2]]
-knitr::kable(summary_d_hour, caption = "") %>%
-  kable_styling(bootstrap_options = "striped", full_width = F)
-```
-
-#### Dygraphs
-```{r dygraphs par_air, , echo=FALSE, warning=FALSE, out.width= "100%"}
-dygraphs_despike(var="data$par_air")
-```
-
-## Turbidity
-
-### turb_fb
-
-#### Cleanning 
-```{r clean turb_fb, echo=FALSE, results = 'asis'}
-tmp <- clean(data$turb_fb)
-res <- tmp[[1]]
-nNAs <- tmp[[2]]
-knitr::kable(nNAs, caption = "NAs added by the despike treatment") %>%
-  kable_styling(bootstrap_options = "striped", full_width = F)
-``` 
-
-#### Plot despike 
-```{r plot despike turb_fb, echo=FALSE, results = 'asis'}
-plot_despike(data = res, var = "data$turb_fb")
-``` 
-
-#### Hour format
-```{r hour format turb_fb, include=FALSE}
-tmp <- agg_hour(data = res, var = "data$turb_fb")
-d_hour <- tmp[[1]]
-summary_d_hour <- tmp[[2]]
-knitr::kable(summary_d_hour, caption = "") %>%
-  kable_styling(bootstrap_options = "striped", full_width = F)
-```
-
-#### Dygraphs
-```{r dygraphs turb_fb, , echo=FALSE, warning=FALSE, out.width= "100%"}
-dygraphs_despike(var="data$turb_fb")
+# ### par_air
+# 
+# #### Cleanning 
+# ```{r clean par_air, echo=FALSE, results = 'asis'}
+# tmp <- clean(data$par_air)
+# res <- tmp[[1]]
+# nNAs <- tmp[[2]]
+# knitr::kable(nNAs, caption = "NAs added by the despike treatment") %>%
+#   kable_styling(bootstrap_options = "striped", full_width = F)
+# ``` 
+# 
+# #### Plot despike 
+# ```{r plot despike par_air, echo=FALSE, results = 'asis'}
+# plot_despike(data = res, var = "data$par_air")
+# ``` 
+# 
+# #### Hour format
+# ```{r hour format par_air, include=FALSE}
+# tmp <- agg_hour(data = res, var = "data$par_air")
+# d_hour <- tmp[[1]]
+# summary_d_hour <- tmp[[2]]
+# knitr::kable(summary_d_hour, caption = "") %>%
+#   kable_styling(bootstrap_options = "striped", full_width = F)
+# ```
+# 
+# #### Dygraphs
+# ```{r dygraphs par_air, , echo=FALSE, warning=FALSE, out.width= "100%"}
+# dygraphs_despike(var="data$par_air")
+# ```
+# 
+# ## Turbidity
+# 
+# ### turb_fb
+# 
+# #### Cleanning 
+# ```{r clean turb_fb, echo=FALSE, results = 'asis'}
+# tmp <- clean(data$turb_fb)
+# res <- tmp[[1]]
+# nNAs <- tmp[[2]]
+# knitr::kable(nNAs, caption = "NAs added by the despike treatment") %>%
+#   kable_styling(bootstrap_options = "striped", full_width = F)
+# ``` 
+# 
+# #### Plot despike 
+# ```{r plot despike turb_fb, echo=FALSE, results = 'asis'}
+# plot_despike(data = res, var = "data$turb_fb")
+# ``` 
+# 
+# #### Hour format
+# ```{r hour format turb_fb, include=FALSE}
+# tmp <- agg_hour(data = res, var = "data$turb_fb")
+# d_hour <- tmp[[1]]
+# summary_d_hour <- tmp[[2]]
+# knitr::kable(summary_d_hour, caption = "") %>%
+#   kable_styling(bootstrap_options = "striped", full_width = F)
+# ```
+# 
+# #### Dygraphs
+# ```{r dygraphs turb_fb, , echo=FALSE, warning=FALSE, out.width= "100%"}
+# dygraphs_despike(var="data$turb_fb")
 ```
 
 
