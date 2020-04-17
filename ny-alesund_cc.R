@@ -461,23 +461,13 @@ data <- data %>%
 #pco2_corr_filtered = final pco2 data from sensor corrected by "contros" document correction + despike. use to be PCO2_corr_contros_filtered before April 2020
 
 data <- data %>%     
-   dplyr::mutate(pco2_raw_filtered= despike(data$pco2_raw, reference= "median", n=0.5, k=121, replace="NA"),
-                 pco2_corr_filtered= despike(data$pco2_corr, reference= "median", n=1.8, k=155, replace="NA"),
-                 sal_fb_filtered= despike(data$sal_fb, reference= "median", n=1, k=65, replace="NA"),
-                 sal_insitu_ctd_filtered= despike(data$sal_insitu_ctd, reference= "median", n=1, k=65, replace="NA"),
-                 temp_fb_filtered= despike(data$temp_fb, reference= "median", n=1, k=65, replace="NA"),
-                 AT_filtered= despike(data$AT, reference= "median", n=0.5, k=121, replace="NA"),
-                 phINT_filtered= despike(data$phINT, reference= "median", n=8, k=241, replace="NA"),
-                 phEXT_filtered= despike(data$phEXT, reference= "median", n=8, k=241, replace="NA"),
+   dplyr::mutate(pco2_raw_filtered= despike(data$pco2_raw, reference= "median", n=2, k=5761, replace="NA"),
+                 pco2_corr_filtered= despike(data$pco2_corr, reference= "median", n=2, k=5761, replace="NA"),
+                 sal_fb_filtered= despike(data$sal_fb, reference= "median", n=2, k=5761, replace="NA"),
+                 temp_fb_filtered= despike(data$temp_fb, reference= "median", n=2, k=5761, replace="NA"),
                  ph_dur_filtered= despike(data$ph_dur, reference= "median", n=8, k=241, replace="NA"),
-                 temp_dur_filtered= despike(data$temp_dur, reference= "median", n=1, k=65, replace="NA"),
-                 temp_insitu_11m_filtered= despike(data$temp_insitu_11m, reference= "median", n=0.5, k=65, replace="NA"),
-                 pressure_insitu_ctd_filtered= despike(data$pressure_insitu_ctd, reference= "median", n=1, k=65, replace="NA"),
-                 par_insitu_profile_filtered= despike(data$par_insitu_profile, reference= "median", n=1, k=65, replace="NA"),
-                 par_insitu_10m_filtered= despike(data$par_insitu_10m, reference= "median", n=1, k=65, replace="NA"),
-                 par_air_filtered= despike(data$par_air, reference= "median", n=1, k=65, replace="NA"),
-                 turb_fb_filtered= despike(data$turb_fb, reference= "median", n=1, k=65, replace="NA"),
-                 temp_insitu_ctd_filtered= despike(data$temp_insitu_ctd, reference= "median", n=1, k=65, replace="NA"),
+                 temp_dur_filtered= despike(data$temp_dur, reference= "median", n=2, k=5761, replace="NA"),
+                 temp_insitu_11m_filtered= despike(data$temp_insitu_11m, reference= "median", n=2, k=5761, replace="NA"),
                  date = as.Date(data$datetime),
                  hour = hour(data$datetime)
   )
@@ -563,27 +553,27 @@ selected_data_minute <- data  %>%
                    pco2_raw_filtered,
                    pco2_corr_filtered,
                    PeriodDeplpCO2,
-                   pressure_insitu_ctd_filtered,
+                   pressure_insitu_ctd,
                    sal_fb_filtered,
-                   sal_insitu_ctd_filtered,
+                   sal_insitu_ctd,
                    temp_fb_filtered,
                    temp_insitu_11m_filtered,
                    temp_dur_filtered,
                    ph_dur_filtered,
-                   AT_filtered,
+                   AT,
                    voltINT,
                    voltEXT,
-                   phINT_filtered,
-                   phEXT_filtered,
+                   phINT,
+                   phEXT,
                    T_seaF,
                    pco2_inst,
                    ta_inst,
                    seafet_inst,
-                   par_insitu_profile_filtered,
-                   par_insitu_10m_filtered,
-                   par_air_filtered,
-                   turb_fb_filtered,
-                   temp_insitu_ctd_filtered,
+                   par_insitu_profile,
+                   par_insitu_10m,
+                   par_air,
+                   turb_fb,
+                   temp_insitu_ctd,
                    date,
                    hour)
 
@@ -607,39 +597,39 @@ selected_data_minute$seafet_inst <- as.numeric(selected_data_minute$seafet_inst)
 
 selected_data_hour <- selected_data_minute%>%
   dplyr::group_by( date, hour) %>%
-  dplyr::summarise(pressure_insitu_ctd_filtered = mean(pressure_insitu_ctd_filtered, na.rm = TRUE),
-                   sal_insitu_ctd_filtered = mean(sal_insitu_ctd_filtered, na.rm = TRUE),
+  dplyr::summarise(pressure_insitu_ctd = mean(pressure_insitu_ctd, na.rm = TRUE),
+                   sal_insitu_ctd = mean(sal_insitu_ctd, na.rm = TRUE),
                    sal_fb_filtered = mean(sal_fb_filtered, na.rm = TRUE),
                    temp_fb_filtered = mean(temp_fb_filtered, na.rm = TRUE),
                    temp_insitu_11m_filtered= mean(temp_insitu_11m_filtered, na.rm = TRUE),
                    pco2_raw_filtered = mean(pco2_raw_filtered, na.rm = TRUE),
                    PeriodDeplpCO2 = mean(PeriodDeplpCO2, na.rm = TRUE),
                    pco2_corr_filtered= mean(pco2_corr_filtered, na.rm = TRUE),
-                   AT_filtered= mean(AT_filtered, na.rm = TRUE),
+                   AT= mean(AT, na.rm = TRUE),
                    ph_dur_filtered= mean(ph_dur_filtered, na.rm = TRUE),
                    temp_dur_filtered= mean(temp_dur_filtered, na.rm = TRUE),
                    T_seaF= mean(T_seaF, na.rm = TRUE),
-                   phINT_filtered= mean(phINT_filtered, na.rm = TRUE),
-                   phEXT_filtered= mean(phEXT_filtered, na.rm = TRUE),
+                   phINT= mean(phINT, na.rm = TRUE),
+                   phEXT= mean(phEXT, na.rm = TRUE),
                    voltINT= mean(voltINT, na.rm = TRUE),
                    voltEXT= mean(voltEXT, na.rm = TRUE),
                    pco2_inst= mean(pco2_inst, na.rm = TRUE),
                    ta_inst= mean(ta_inst, na.rm = TRUE),
                    seafet_inst= mean(seafet_inst, na.rm = TRUE) ,
-                   par_insitu_profile_filtered = mean(par_insitu_profile_filtered, na.rm = TRUE),
-                   par_insitu_10m_filtered = mean(par_insitu_10m_filtered, na.rm = TRUE),
-                   par_air_filtered = mean(par_air_filtered, na.rm = TRUE),
-                   turb_fb_filtered = mean(turb_fb_filtered, na.rm = TRUE),
-                   temp_insitu_ctd_filtered= mean(temp_insitu_ctd_filtered, na.rm = TRUE)) %>%
+                   par_insitu_profile = mean(par_insitu_profile, na.rm = TRUE),
+                   par_insitu_10m = mean(par_insitu_10m, na.rm = TRUE),
+                   par_air = mean(par_air, na.rm = TRUE),
+                   turb_fb = mean(turb_fb, na.rm = TRUE),
+                   temp_insitu_ctd= mean(temp_insitu_ctd, na.rm = TRUE)) %>%
   dplyr::mutate(datetime = ymd_h(paste(date, hour, sep=" ", tz = "UTC"))) %>%
   dplyr::ungroup() %>% # this is to be able to perform the following changes
   dplyr::select(datetime, everything()) %>%
   dplyr::select(-c( hour)) %>% # not needed in the shiny display
   dplyr::arrange(desc(datetime))
 
-# despike is run a 2nd time ON HOUR FORMAT DATA for TA in order to remove wrong flush measurements
-selected_data_hour <- selected_data_hour %>%     
-  dplyr::mutate(AT_filtered = despike(selected_data_hour$AT_filtered, reference= "median", n=0.3, k=217, replace="NA")) 
+# # despike is run a 2nd time ON HOUR FORMAT DATA for TA in order to remove wrong flush measurements
+# selected_data_hour <- selected_data_hour %>%     
+#   dplyr::mutate(AT_filtered = despike(selected_data_hour$AT_filtered, reference= "median", n=0.3, k=217, replace="NA")) 
 
 # HOUR format
 d_hour <- selected_data_hour
