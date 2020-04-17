@@ -377,7 +377,10 @@ Sys.setenv(TZ="UTC")
 
 tmp <- as_tibble(
   readRDS(file = paste0(path, "all_parameters_nydata_minute.rds"))
-)
+) %>%
+  dplyr::rename(pco2_raw = PCO2_Corr,
+                pco2_corr = PCO2_corr_contros,
+                temp_dur = HW_Temperature1)
 data <- tmp
 ```
 
@@ -438,9 +441,9 @@ data <- data %>%
 
  ## filter temperatures above 10
 data <- data %>%
-  dplyr::mutate( temp_dur = ifelse(temp_dur > 10 | temp_dur < -2 , NA, temp_dur))
-data <- data %>%
-  dplyr::mutate( temp_fb = ifelse(temp_dur > 10 | temp_dur < -2 , NA, temp_dur))
+  dplyr::mutate( temp_dur = ifelse(temp_dur > 10 | temp_dur < -2 , NA, temp_dur),
+                 temp_fb = ifelse(temp_fb > 10 | temp_fb < -2 , NA, temp_fb),
+                 temp_insitu_11m = ifelse(temp_insitu_11m > 10 | temp_insitu_11m < -2 , NA, temp_insitu_11m))
 
 ## seaFET
 data <- data %>%
@@ -507,14 +510,14 @@ return(list(res=res, nNAs = nNAs))
 
 ```{r function plot despike, include=FALSE}
 plot_despike <- function(data = res, var=var){ # car is the variable name, a text
-# d <- res %>%
+  # d <- res %>%
 #   select(datetime, starts_with("n0.1")) %>%
-#   pivot_longer(-datetime, names_to = "params", values_to = "pCO2") %>%
+#   pivot_longer(-datetime, names_to = "params", values_to = "values") %>%
 #   dplyr::mutate(params = factor(params)) %>%
 #   dplyr::mutate(params = factor(params, levels=levels(params)[c(4, 3, 1, 2, 5, 6)]))
 # plt_n0.1 <- d %>%
 #   ggplot() +
-#   geom_point(aes(x=datetime, y=pCO2, col=params), na.rm= TRUE, size=0.25) +
+#   geom_point(aes(x=datetime, y=values, col=params), na.rm= TRUE, size=0.25) +
 #   facet_wrap(vars(params), ncol = 1) +
 #   theme_bw()
 # ggsave(filename = paste0(var,"_plt_n0.1.png"), plt_n0.1, dpi=80)
@@ -522,12 +525,12 @@ plot_despike <- function(data = res, var=var){ # car is the variable name, a tex
 
 d <- res %>%
   select(datetime, starts_with("n0.5")) %>%
-  pivot_longer(-datetime, names_to = "params", values_to = var) %>%
+  pivot_longer(-datetime, names_to = "params", values_to = "values") %>%
   dplyr::mutate(params = factor(params)) %>%
   dplyr::mutate(params = factor(params, levels=levels(params)[c(4, 3, 1, 2, 5, 6)]))
 plt_n0.5 <- d %>%
   ggplot() +
-  geom_point(aes(x=datetime, y=var, col=params), na.rm= TRUE, size=0.25) +
+  geom_point(aes(x=datetime, y=values, col=params), na.rm= TRUE, size=0.25) +
   facet_wrap(vars(params), ncol = 1) +
   theme_bw()
 ggsave(filename = paste0(var,"_plt_n0.5.png"), plt_n0.5, dpi=150)
@@ -535,12 +538,12 @@ print(plt_n0.5)
 
 d <- res %>%
   select(datetime, starts_with("n1")) %>%
-  pivot_longer(-datetime, names_to = "params", values_to = var) %>%
+  pivot_longer(-datetime, names_to = "params", values_to = "values") %>%
   dplyr::mutate(params = factor(params)) %>%
   dplyr::mutate(params = factor(params, levels=levels(params)[c(4, 3, 1, 2, 5, 6)]))
 plt_n1 <- d %>%
   ggplot() +
-  geom_point(aes(x=datetime, y=var, col=params), na.rm= TRUE, size=0.25) +
+  geom_point(aes(x=datetime, y=values, col=params), na.rm= TRUE, size=0.25) +
   facet_wrap(vars(params), ncol = 1) +
   theme_bw()
 ggsave(filename = paste0(var,"_plt_n1.png"), plt_n1, dpi=150)
@@ -548,12 +551,12 @@ print(plt_n1)
 
 d <- res %>%
   select(datetime, starts_with("n2")) %>%
-  pivot_longer(-datetime, names_to = "params", values_to = var) %>%
+  pivot_longer(-datetime, names_to = "params", values_to = "values") %>%
   dplyr::mutate(params = factor(params)) %>%
   dplyr::mutate(params = factor(params, levels=levels(params)[c(4, 3, 1, 2, 5, 6)]))
 plt_n2 <- d %>%
   ggplot() +
-  geom_point(aes(x=datetime, y=var, col=params), na.rm= TRUE, size=0.25) +
+  geom_point(aes(x=datetime, y=values, col=params), na.rm= TRUE, size=0.25) +
   facet_wrap(vars(params), ncol = 1) +
   theme_bw()
 ggsave(filename = paste0(var,"_plt_n2.png"), plt_n2, dpi=150)
@@ -564,7 +567,7 @@ print(plt_n2)
 ```{r function hour format, include=FALSE}
 agg_hour <- function(data = res, var=var){
 d <- as_tsibble(res %>%
-                  dplyr::select(datetime, n0.5k5761, n0.5k8641, n1k5761, n1k8641))
+                  dplyr::select(datetime, n0.5k5761, n0.5k8641, n1k5761, n1k8641, n2k5761, n2k8641))
 d_hour <- d %>%
   group_by_key() %>%
   index_by(hour = ~ lubridate::floor_date(., "1 hour")) %>% # monthly aggregates
@@ -572,7 +575,7 @@ d_hour <- d %>%
     n0.5k5761h = mean(n0.5k5761, na.rm = TRUE),
     n0.5k8641h = mean(n0.5k8641, na.rm = TRUE),
     n1k5761h = mean(n1k5761, na.rm = TRUE),
-    n1k8641h = mean(n1k8641, na.rm = TRUE)
+    n1k8641h = mean(n1k8641, na.rm = TRUE),
     n2k5761h = mean(n2k5761, na.rm = TRUE),
     n2k8641h = mean(n2k8641, na.rm = TRUE)
   )
@@ -583,6 +586,7 @@ return(list(d_hour=d_hour, summary_d_hour = summary_d_hour))
 
 ```{r function plot dygraphs, , echo=FALSE, warning=FALSE, out.width= "100%"}
 dygraphs_despike <- function(var=var){
+  v <- assign("data$temp_fb", data$temp_fb) #to calculate min max below
   d_hour_xts <- d_hour %>%
   as.xts(order.by = d_hour$hour)
 dygraph(d_hour_xts,
@@ -631,7 +635,7 @@ dygraph(d_hour_xts,
     strokeWidth = 0,
     pointSize = 2
   ) %>%
-  dyAxis("y", valueRange = c(min(var), max(var))) %>%
+  dyAxis("y", valueRange = 1.1*range(v, na.rm = TRUE)) %>%
   dyLimit(0, color = "black", strokePattern = "dashed") %>%
   dyHighlight(
     highlightCircleSize = 8,
@@ -684,7 +688,7 @@ knitr::kable(summary_d_hour, caption = "") %>%
 dygraphs_despike(var="data$pco2_corr")
 ```
 
-n0.5k5761	and n0.5k8641	remove a lot of data points (> 300,000), many of them seem legitimate. n1k5761	and n1k8641 remove much less data points (124000 to 134000) and therefore seem more appropriate. Although very subjective, it seems that n1k8641 cuts some spikes, which appears unnecessary. One settles for **n1k5761**.
+n0.5k5761	and n0.5k8641	remove a lot of data points (> 300,000), many of them seem legitimate. n1k5761	and n1k8641 remove much less data points (124000 to 134000) and therefore seem more appropriate. Although very subjective, it seems that n1k8641 cuts some spikes, which appears unnecessary. One settles for **n2k5761**.
 
 ## Salinities
 
@@ -717,7 +721,7 @@ knitr::kable(summary_d_hour, caption = "") %>%
 ```{r dygraphs sal_fb, , echo=FALSE, warning=FALSE, out.width= "100%"}
 dygraphs_despike(var="data$sal_fb")
 ```
-One keeps **n1k8641** which adds less NAs and seems satisfactory.
+One keeps **n2k5761** which adds less NAs and seems satisfactory.
 
 <!-- ### sal_insitu_ctd -->
 
@@ -780,8 +784,11 @@ knitr::kable(summary_d_hour, caption = "") %>%
 
 #### Dygraphs
 ```{r dygraphs temp_fb, , echo=FALSE, warning=FALSE, out.width= "100%"}
-dygraphs_despike(var="data$temp_fb")
+dygraphs_despike(var=data$temp_fb)
 ```
+
+One keeps **n2k5761** which adds less NAs and seems satisfactory.
+
 
 ### temp_dur (durafet)
 
@@ -813,6 +820,8 @@ knitr::kable(summary_d_hour, caption = "") %>%
 dygraphs_despike(var="data$temp_dur")
 ```
 
+One keeps **n2k5761** which adds less NAs and seems satisfactory.
+
 ### temp_insitu_11m
 
 #### Cleaning 
@@ -842,6 +851,8 @@ knitr::kable(summary_d_hour, caption = "") %>%
 ```{r dygraphs temp_insitu_11m, , echo=FALSE, warning=FALSE, out.width= "100%"}
 dygraphs_despike(var="data$temp_insitu_11m")
 ```
+
+One keeps **n2k5761** which adds less NAs and seems satisfactory.
 
 ### temp_insitu_ctd
 
