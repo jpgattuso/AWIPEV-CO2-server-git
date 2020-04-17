@@ -428,6 +428,14 @@ data <- data %>%
     ),
     PCO2_corr_contros = ifelse(PCO2_corr_contros_qf == 4 , NA, PCO2_corr_contros)
     )
+
+## filter salinities above 28
+d_all <- d_all%>%
+  dplyr::mutate( sal_fb = ifelse(sal_fb < 28 | sal_fb > 36, NA, sal_fb),
+                 sal_insitu_ctd = ifelse(sal_insitu_ctd < 28 | sal_fb > 36, NA, sal_insitu_ctd))
+ d_all <- d_all%>%
+  dplyr::mutate(sal_insitu_ctd = ifelse(datetime > "2019-12-26 00:00:00", NA, sal_insitu_ctd))
+
 ## seaFET
 data <- data %>%
   dplyr::mutate(phINT = ifelse(phINT >7.5  & phINT <8.5, phINT, NA), 
@@ -457,9 +465,9 @@ TO DO in RMD:
 (ph seafet dans Rmd)
 (pH durafet dans Rmd)
 
-```{r clean, echo=FALSE, results = 'asis'}
+```{r function clean, echo=FALSE, results = 'asis'}
 clean <- function(var=var) {
-  n <- c(0.1, 0.5, 1, 2) # number of times sd
+  n <- c(0.5, 1, 2) # number of times sd
   k <-
     c(5, 31, 121, 1441, 1440 * 4 + 1, 1440 * 6 + 1) # time window to calculate median in min
   grid <- as_tibble(expand.grid(n = n, k = k)) %>%
@@ -491,20 +499,20 @@ return(list(res=res, nNAs = nNAs))
 }
 ``` 
 
-```{r plot despike, include=FALSE}
+```{r function plot despike, include=FALSE}
 plot_despike <- function(data = res, var=var){ # car is the variable name, a text
-d <- res %>%
-  select(datetime, starts_with("n0.1")) %>%
-  pivot_longer(-datetime, names_to = "params", values_to = "pCO2") %>%
-  dplyr::mutate(params = factor(params)) %>%
-  dplyr::mutate(params = factor(params, levels=levels(params)[c(4, 3, 1, 2, 5, 6)]))
-plt_n0.1 <- d %>%
-  ggplot() +
-  geom_point(aes(x=datetime, y=pCO2, col=params), na.rm= TRUE, size=0.25) +
-  facet_wrap(vars(params), ncol = 1) +
-  theme_bw()
-ggsave(filename = paste0(var,"_plt_n0.1.png"), plt_n0.1, dpi=80)
-print(plt_n0.1)
+# d <- res %>%
+#   select(datetime, starts_with("n0.1")) %>%
+#   pivot_longer(-datetime, names_to = "params", values_to = "pCO2") %>%
+#   dplyr::mutate(params = factor(params)) %>%
+#   dplyr::mutate(params = factor(params, levels=levels(params)[c(4, 3, 1, 2, 5, 6)]))
+# plt_n0.1 <- d %>%
+#   ggplot() +
+#   geom_point(aes(x=datetime, y=pCO2, col=params), na.rm= TRUE, size=0.25) +
+#   facet_wrap(vars(params), ncol = 1) +
+#   theme_bw()
+# ggsave(filename = paste0(var,"_plt_n0.1.png"), plt_n0.1, dpi=80)
+# print(plt_n0.1)
 
 d <- res %>%
   select(datetime, starts_with("n0.5")) %>%
@@ -547,7 +555,7 @@ print(plt_n2)
 }
 ```
 
-```{r hour format, include=FALSE}
+```{r function hour format, include=FALSE}
 agg_hour <- function(data = res, var=var){
 d <- as_tsibble(res %>%
                   dplyr::select(datetime, n0.5k5761, n0.5k8641, n1k5761, n1k8641))
@@ -565,14 +573,14 @@ return(list(d_hour=d_hour, summary_d_hour = summary_d_hour))
 }
 ```
 
-```{r dygraphs, , echo=FALSE, warning=FALSE, out.width= "100%"}
+```{r function plot dygraphs, , echo=FALSE, warning=FALSE, out.width= "100%"}
 dygraphs_despike <- function(var=var){
   d_hour_xts <- d_hour %>%
   as.xts(order.by = d_hour$hour)
 dygraph(d_hour_xts,
         group = "",
         main = var,
-        ylab = "pco2") %>%
+        ylab = var) %>%
   dySeries(
     "n0.5k5761h",
     label = "n0.5k5761h",
@@ -619,14 +627,13 @@ dygraph(d_hour_xts,
 ```
 
 
-n0.5k5761	and n0.5k8641	remove a lot of data points (> 300,000), many of them seem legitimate. n1k5761	and n1k8641 remove much less data points (124000 to 134000) and therefore seem more appropriate. Although very subjective, it seems that n1k8641 cuts some spikes, which appears unnecessary. One settles for n1k5761.
-
 
 ## *p*CO~2~
 
+
 ### PCO2_corr_contros
 
-#### Cleanning 
+#### Cleaning 
 ```{r clean PCO2_corr_contros, echo=FALSE, results = 'asis'}
 tmp <- clean(data$PCO2_corr_contros)
 res <- tmp[[1]]
@@ -654,11 +661,13 @@ knitr::kable(summary_d_hour, caption = "") %>%
 dygraphs_despike(var="data$PCO2_corr_contros")
 ```
 
+n0.5k5761	and n0.5k8641	remove a lot of data points (> 300,000), many of them seem legitimate. n1k5761	and n1k8641 remove much less data points (124000 to 134000) and therefore seem more appropriate. Although very subjective, it seems that n1k8641 cuts some spikes, which appears unnecessary. One settles for **n1k5761**.
+
 ## Salinities
 
 ### sal_fb
 
-#### Cleanning 
+#### Cleaning 
 ```{r clean sal_fb, echo=FALSE, results = 'asis'}
 tmp <- clean(data$sal_fb)
 res <- tmp[[1]]
@@ -685,36 +694,39 @@ knitr::kable(summary_d_hour, caption = "") %>%
 ```{r dygraphs sal_fb, , echo=FALSE, warning=FALSE, out.width= "100%"}
 dygraphs_despike(var="data$sal_fb")
 ```
+One keeps **n1k8641** which adds less NAs and seems satisfactory.
 
-### sal_insitu_ctd
+<!-- ### sal_insitu_ctd -->
 
-#### Cleanning 
-```{r clean sal_insitu_ctd, echo=FALSE, results = 'asis'}
-tmp <- clean(data$sal_insitu_ctd)
-res <- tmp[[1]]
-nNAs <- tmp[[2]]
-knitr::kable(nNAs, caption = "NAs added by the despike treatment") %>%
-  kable_styling(bootstrap_options = "striped", full_width = F)
-``` 
+<!-- #### Cleanning  -->
+<!-- ```{r clean sal_insitu_ctd, echo=FALSE, results = 'asis'} -->
+<!-- tmp <- clean(data$sal_insitu_ctd) -->
+<!-- res <- tmp[[1]] -->
+<!-- nNAs <- tmp[[2]] -->
+<!-- knitr::kable(nNAs, caption = "NAs added by the despike treatment") %>% -->
+<!--   kable_styling(bootstrap_options = "striped", full_width = F) -->
+<!-- ```  -->
 
-#### Plot despike 
-```{r plot despike sal_insitu_ctd, echo=FALSE, results = 'asis'}
-plot_despike(data = res, var = "data$sal_insitu_ctd")
-``` 
+<!-- #### Plot despike  -->
+<!-- ```{r plot despike sal_insitu_ctd, echo=FALSE, results = 'asis'} -->
+<!-- plot_despike(data = res, var = "data$sal_insitu_ctd") -->
+<!-- ```  -->
 
-#### Hour format
-```{r hour format sal_insitu_ctd, include=FALSE}
-tmp <- agg_hour(data = res, var = "data$sal_insitu_ctd")
-d_hour <- tmp[[1]]
-summary_d_hour <- tmp[[2]]
-knitr::kable(summary_d_hour, caption = "") %>%
-  kable_styling(bootstrap_options = "striped", full_width = F)
-```
+<!-- #### Hour format -->
+<!-- ```{r hour format sal_insitu_ctd, include=FALSE} -->
+<!-- tmp <- agg_hour(data = res, var = "data$sal_insitu_ctd") -->
+<!-- d_hour <- tmp[[1]] -->
+<!-- summary_d_hour <- tmp[[2]] -->
+<!-- knitr::kable(summary_d_hour, caption = "") %>% -->
+<!--   kable_styling(bootstrap_options = "striped", full_width = F) -->
+<!-- ``` -->
 
-#### Dygraphs
-```{r dygraphs sal_insitu_ctd, , echo=FALSE, warning=FALSE, out.width= "100%"}
-dygraphs_despike(var="data$sal_insitu_ctd")
-```
+<!-- #### Dygraphs -->
+<!-- ```{r dygraphs sal_insitu_ctd, , echo=FALSE, warning=FALSE, out.width= "100%"} -->
+<!-- dygraphs_despike(var="data$sal_insitu_ctd") -->
+<!-- ``` -->
+
+<!-- **n1k8641** adds les NAs than **n1k5761**. To revisit with n2. -->
 
 ## Temperatures
 
