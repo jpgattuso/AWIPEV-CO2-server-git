@@ -436,6 +436,10 @@ d_all <- d_all%>%
  d_all <- d_all%>%
   dplyr::mutate(sal_insitu_ctd = ifelse(datetime > "2019-12-26 00:00:00", NA, sal_insitu_ctd))
 
+ ## filter temperatures above 10
+d_all <- d_all%>%
+  dplyr::mutate( temp_fb = ifelse(temp_fb > 10 | temp_fb < -2 , NA, temp_fb))
+
 ## seaFET
 data <- data %>%
   dplyr::mutate(phINT = ifelse(phINT >7.5  & phINT <8.5, phINT, NA), 
