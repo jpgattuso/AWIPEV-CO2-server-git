@@ -212,7 +212,7 @@ plt_n0.5 <- d %>%
   geom_point(aes(x=datetime, y=values, col=params), na.rm= TRUE, size=0.25) +
   facet_wrap(vars(params), ncol = 1) +
   theme_bw()
-ggsave(filename = paste0(var,"_plt_n0.5.png"), plt_n0.5, dpi=150)
+#ggsave(filename = paste0(var,"_plt_n0.5"), plt_n0.5, device = "pdf", dpi=150)
 print(plt_n0.5)
 
 d <- res %>%
@@ -225,7 +225,7 @@ plt_n1 <- d %>%
   geom_point(aes(x=datetime, y=values, col=params), na.rm= TRUE, size=0.25) +
   facet_wrap(vars(params), ncol = 1) +
   theme_bw()
-ggsave(filename = paste0(var,"_plt_n1.png"), plt_n1, dpi=150)
+#ggsave(filename = paste0(var,"_plt_n1"), plt_n1, device = "pdf", dpi=150)
 print(plt_n1)
 
 d <- res %>%
@@ -238,7 +238,7 @@ plt_n2 <- d %>%
   geom_point(aes(x=datetime, y=values, col=params), na.rm= TRUE, size=0.25) +
   facet_wrap(vars(params), ncol = 1) +
   theme_bw()
-ggsave(filename = paste0(var,"_plt_n2.png"), plt_n2, dpi=150)
+#ggsave(filename = paste0(var,"_plt_n2"), plt_n2, device = "pdf", dpi=150)
 print(plt_n2)
 }
 ```
