@@ -46,31 +46,21 @@ if (!require("knitr")) install.packages("knitr")
 library(knitr)
 if (!require("kableExtra")) install.packages("kableExtra")
 library(kableExtra)
+if (!require("ragg")) install.packages("ragg")
+library("ragg")
 
 ####define who is the user and define path
 rm(list = ls())
 
 if (Sys.getenv("LOGNAME") == "gattuso") path = "../../pCloud\ Sync/Documents/experiments/exp168_AWIPEV-CO2/fb_awipev-co2_server/ny-alesund/data/NRT_data/"
 if (Sys.getenv("LOGNAME") == "samir") path = "../../pCloud\ Sync/exp168_AWIPEV-CO2/fb_awipev-co2_server/ny-alesund/data/NRT_data/"
-# if (system('echo "$USER"') == "awipev") {
-#   setwd("/home/awipev/ny-alesund/") #to run on server
-#   path = "data/NRT_data/"
-# }
-
-# sur serveur
-#setwd("/home/awipev/ny-alesund/") #to run on server
-#path = "data/NRT_data/"
 
 ####Set environmental variables####
 Sys.setenv(TZ="UTC")
 tmp <- as_tibble(
   readRDS(file = paste0(path, "all_parameters_nydata_minute.rds"))
 )
-# ) %>%
-#   dplyr::rename(pco2_raw = PCO2_Corr,
-#                 pco2_corr = PCO2_corr_contros,
-#                 temp_dur = HW_Temperature1)
-data <- tmp
+data <- tmp # backup
 ```
 
 ```{r First cleaning, echo=FALSE}
