@@ -73,10 +73,11 @@ agg_fun_3 = "N"
 # start_date <- ymd_hms("2015-07-25 00:00:00")
 # start_date <- ymd_hms("2018-01-01 00:00:00")
 selected_data_minute <- readRDS(file = paste0(path, "all_nydata_minute.rds"))
-start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(1)
+start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(60)
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S") 
 
 #end_date <- ymd_hms("2017-12-31 23:59:59") 
+#end_date <- ymd_hms("2018-12-31 23:59:59") 
 #end_date <- ymd_hms("2020-02-15 23:59:59") 
 # days_back <- 2
 end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
@@ -396,8 +397,6 @@ data <- data %>%
   dplyr::filter(dt_qf == 1) # removes rows with wrong dates
 
 
-
-
 ## pCO2 
 # Argo Global Range Test. If QF = 4 replace value by NA
 # Removing outliers due to acid flush in the FB at 12:00 and 00:00 
@@ -430,31 +429,38 @@ data <- data %>%
   )
 
 ## filter salinities above 28
-data <- data %>%
-  dplyr::mutate( sal_fb = ifelse(sal_fb < 28 | sal_fb > 36, NA, sal_fb),
-                 sal_insitu_ctd = ifelse(sal_insitu_ctd < 28 | sal_fb > 36, NA, sal_insitu_ctd))
-data <- data %>%
-  dplyr::mutate(sal_insitu_ctd = ifelse(datetime > "2019-12-26 00:00:00", NA, sal_insitu_ctd))
+data <- data %>% 
+  dplyr::mutate(
+    sal_fb_qf = ifelse(sal_fb < 28 | sal_fb > 36, 4, 1), 
+    sal_fb = ifelse(sal_fb_qf == 4 , NA, sal_fb),
+    sal_insitu_ctd_qf = ifelse(sal_insitu_ctd < 28 | sal_fb > 36, 4, 1),
+    sal_insitu_ctd_qf = ifelse(datetime > "2019-12-26 00:00:00", 4, 1),
+    sal_insitu_ctd = ifelse(sal_insitu_ctd_qf == 4 , NA, sal_insitu_ctd),
+  )
 
 ## filter temperatures above 10
-data <- data %>%
-  dplyr::mutate( temp_dur = ifelse(temp_dur > 10 | temp_dur < -2 , NA, temp_dur),
-                 temp_fb = ifelse(temp_fb > 10 | temp_fb < -2 , NA, temp_fb),
-                 temp_insitu_11m = ifelse(temp_insitu_11m > 10 | temp_insitu_11m < -2 , NA, temp_insitu_11m))
+data <- data %>% 
+  dplyr::mutate(
+    temp_dur_qf = ifelse(temp_dur > 10 | temp_dur < -2 , 4, 1), 
+    temp_dur = ifelse(temp_dur_qf == 4 , NA, temp_dur),
+    temp_fb_qf = ifelse(temp_fb > 10 | temp_fb < -2 , 4, 1), 
+    temp_fb = ifelse(temp_fb_qf == 4 , NA, temp_fb),
+    temp_insitu_11m_qf = ifelse(temp_insitu_11m > 10 | temp_insitu_11m < -2 , 4, 1), 
+    temp_insitu_11m = ifelse(temp_insitu_11m_qf == 4 , NA, temp_insitu_11m),
+  )
 
 ## seaFET
-data <- data %>%
-  dplyr::mutate(phINT = ifelse(phINT >7.5  & phINT <8.5, phINT, NA), 
-                phEXT = ifelse(phEXT >7.5  & phEXT <8.5, phEXT, NA))
+data <- data %>% 
+  dplyr::mutate(
+    phINT_qf = ifelse(phINT < 7.5 | phINT > 8.5 , 4, 1), 
+    phINT = ifelse(phINT_qf == 4 , NA, phINT),
+    phEXT_qf = ifelse(phEXT < 7.5 | phEXT > 8.5 , 4, 1), 
+    phEXT = ifelse(phEXT_qf == 4 , NA, phEXT)
+  )
+# data <- data %>%
+#   dplyr::mutate(phINT = ifelse(phINT >7.5  & phINT <8.5, phINT, NA), 
+#                 phEXT = ifelse(phEXT >7.5  & phEXT <8.5, phEXT, NA))
 
-## TA ##
-data <- data %>%
-  dplyr::mutate(AT= ifelse(datetime >= "2016-02-26 12:00:00" & AT_1215 > 100 & InvSal_1215 == 0 & InvpH_1215 == 0 & InvAT_1215 ==0 , AT_1215, NA))
-data <- data %>%
-  dplyr::mutate(AT= ifelse(datetime >= "2016-02-26 12:00:00" & AT_0317 > 100 & InvSal_0317 == 0 & InvpH_0317 == 0 & InvAT_0317 ==0 , AT_0317, NA))
-data <- data %>%
-  dplyr::mutate(AT = ifelse(datetime == "2017-05-23 21:07:00", NA, AT))
-        
 
 ##########   first data cleaning : despike()  ###########
 #pco2_raw_filtered = raw pco2 data from sensor + despike. use to be PCO2_Corr_filtered before April 2020
@@ -465,7 +471,7 @@ data <- data %>%
                  pco2_corr_filtered= despike(data$pco2_corr, reference= "median", n=2, k=5761, replace="NA"),
                  sal_fb_filtered= despike(data$sal_fb, reference= "median", n=2, k=5761, replace="NA"),
                  temp_fb_filtered= despike(data$temp_fb, reference= "median", n=2, k=5761, replace="NA"),
-                 ph_dur_filtered= despike(data$ph_dur, reference= "median", n=8, k=241, replace="NA"),
+                 #ph_dur_filtered= despike(data$ph_dur, reference= "median", n=8, k=241, replace="NA"),
                  temp_dur_filtered= despike(data$temp_dur, reference= "median", n=2, k=5761, replace="NA"),
                  temp_insitu_11m_filtered= despike(data$temp_insitu_11m, reference= "median", n=2, k=5761, replace="NA"),
                  date = as.Date(data$datetime),
@@ -489,7 +495,8 @@ data <- data %>%
 #MINUTE
 # save all parameters in long format (not selected data)
 if (file.exists(paste0(path, "all_parameters_nydata_minute.rds")) == TRUE) {
-  previous_all_parameters_data_minute <- readRDS(paste0(path, "all_parameters_nydata_minute.rds"))
+  previous_all_parameters_data_minute <- readRDS(paste0(path, "all_parameters_nydata_minute.rds"))   %>%
+    dplyr::filter(datetime - days(60) ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
   #### Binding data (previous + new) ####
   data <- rbind(previous_all_parameters_data_minute, data)
   #Remove duplicate due to binding
@@ -559,8 +566,7 @@ selected_data_minute <- data  %>%
                    temp_fb_filtered,
                    temp_insitu_11m_filtered,
                    temp_dur_filtered,
-                   ph_dur_filtered,
-                   AT,
+                   ph_dur,
                    voltINT,
                    voltEXT,
                    phINT,
@@ -605,8 +611,7 @@ selected_data_hour <- selected_data_minute%>%
                    pco2_raw_filtered = mean(pco2_raw_filtered, na.rm = TRUE),
                    PeriodDeplpCO2 = mean(PeriodDeplpCO2, na.rm = TRUE),
                    pco2_corr_filtered= mean(pco2_corr_filtered, na.rm = TRUE),
-                   AT= mean(AT, na.rm = TRUE),
-                   ph_dur_filtered= mean(ph_dur_filtered, na.rm = TRUE),
+                   ph_dur= mean(ph_dur, na.rm = TRUE),
                    temp_dur_filtered= mean(temp_dur_filtered, na.rm = TRUE),
                    T_seaF= mean(T_seaF, na.rm = TRUE),
                    phINT= mean(phINT, na.rm = TRUE),
