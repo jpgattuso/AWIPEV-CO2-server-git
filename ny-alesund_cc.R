@@ -396,8 +396,6 @@ data <- data %>%
   dplyr::filter(dt_qf == 1) # removes rows with wrong dates
 
 
-
-
 ## pCO2 
 # Argo Global Range Test. If QF = 4 replace value by NA
 # Removing outliers due to acid flush in the FB at 12:00 and 00:00 
@@ -430,31 +428,54 @@ data <- data %>%
   )
 
 ## filter salinities above 28
-data <- data %>%
-  dplyr::mutate( sal_fb = ifelse(sal_fb < 28 | sal_fb > 36, NA, sal_fb),
-                 sal_insitu_ctd = ifelse(sal_insitu_ctd < 28 | sal_fb > 36, NA, sal_insitu_ctd))
-data <- data %>%
-  dplyr::mutate(sal_insitu_ctd = ifelse(datetime > "2019-12-26 00:00:00", NA, sal_insitu_ctd))
+data <- data %>% 
+  dplyr::mutate(
+    sal_fb_qf = ifelse(sal_fb < 28 | sal_fb > 36, 4, 1), 
+    sal_fb = ifelse(sal_fb_qf == 4 , NA, sal_fb),
+    sal_insitu_ctd_qf = ifelse(sal_insitu_ctd < 28 | sal_fb > 36, 4, 1),
+    sal_insitu_ctd_qf = ifelse(datetime > "2019-12-26 00:00:00", 4, 1),
+    sal_insitu_ctd = ifelse(sal_insitu_ctd_qf == 4 , NA, sal_insitu_ctd),
+  )
 
 ## filter temperatures above 10
-data <- data %>%
-  dplyr::mutate( temp_dur = ifelse(temp_dur > 10 | temp_dur < -2 , NA, temp_dur),
-                 temp_fb = ifelse(temp_fb > 10 | temp_fb < -2 , NA, temp_fb),
-                 temp_insitu_11m = ifelse(temp_insitu_11m > 10 | temp_insitu_11m < -2 , NA, temp_insitu_11m))
+data <- data %>% 
+  dplyr::mutate(
+    temp_dur_qf = ifelse(temp_dur > 10 | temp_dur < -2 , 4, 1), 
+    temp_dur = ifelse(temp_dur_qf == 4 , NA, temp_dur),
+    temp_fb_qf = ifelse(temp_fb > 10 | temp_fb < -2 , 4, 1), 
+    temp_fb = ifelse(temp_fb_qf == 4 , NA, temp_fb),
+    temp_insitu_11m_qf = ifelse(temp_insitu_11m > 10 | temp_insitu_11m < -2 , 4, 1), 
+    temp_insitu_11m = ifelse(temp_insitu_11m_qf == 4 , NA, temp_insitu_11m),
+  )
 
 ## seaFET
-data <- data %>%
-  dplyr::mutate(phINT = ifelse(phINT >7.5  & phINT <8.5, phINT, NA), 
-                phEXT = ifelse(phEXT >7.5  & phEXT <8.5, phEXT, NA))
+data <- data %>% 
+  dplyr::mutate(
+    phINT_qf = ifelse(phINT < 7.5 | phINT > 8.5 , 4, 1), 
+    phINT = ifelse(phINT_qf == 4 , NA, phINT),
+    phEXT_qf = ifelse(phEXT < 7.5 | phEXT > 8.5 , 4, 1), 
+    phEXT = ifelse(phEXT_qf == 4 , NA, phEXT)
+  )
+# data <- data %>%
+#   dplyr::mutate(phINT = ifelse(phINT >7.5  & phINT <8.5, phINT, NA), 
+#                 phEXT = ifelse(phEXT >7.5  & phEXT <8.5, phEXT, NA))
 
 ## TA ##
-data <- data %>%
-  dplyr::mutate(AT= ifelse(datetime >= "2016-02-26 12:00:00" & AT_1215 > 100 & InvSal_1215 == 0 & InvpH_1215 == 0 & InvAT_1215 ==0 , AT_1215, NA))
-data <- data %>%
-  dplyr::mutate(AT= ifelse(datetime >= "2016-02-26 12:00:00" & AT_0317 > 100 & InvSal_0317 == 0 & InvpH_0317 == 0 & InvAT_0317 ==0 , AT_0317, NA))
-data <- data %>%
-  dplyr::mutate(AT = ifelse(datetime == "2017-05-23 21:07:00", NA, AT))
-        
+data <- data %>% 
+  dplyr::mutate(
+    AT_qf = ifelse(datetime >= "2016-02-26 12:00:00" & AT_1215 < 100 | InvSal_1215 != 0 | InvpH_1215 != 0 | InvAT_1215 !=0, 4, 1),
+    AT_qf = ifelse(datetime >= "2016-02-26 12:00:00" & AT_0317 < 100 | InvSal_0317 != 0 | InvpH_0317 != 0 | InvAT_0317 !=0, 4, 1),
+    AT_qf = ifelse(datetime == "2017-05-23 21:07:00", 4, 1),
+    AT = ifelse(AT_qf == 4 , NA, AT),
+  )
+    
+# data <- data %>%
+#   dplyr::mutate(AT= ifelse(datetime >= "2016-02-26 12:00:00" & AT_1215 > 100 & InvSal_1215 == 0 & InvpH_1215 == 0 & InvAT_1215 ==0 , AT_1215, NA))
+# data <- data %>%
+#   dplyr::mutate(AT= ifelse(datetime >= "2016-02-26 12:00:00" & AT_0317 > 100 & InvSal_0317 == 0 & InvpH_0317 == 0 & InvAT_0317 ==0 , AT_0317, NA))
+# data <- data %>%
+#   dplyr::mutate(AT = ifelse(datetime == "2017-05-23 21:07:00", NA, AT))
+#         
 
 ##########   first data cleaning : despike()  ###########
 #pco2_raw_filtered = raw pco2 data from sensor + despike. use to be PCO2_Corr_filtered before April 2020
