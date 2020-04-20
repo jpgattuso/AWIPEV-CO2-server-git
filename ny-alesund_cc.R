@@ -73,10 +73,11 @@ agg_fun_3 = "N"
 # start_date <- ymd_hms("2015-07-25 00:00:00")
 # start_date <- ymd_hms("2018-01-01 00:00:00")
 selected_data_minute <- readRDS(file = paste0(path, "all_nydata_minute.rds"))
-start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(1)
+start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(60)
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S") 
 
 #end_date <- ymd_hms("2017-12-31 23:59:59") 
+#end_date <- ymd_hms("2018-12-31 23:59:59") 
 #end_date <- ymd_hms("2020-02-15 23:59:59") 
 # days_back <- 2
 end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
@@ -460,22 +461,6 @@ data <- data %>%
 #   dplyr::mutate(phINT = ifelse(phINT >7.5  & phINT <8.5, phINT, NA), 
 #                 phEXT = ifelse(phEXT >7.5  & phEXT <8.5, phEXT, NA))
 
-## TA ##
-data <- data %>% 
-  dplyr::mutate(
-    AT_qf = ifelse(datetime >= "2016-02-26 12:00:00" & AT_1215 < 100 | InvSal_1215 != 0 | InvpH_1215 != 0 | InvAT_1215 !=0, 4, 1),
-    AT_qf = ifelse(datetime >= "2016-02-26 12:00:00" & AT_0317 < 100 | InvSal_0317 != 0 | InvpH_0317 != 0 | InvAT_0317 !=0, 4, 1),
-    AT_qf = ifelse(datetime == "2017-05-23 21:07:00", 4, 1),
-    AT = ifelse(AT_qf == 4 , NA, AT),
-  )
-    
-# data <- data %>%
-#   dplyr::mutate(AT= ifelse(datetime >= "2016-02-26 12:00:00" & AT_1215 > 100 & InvSal_1215 == 0 & InvpH_1215 == 0 & InvAT_1215 ==0 , AT_1215, NA))
-# data <- data %>%
-#   dplyr::mutate(AT= ifelse(datetime >= "2016-02-26 12:00:00" & AT_0317 > 100 & InvSal_0317 == 0 & InvpH_0317 == 0 & InvAT_0317 ==0 , AT_0317, NA))
-# data <- data %>%
-#   dplyr::mutate(AT = ifelse(datetime == "2017-05-23 21:07:00", NA, AT))
-#         
 
 ##########   first data cleaning : despike()  ###########
 #pco2_raw_filtered = raw pco2 data from sensor + despike. use to be PCO2_Corr_filtered before April 2020
@@ -510,7 +495,8 @@ data <- data %>%
 #MINUTE
 # save all parameters in long format (not selected data)
 if (file.exists(paste0(path, "all_parameters_nydata_minute.rds")) == TRUE) {
-  previous_all_parameters_data_minute <- readRDS(paste0(path, "all_parameters_nydata_minute.rds"))
+  previous_all_parameters_data_minute <- readRDS(paste0(path, "all_parameters_nydata_minute.rds"))   %>%
+    dplyr::filter(datetime - days(60) ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
   #### Binding data (previous + new) ####
   data <- rbind(previous_all_parameters_data_minute, data)
   #Remove duplicate due to binding
@@ -581,7 +567,6 @@ selected_data_minute <- data  %>%
                    temp_insitu_11m_filtered,
                    temp_dur_filtered,
                    ph_dur,
-                   AT,
                    voltINT,
                    voltEXT,
                    phINT,
@@ -626,7 +611,6 @@ selected_data_hour <- selected_data_minute%>%
                    pco2_raw_filtered = mean(pco2_raw_filtered, na.rm = TRUE),
                    PeriodDeplpCO2 = mean(PeriodDeplpCO2, na.rm = TRUE),
                    pco2_corr_filtered= mean(pco2_corr_filtered, na.rm = TRUE),
-                   AT= mean(AT, na.rm = TRUE),
                    ph_dur= mean(ph_dur, na.rm = TRUE),
                    temp_dur_filtered= mean(temp_dur_filtered, na.rm = TRUE),
                    T_seaF= mean(T_seaF, na.rm = TRUE),
