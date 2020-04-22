@@ -77,7 +77,6 @@ start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S") 
 
 #end_date <- ymd_hms("2017-12-31 23:59:59") 
-#end_date <- ymd_hms("2018-12-31 23:59:59") 
 #end_date <- ymd_hms("2020-02-15 23:59:59") 
 # days_back <- 2
 end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
@@ -448,6 +447,14 @@ data <- data %>%
     temp_insitu_11m_qf = ifelse(temp_insitu_11m > 10 | temp_insitu_11m < -2 , 4, 1), 
     temp_insitu_11m = ifelse(temp_insitu_11m_qf == 4 , NA, temp_insitu_11m),
   )
+## filter Voltages seaFET 
+data <- data %>% 
+  dplyr::mutate(
+    voltINT_qf = ifelse(voltINT > 0 , 4, 1), 
+    voltINT = ifelse(voltINT_qf == 4 , NA, voltINT),
+    voltEXT_qf = ifelse(voltINT > -0.4 , 4, 1), 
+    voltEXT = ifelse(voltEXT_qf == 4 , NA, voltEXT)
+  )
 
 ## seaFET
 data <- data %>% 
@@ -471,7 +478,7 @@ data <- data %>%
                  pco2_corr_filtered= despike(data$pco2_corr, reference= "median", n=2, k=5761, replace="NA"),
                  sal_fb_filtered= despike(data$sal_fb, reference= "median", n=2, k=5761, replace="NA"),
                  temp_fb_filtered= despike(data$temp_fb, reference= "median", n=2, k=5761, replace="NA"),
-                 #ph_dur_filtered= despike(data$ph_dur, reference= "median", n=8, k=241, replace="NA"),
+                 ph_dur_filtered= despike(data$ph_dur, reference= "median", n=2, k=5761, replace="NA"),
                  temp_dur_filtered= despike(data$temp_dur, reference= "median", n=2, k=5761, replace="NA"),
                  temp_insitu_11m_filtered= despike(data$temp_insitu_11m, reference= "median", n=2, k=5761, replace="NA"),
                  date = as.Date(data$datetime),
@@ -566,7 +573,7 @@ selected_data_minute <- data  %>%
                    temp_fb_filtered,
                    temp_insitu_11m_filtered,
                    temp_dur_filtered,
-                   ph_dur,
+                   ph_dur_filtered,
                    voltINT,
                    voltEXT,
                    phINT,
@@ -611,7 +618,7 @@ selected_data_hour <- selected_data_minute%>%
                    pco2_raw_filtered = mean(pco2_raw_filtered, na.rm = TRUE),
                    PeriodDeplpCO2 = mean(PeriodDeplpCO2, na.rm = TRUE),
                    pco2_corr_filtered= mean(pco2_corr_filtered, na.rm = TRUE),
-                   ph_dur= mean(ph_dur, na.rm = TRUE),
+                   ph_dur_filtered= mean(ph_dur_filtered, na.rm = TRUE),
                    temp_dur_filtered= mean(temp_dur_filtered, na.rm = TRUE),
                    T_seaF= mean(T_seaF, na.rm = TRUE),
                    phINT= mean(phINT, na.rm = TRUE),
