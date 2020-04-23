@@ -67,9 +67,6 @@ agg_fun_3 = "N"
 # Create end_date (data until yesterday 23:59:59) and start_date (last data from previous data minute).
 
 # start_date = Open the last "year" file (minute fomat) and take the last line date - 1 day. like that we avoid NA to interpolate Sprim2beamZ (pCO2) later.
-#list_last_year <- list.files(path  = path), pattern = "*all_nydata_minute.*")
-#list_last_year <- list_last_year[length(list_last_year)]
-# start_date <- (end_date - (days_back *(3600*24)))
 # start_date <- ymd_hms("2015-07-25 00:00:00")
 # start_date <- ymd_hms("2018-01-01 00:00:00")
 selected_data_minute <- readRDS(file = paste0(path, "all_nydata_minute.rds"))
@@ -78,7 +75,6 @@ startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
 
 # end_date <- ymd_hms("2017-12-31 23:59:59") 
 # end_date <- ymd_hms("2020-02-15 23:59:59") 
-# days_back <- 2
 end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
 enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 
@@ -86,6 +82,17 @@ enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 if (end_date-start_date <= days(1)) {
   stop()
   }
+
+
+read_nrt <- function(agg_time = agg_time) {
+  data <- NULL
+  tmp <- NULL
+  for (i in c(2015:2020)) {
+    print(i)
+    startdate <- ymd_hms(paste0(as.character(i), "-01-01 00:00:00"))
+    startdate <- format(startdate, "%Y-%m-%dT%H:%M:%S") 
+    enddate <- ymd_hms(paste0(as.character(i), "-12-31 23:59:59"))
+    enddate <- format(enddate, "%Y-%m-%dT%H:%M:%S") 
 
 if(agg_time=="MINUTE"){
   aggregate_string=paste0("&aggregate=",agg_time)
@@ -167,8 +174,18 @@ code <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdat
                
                )
 
-data <- data.table::fread(code, encoding = "UTF-8", showProgress	= TRUE)
-colnames(data) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317",  "InvAT_0317",  "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215",  "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215","pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515","pco2_raw_Zero_0515", "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103" )
+tmp <- data.table::fread(code, encoding = "UTF-8", showProgress	= TRUE)
+colnames(tmp) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317",  "InvAT_0317",  "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215",  "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215","pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515","pco2_raw_Zero_0515", "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103" )
+if(i == 2015) {
+  data <- tmp 
+  } else {
+    data <- dplyr::bind_rows(data, tmp)
+  }
+}
+return(data)
+}
+
+data <- as_tibble(read_nrt(agg_time = "MINUTE"))
 data$datetime <- ymd_hms(data$datetime)
 data2 <- data
 # Create instrument column as flag

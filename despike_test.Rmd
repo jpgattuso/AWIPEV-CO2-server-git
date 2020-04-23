@@ -144,7 +144,7 @@ One reads data from the NRT and then focus on pCO2:
 * Use of despike:
     + The type of reference time series to be used in the detection of spikes is **median**. The first step is to linearly interpolate across any gaps (spots where x==NA), using approx() with rule=2. The second step is to pass this through runmed() to get a running median spanning k elements. The result of these two steps is the "reference" time-series. Then, the standard deviation of the difference between x and the reference is calculated. Any x values that differ from the reference by more than n times this standard deviation are considered to be spikes. If replace="reference", the spike values are replaced with the reference, and the resultant time series is returned. If replace="NA", the spikes are replaced with NA, and that result is returned.
     + all combinations of the following n and k values:
-        * n <- c(0.01, 0.1, 1, 2) # number of times sd
+        * n <- c(0.5, 1, 2) # number of times sd [0.01, 0.1 have also been tried but too stringent]
         * k <- c(5, 31, 121, 1441, $1440*4+1$, $1440*6+1$) # time window in min
 
 There are `r length(data$pco2_corr)` data in this 2016 file. `r sum(!is.na(data$pco2_corr))` are not NAs (the first 2 months or so have NAs). 
@@ -249,7 +249,7 @@ d <- as_tsibble(res %>%
                   dplyr::select(datetime, n0.5k5761, n0.5k8641, n1k5761, n1k8641, n2k5761, n2k8641))
 d_hour <- d %>%
   group_by_key() %>%
-  index_by(hour = ~ lubridate::floor_date(., "1 hour")) %>% # monthly aggregates
+  index_by(hour = ~ lubridate::floor_date(., "1 hour")) %>% # hourly aggregates
   summarise(
     n0.5k5761h = mean(n0.5k5761, na.rm = TRUE),
     n0.5k8641h = mean(n0.5k8641, na.rm = TRUE),
