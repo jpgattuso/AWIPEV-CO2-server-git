@@ -76,9 +76,8 @@ selected_data_minute <- readRDS(file = paste0(path, "all_nydata_minute.rds"))
 start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(60)
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S") 
 
-#end_date <- ymd_hms("2017-12-31 23:59:59") 
-#end_date <- ymd_hms("2018-12-31 23:59:59") 
-#end_date <- ymd_hms("2020-02-15 23:59:59") 
+# end_date <- ymd_hms("2017-12-31 23:59:59") 
+# end_date <- ymd_hms("2020-02-15 23:59:59") 
 # days_back <- 2
 end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
 enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
@@ -382,6 +381,14 @@ data <- data %>%
   )
 
 ##### First cleaning
+# classified as id 1 when good data
+# classified as id 3 when impossible date and time test
+# classified as id 4 when data not usable according to manufacturer (flush mode, zero mode, calibration mode...) 
+# classified as id 6 when failing the manufacturer range test 
+# classified as id 7 when failing the regional range test 
+# classified as id 12 when failing the spike test (NAs from despike)
+# classified as id 13 when failing the gradient test
+# classified as 99  when failing the final visual inspection of the data. 
 
 # Argo qflags: 1 is good data, 4 is bad data
 
@@ -393,11 +400,11 @@ data <- data %>%
       day(data$datetime) < 1 | day(data$datetime) > 31 |
       hour(data$datetime) < 0 | hour(data$datetime) > 23 |
       minute(data$datetime) < 0 | minute(data$datetime) > 59,
-    4, 1)) %>%
+    3, 1)) %>%
   dplyr::filter(dt_qf == 1) # removes rows with wrong dates
 
-
 ## pCO2 
+
 # Argo Global Range Test. If QF = 4 replace value by NA
 # Removing outliers due to acid flush in the FB at 12:00 and 00:00 
 # pco2_raw = Raw data from the sensor (use to be PCO2_Corr before April 2020)
@@ -448,6 +455,14 @@ data <- data %>%
     temp_insitu_11m_qf = ifelse(temp_insitu_11m > 10 | temp_insitu_11m < -2 , 4, 1), 
     temp_insitu_11m = ifelse(temp_insitu_11m_qf == 4 , NA, temp_insitu_11m),
   )
+## filter Voltages seaFET to remove outliers when calculating final corrected pH.
+data <- data %>% 
+  dplyr::mutate(
+    voltINT_qf = ifelse(voltINT > 0 , 4, 1), 
+    voltINT = ifelse(voltINT_qf == 4 , NA, voltINT),
+    voltEXT_qf = ifelse(voltINT > -0.4 , 4, 1), 
+    voltEXT = ifelse(voltEXT_qf == 4 , NA, voltEXT)
+  )
 
 ## seaFET
 data <- data %>% 
@@ -471,7 +486,7 @@ data <- data %>%
                  pco2_corr_filtered= despike(data$pco2_corr, reference= "median", n=2, k=5761, replace="NA"),
                  sal_fb_filtered= despike(data$sal_fb, reference= "median", n=2, k=5761, replace="NA"),
                  temp_fb_filtered= despike(data$temp_fb, reference= "median", n=2, k=5761, replace="NA"),
-                 #ph_dur_filtered= despike(data$ph_dur, reference= "median", n=8, k=241, replace="NA"),
+                 ph_dur_filtered= despike(data$ph_dur, reference= "median", n=2, k=5761, replace="NA"),
                  temp_dur_filtered= despike(data$temp_dur, reference= "median", n=2, k=5761, replace="NA"),
                  temp_insitu_11m_filtered= despike(data$temp_insitu_11m, reference= "median", n=2, k=5761, replace="NA"),
                  date = as.Date(data$datetime),
@@ -566,7 +581,7 @@ selected_data_minute <- data  %>%
                    temp_fb_filtered,
                    temp_insitu_11m_filtered,
                    temp_dur_filtered,
-                   ph_dur,
+                   ph_dur_filtered,
                    voltINT,
                    voltEXT,
                    phINT,
@@ -611,7 +626,7 @@ selected_data_hour <- selected_data_minute%>%
                    pco2_raw_filtered = mean(pco2_raw_filtered, na.rm = TRUE),
                    PeriodDeplpCO2 = mean(PeriodDeplpCO2, na.rm = TRUE),
                    pco2_corr_filtered= mean(pco2_corr_filtered, na.rm = TRUE),
-                   ph_dur= mean(ph_dur, na.rm = TRUE),
+                   ph_dur_filtered= mean(ph_dur_filtered, na.rm = TRUE),
                    temp_dur_filtered= mean(temp_dur_filtered, na.rm = TRUE),
                    T_seaF= mean(T_seaF, na.rm = TRUE),
                    phINT= mean(phINT, na.rm = TRUE),
