@@ -76,8 +76,8 @@ selected_data_minute <- readRDS(file = paste0(path, "all_nydata_minute.rds"))
 start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(60)
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S") 
 
-#end_date <- ymd_hms("2017-12-31 23:59:59") 
-#end_date <- ymd_hms("2020-02-15 23:59:59") 
+# end_date <- ymd_hms("2017-12-31 23:59:59") 
+# end_date <- ymd_hms("2020-02-15 23:59:59") 
 # days_back <- 2
 end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
 enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
@@ -381,6 +381,14 @@ data <- data %>%
   )
 
 ##### First cleaning
+# classified as id 1 when good data
+# classified as id 3 when impossible date and time test
+# classified as id 4 when data not usable according to manufacturer (flush mode, zero mode, calibration mode...) 
+# classified as id 6 when failing the manufacturer range test 
+# classified as id 7 when failing the regional range test 
+# classified as id 12 when failing the spike test (NAs from despike)
+# classified as id 13 when failing the gradient test
+# classified as 99  when failing the final visual inspection of the data. 
 
 # Argo qflags: 1 is good data, 4 is bad data
 
@@ -392,11 +400,11 @@ data <- data %>%
       day(data$datetime) < 1 | day(data$datetime) > 31 |
       hour(data$datetime) < 0 | hour(data$datetime) > 23 |
       minute(data$datetime) < 0 | minute(data$datetime) > 59,
-    4, 1)) %>%
+    3, 1)) %>%
   dplyr::filter(dt_qf == 1) # removes rows with wrong dates
 
-
 ## pCO2 
+
 # Argo Global Range Test. If QF = 4 replace value by NA
 # Removing outliers due to acid flush in the FB at 12:00 and 00:00 
 # pco2_raw = Raw data from the sensor (use to be PCO2_Corr before April 2020)
@@ -447,7 +455,7 @@ data <- data %>%
     temp_insitu_11m_qf = ifelse(temp_insitu_11m > 10 | temp_insitu_11m < -2 , 4, 1), 
     temp_insitu_11m = ifelse(temp_insitu_11m_qf == 4 , NA, temp_insitu_11m),
   )
-## filter Voltages seaFET 
+## filter Voltages seaFET to remove outliers when calculating final corrected pH.
 data <- data %>% 
   dplyr::mutate(
     voltINT_qf = ifelse(voltINT > 0 , 4, 1), 
