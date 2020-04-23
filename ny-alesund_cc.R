@@ -401,13 +401,11 @@ data <- data %>%
 # classified as id 1 when good data
 # classified as id 3 when impossible date and time test
 # classified as id 4 when data not usable according to manufacturer (flush mode, zero mode, calibration mode...) 
-# classified as id 6 when failing the manufacturer range test 
+# classified as id 6 when failing the manufacturer range test (not used)
 # classified as id 7 when failing the regional range test 
 # classified as id 12 when failing the spike test (NAs from despike)
 # classified as id 13 when failing the gradient test
 # classified as 99  when failing the final visual inspection of the data. 
-
-# Argo qflags: 1 is good data, 4 is bad data
 
 #### Argo impossible date test
 data <- data %>%
@@ -428,66 +426,54 @@ data <- data %>%
 # pco2_corr = Final corrected data from Contros "data processing document", (use to be PCO2_corr_contros before April 2020)
 data <- data %>% 
   dplyr::mutate(
-    pco2_raw_qf = ifelse(
-      State_Zero >= 1 | State_Flush >= 1 |
-        pco2_raw < 100 | pco2_raw > 450 |
-        Time >= "00:00:00" & Time <= "01:30:00" |
-        Time >= "12:00:00" & Time <= "13:00:00" |
-        datetime >= "2017-03-10 08:00:00" &
-        datetime < "2017-03-21 20:00:00",
-      4,
-      1
-    ),
-    pco2_raw = ifelse(pco2_raw_qf == 4 , NA, pco2_raw),
-    pco2_corr_qf = ifelse(
-      State_Zero >= 1 | State_Flush >= 1 |
-        pco2_corr < 100 | pco2_corr > 450 |
-        Time >= "00:00:00" & Time <= "01:30:00" |
-        Time >= "12:00:00" & Time <= "13:00:00" |
-        datetime >= "2017-03-10 08:00:00" &
-        datetime < "2017-03-21 20:00:00",
-      4,
-      1
-    ),
-    pco2_corr = ifelse(pco2_corr_qf == 4 , NA, pco2_corr)
+    pco2_raw_qf = ifelse(State_Zero >= 1 | State_Flush >= 1, 4,
+                      ifelse(pco2_raw < 100 | pco2_raw > 450 , 7,
+                      ifelse(Time >= "00:00:00" & Time <= "01:30:00" | Time >= "12:00:00" & Time <= "13:00:00" |datetime >= "2017-03-10 08:00:00" & datetime < "2017-03-21 20:00:00", 99,
+      1))),
+    pco2_raw = ifelse(pco2_raw_qf !=1 , NA, pco2_raw),
+    pco2_corr_qf = ifelse(State_Zero >= 1 | State_Flush >= 1, 4,
+                          ifelse(pco2_raw < 100 | pco2_raw > 450 , 7,
+                                 ifelse(Time >= "00:00:00" & Time <= "01:30:00" | Time >= "12:00:00" & Time <= "13:00:00" |datetime >= "2017-03-10 08:00:00" & datetime < "2017-03-21 20:00:00", 99,
+                                        1))),
+    pco2_corr = ifelse(pco2_corr_qf !=1 , NA, pco2_corr)
   )
 
 ## filter salinities above 28
 data <- data %>% 
   dplyr::mutate(
-    sal_fb_qf = ifelse(sal_fb < 28 | sal_fb > 36, 4, 1), 
-    sal_fb = ifelse(sal_fb_qf == 4 , NA, sal_fb),
-    sal_insitu_ctd_qf = ifelse(sal_insitu_ctd < 28 | sal_fb > 36, 4, 1),
-    sal_insitu_ctd_qf = ifelse(datetime > "2019-12-26 00:00:00", 4, 1),
-    sal_insitu_ctd = ifelse(sal_insitu_ctd_qf == 4 , NA, sal_insitu_ctd),
+    sal_fb_qf = ifelse(sal_fb < 28 | sal_fb > 36, 7, 1), 
+    sal_fb = ifelse(sal_fb_qf != 1 , NA, sal_fb),
+    sal_insitu_ctd_qf = ifelse(sal_insitu_ctd < 28 | sal_fb > 36, 7, 1),
+    sal_insitu_ctd_qf = ifelse(datetime > "2019-12-26 00:00:00", 99, 1),
+    sal_insitu_ctd = ifelse(sal_insitu_ctd_qf != 1 , NA, sal_insitu_ctd),
   )
 
 ## filter temperatures above 10
 data <- data %>% 
   dplyr::mutate(
-    temp_dur_qf = ifelse(temp_dur > 10 | temp_dur < -2 , 4, 1), 
-    temp_dur = ifelse(temp_dur_qf == 4 , NA, temp_dur),
-    temp_fb_qf = ifelse(temp_fb > 10 | temp_fb < -2 , 4, 1), 
-    temp_fb = ifelse(temp_fb_qf == 4 , NA, temp_fb),
-    temp_insitu_11m_qf = ifelse(temp_insitu_11m > 10 | temp_insitu_11m < -2 , 4, 1), 
-    temp_insitu_11m = ifelse(temp_insitu_11m_qf == 4 , NA, temp_insitu_11m),
+    temp_dur_qf = ifelse(temp_dur > 10 | temp_dur < -2 , 7, 1), 
+    temp_dur = ifelse(temp_dur_qf != 1 , NA, temp_dur),
+    temp_fb_qf = ifelse(temp_fb > 10 | temp_fb < -2 , 7, 1), 
+    temp_fb = ifelse(temp_fb_qf != 1 , NA, temp_fb),
+    temp_insitu_11m_qf = ifelse(temp_insitu_11m > 10 | temp_insitu_11m < -2 , 7, 1), 
+    temp_insitu_11m = ifelse(temp_insitu_11m_qf != 1 , NA, temp_insitu_11m),
   )
 ## filter Voltages seaFET to remove outliers when calculating final corrected pH.
 data <- data %>% 
   dplyr::mutate(
-    voltINT_qf = ifelse(voltINT > 0 , 4, 1), 
-    voltINT = ifelse(voltINT_qf == 4 , NA, voltINT),
-    voltEXT_qf = ifelse(voltINT > -0.4 , 4, 1), 
-    voltEXT = ifelse(voltEXT_qf == 4 , NA, voltEXT)
+    voltINT_qf = ifelse(voltINT > 0 , 99, 1), 
+    voltINT = ifelse(voltINT_qf != 1 , NA, voltINT),
+    voltEXT_qf = ifelse(voltINT > -0.4 , 99, 1), 
+    voltEXT = ifelse(voltEXT_qf != 1 , NA, voltEXT)
   )
 
 ## seaFET
 data <- data %>% 
   dplyr::mutate(
-    phINT_qf = ifelse(phINT < 7.5 | phINT > 8.5 , 4, 1), 
-    phINT = ifelse(phINT_qf == 4 , NA, phINT),
-    phEXT_qf = ifelse(phEXT < 7.5 | phEXT > 8.5 , 4, 1), 
-    phEXT = ifelse(phEXT_qf == 4 , NA, phEXT)
+    phINT_qf = ifelse(phINT < 7.5 | phINT > 8.5 , 7, 1), 
+    phINT = ifelse(phINT_qf != 1 , NA, phINT),
+    phEXT_qf = ifelse(phEXT < 7.5 | phEXT > 8.5 , 7, 1), 
+    phEXT = ifelse(phEXT_qf != 1 , NA, phEXT)
   )
 # data <- data %>%
 #   dplyr::mutate(phINT = ifelse(phINT >7.5  & phINT <8.5, phINT, NA), 
@@ -589,20 +575,38 @@ if (file.exists(paste0(path, "all_parameters_nydata_hour.rds")) == TRUE) {
 #### MINUTE format (small format) ####
 selected_data_minute <- data  %>%
     dplyr::select( datetime,
+                   dt_qf,
+                   pco2_raw,
                    pco2_raw_filtered,
+                   pco2_raw_qf,
+                   pco2_corr,
                    pco2_corr_filtered,
+                   pco2_corr_qf,
                    PeriodDeplpCO2,
                    pressure_insitu_ctd,
+                   sal_fb,
                    sal_fb_filtered,
+                   sal_fb_qf,
                    sal_insitu_ctd,
+                   sal_insitu_ctd_qf,
+                   temp_fb,
                    temp_fb_filtered,
+                   temp_fb_qf,
+                   temp_insitu_11m,
                    temp_insitu_11m_filtered,
+                   temp_insitu_11m_qf,
+                   temp_dur,
                    temp_dur_filtered,
+                   temp_dur_qf,
                    ph_dur_filtered,
                    voltINT,
+                   voltINT_qf,
                    voltEXT,
+                   voltEXT_qf,
                    phINT,
+                   phINT_qf,
                    phEXT,
+                   phEXT_qf,
                    T_seaF,
                    pco2_inst,
                    ta_inst,
@@ -637,13 +641,20 @@ selected_data_hour <- selected_data_minute%>%
   dplyr::group_by( date, hour) %>%
   dplyr::summarise(pressure_insitu_ctd = mean(pressure_insitu_ctd, na.rm = TRUE),
                    sal_insitu_ctd = mean(sal_insitu_ctd, na.rm = TRUE),
+                   sal_fb = mean(sal_fb, na.rm = TRUE),
                    sal_fb_filtered = mean(sal_fb_filtered, na.rm = TRUE),
+                   temp_fb = mean(temp_fb, na.rm = TRUE),
                    temp_fb_filtered = mean(temp_fb_filtered, na.rm = TRUE),
+                   temp_insitu_11m = mean(temp_insitu_11m, na.rm = TRUE),
                    temp_insitu_11m_filtered= mean(temp_insitu_11m_filtered, na.rm = TRUE),
+                   pco2_raw = mean(pco2_raw, na.rm = TRUE),
                    pco2_raw_filtered = mean(pco2_raw_filtered, na.rm = TRUE),
                    PeriodDeplpCO2 = mean(PeriodDeplpCO2, na.rm = TRUE),
+                   pco2_corr = mean(pco2_corr, na.rm = TRUE),
                    pco2_corr_filtered= mean(pco2_corr_filtered, na.rm = TRUE),
+                   ph_dur = mean(ph_dur, na.rm = TRUE),
                    ph_dur_filtered= mean(ph_dur_filtered, na.rm = TRUE),
+                   temp_dur= mean(temp_dur, na.rm = TRUE),
                    temp_dur_filtered= mean(temp_dur_filtered, na.rm = TRUE),
                    T_seaF= mean(T_seaF, na.rm = TRUE),
                    phINT= mean(phINT, na.rm = TRUE),
