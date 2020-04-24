@@ -598,6 +598,7 @@ selected_data_minute <- data  %>%
                    temp_dur,
                    temp_dur_filtered,
                    temp_dur_qf,
+                   ph_dur,
                    ph_dur_filtered,
                    voltINT,
                    voltINT_qf,
@@ -649,11 +650,11 @@ selected_data_minute <- selected_data_minute%>%
                 temp_insitu_ctd_5m = ifelse(depth == 5, temp_insitu_ctd, NA ),
                 temp_insitu_ctd_7m = ifelse(depth == 7, temp_insitu_ctd, NA ),
                 temp_insitu_ctd_9m = ifelse(depth == 9, temp_insitu_ctd, NA ),
-                par_insitu_ctd_1m = ifelse(depth == 1, par_insitu_ctd, NA ),
-                par_insitu_ctd_3m = ifelse(depth == 3, par_insitu_ctd, NA ),
-                par_insitu_ctd_5m = ifelse(depth == 5, par_insitu_ctd, NA ),
-                par_insitu_ctd_7m = ifelse(depth == 7, par_insitu_ctd, NA ),
-                par_insitu_ctd_9m = ifelse(depth == 9, par_insitu_ctd, NA ))
+                par_insitu_profile_1m = ifelse(depth == 1, par_insitu_profile, NA ),
+                par_insitu_profile_3m = ifelse(depth == 3, par_insitu_profile, NA ),
+                par_insitu_profile_5m = ifelse(depth == 5, par_insitu_profile, NA ),
+                par_insitu_profile_7m = ifelse(depth == 7, par_insitu_profile, NA ),
+                par_insitu_profile_9m = ifelse(depth == 9, par_insitu_profile, NA ))
                 
 # to add instrument S/N columns
 selected_data_minute$pco2_inst <- as.numeric(selected_data_minute$pco2_inst)
@@ -662,8 +663,7 @@ selected_data_minute$seafet_inst <- as.numeric(selected_data_minute$seafet_inst)
 
 selected_data_hour <- selected_data_minute%>%
   dplyr::group_by( date, hour) %>%
-  dplyr::summarise(pressure_insitu_ctd = mean(pressure_insitu_ctd, na.rm = TRUE),
-                   sal_insitu_ctd_1m = mean(sal_insitu_ctd_1m, na.rm = TRUE),
+  dplyr::summarise(sal_insitu_ctd_1m = mean(sal_insitu_ctd_1m, na.rm = TRUE),
                    sal_insitu_ctd_3m = mean(sal_insitu_ctd_3m, na.rm = TRUE),
                    sal_insitu_ctd_5m = mean(sal_insitu_ctd_5m, na.rm = TRUE),
                    sal_insitu_ctd_7m = mean(sal_insitu_ctd_7m, na.rm = TRUE),
