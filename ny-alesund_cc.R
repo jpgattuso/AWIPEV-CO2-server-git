@@ -69,14 +69,6 @@ agg_fun_3 = "N"
 # start_date = Open the last "year" file (minute fomat) and take the last line date - 1 day. like that we avoid NA to interpolate Sprim2beamZ (pCO2) later.
 # start_date <- ymd_hms("2015-07-25 00:00:00")
 # start_date <- ymd_hms("2018-01-01 00:00:00")
-selected_data_minute <- readRDS(file = paste0(path, "all_nydata_minute.rds"))
-start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(60)
-startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S") 
-
-# end_date <- ymd_hms("2017-12-31 23:59:59") 
-# end_date <- ymd_hms("2020-02-15 23:59:59") 
-end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
-enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 
 # if enddate - startdate < 1 d one skips everything until the end of this script
 if (end_date-start_date <= days(1)) {
@@ -87,12 +79,22 @@ if (end_date-start_date <= days(1)) {
 read_nrt <- function(agg_time = agg_time) {
   data <- NULL
   tmp <- NULL
-  for (i in c(2015:2020)) {
-    print(i)
-    startdate <- ymd_hms(paste0(as.character(i), "-01-01 00:00:00"))
-    startdate <- format(startdate, "%Y-%m-%dT%H:%M:%S") 
-    enddate <- ymd_hms(paste0(as.character(i), "-12-31 23:59:59"))
-    enddate <- format(enddate, "%Y-%m-%dT%H:%M:%S") 
+  
+selected_data_minute <- readRDS(file = paste0(path, "all_nydata_minute.rds"))
+start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(60)
+startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S") 
+
+# end_date <- ymd_hms("2017-12-31 23:59:59") 
+# end_date <- ymd_hms("2020-02-15 23:59:59") 
+end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
+enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
+
+  # for (i in c(2015:2020)) {
+  #   print(i)
+  #   startdate <- ymd_hms(paste0(as.character(i), "-01-01 00:00:00"))
+  #   startdate <- format(startdate, "%Y-%m-%dT%H:%M:%S") 
+  #   enddate <- ymd_hms(paste0(as.character(i), "-12-31 23:59:59"))
+  #   enddate <- format(enddate, "%Y-%m-%dT%H:%M:%S") 
 
 if(agg_time=="MINUTE"){
   aggregate_string=paste0("&aggregate=",agg_time)
@@ -181,7 +183,7 @@ if(i == 2015) {
   } else {
     data <- dplyr::bind_rows(data, tmp)
   }
-}
+#}
 return(data)
 }
 
@@ -668,20 +670,13 @@ selected_data_hour <- selected_data_minute%>%
                    sal_insitu_ctd_5m = mean(sal_insitu_ctd_5m, na.rm = TRUE),
                    sal_insitu_ctd_7m = mean(sal_insitu_ctd_7m, na.rm = TRUE),
                    sal_insitu_ctd_9m = mean(sal_insitu_ctd_9m, na.rm = TRUE),
-                   sal_fb = mean(sal_fb, na.rm = TRUE),
                    sal_fb_filtered = mean(sal_fb_filtered, na.rm = TRUE),
-                   temp_fb = mean(temp_fb, na.rm = TRUE),
                    temp_fb_filtered = mean(temp_fb_filtered, na.rm = TRUE),
-                   temp_insitu_11m = mean(temp_insitu_11m, na.rm = TRUE),
                    temp_insitu_11m_filtered= mean(temp_insitu_11m_filtered, na.rm = TRUE),
-                   pco2_raw = mean(pco2_raw, na.rm = TRUE),
                    pco2_raw_filtered = mean(pco2_raw_filtered, na.rm = TRUE),
                    PeriodDeplpCO2 = mean(PeriodDeplpCO2, na.rm = TRUE),
-                   pco2_corr = mean(pco2_corr, na.rm = TRUE),
                    pco2_corr_filtered= mean(pco2_corr_filtered, na.rm = TRUE),
-                   ph_dur = mean(ph_dur, na.rm = TRUE),
                    ph_dur_filtered= mean(ph_dur_filtered, na.rm = TRUE),
-                   temp_dur= mean(temp_dur, na.rm = TRUE),
                    temp_dur_filtered= mean(temp_dur_filtered, na.rm = TRUE),
                    T_seaF= mean(T_seaF, na.rm = TRUE),
                    phINT= mean(phINT, na.rm = TRUE),
