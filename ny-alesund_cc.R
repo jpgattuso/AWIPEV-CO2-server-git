@@ -632,6 +632,29 @@ if (file.exists(paste0(path, "all_nydata_minute.rds")) == TRUE) {
 }
 
 #### HOUR format ####
+# Make groups for data on the profiler
+selected_data_minute <- selected_data_minute%>%
+  dplyr::mutate(depth = ifelse(pressure_insitu_ctd <=2, 1, 
+                               ifelse(pressure_insitu_ctd >2 & pressure_insitu_ctd <=4, 3, 
+                                      ifelse(pressure_insitu_ctd >4 & pressure_insitu_ctd <=6, 5,
+                                             ifelse(pressure_insitu_ctd >6 & pressure_insitu_ctd <=8, 7,
+                                                    ifelse(pressure_insitu_ctd >8, 9,NA))))),
+                sal_insitu_ctd_1m = ifelse(depth == 1, sal_insitu_ctd, NA ),
+                sal_insitu_ctd_3m = ifelse(depth == 3, sal_insitu_ctd, NA ),
+                sal_insitu_ctd_5m = ifelse(depth == 5, sal_insitu_ctd, NA ),
+                sal_insitu_ctd_7m = ifelse(depth == 7, sal_insitu_ctd, NA ),
+                sal_insitu_ctd_9m = ifelse(depth == 9, sal_insitu_ctd, NA ),
+                temp_insitu_ctd_1m = ifelse(depth == 1, temp_insitu_ctd, NA ),
+                temp_insitu_ctd_3m = ifelse(depth == 3, temp_insitu_ctd, NA ),
+                temp_insitu_ctd_5m = ifelse(depth == 5, temp_insitu_ctd, NA ),
+                temp_insitu_ctd_7m = ifelse(depth == 7, temp_insitu_ctd, NA ),
+                temp_insitu_ctd_9m = ifelse(depth == 9, temp_insitu_ctd, NA ),
+                par_insitu_ctd_1m = ifelse(depth == 1, par_insitu_ctd, NA ),
+                par_insitu_ctd_3m = ifelse(depth == 3, par_insitu_ctd, NA ),
+                par_insitu_ctd_5m = ifelse(depth == 5, par_insitu_ctd, NA ),
+                par_insitu_ctd_7m = ifelse(depth == 7, par_insitu_ctd, NA ),
+                par_insitu_ctd_9m = ifelse(depth == 9, par_insitu_ctd, NA ))
+                
 # to add instrument S/N columns
 selected_data_minute$pco2_inst <- as.numeric(selected_data_minute$pco2_inst)
 selected_data_minute$ta_inst <- as.numeric(selected_data_minute$ta_inst)
@@ -640,7 +663,11 @@ selected_data_minute$seafet_inst <- as.numeric(selected_data_minute$seafet_inst)
 selected_data_hour <- selected_data_minute%>%
   dplyr::group_by( date, hour) %>%
   dplyr::summarise(pressure_insitu_ctd = mean(pressure_insitu_ctd, na.rm = TRUE),
-                   sal_insitu_ctd = mean(sal_insitu_ctd, na.rm = TRUE),
+                   sal_insitu_ctd_1m = mean(sal_insitu_ctd_1m, na.rm = TRUE),
+                   sal_insitu_ctd_3m = mean(sal_insitu_ctd_3m, na.rm = TRUE),
+                   sal_insitu_ctd_5m = mean(sal_insitu_ctd_5m, na.rm = TRUE),
+                   sal_insitu_ctd_7m = mean(sal_insitu_ctd_7m, na.rm = TRUE),
+                   sal_insitu_ctd_9m = mean(sal_insitu_ctd_9m, na.rm = TRUE),
                    sal_fb = mean(sal_fb, na.rm = TRUE),
                    sal_fb_filtered = mean(sal_fb_filtered, na.rm = TRUE),
                    temp_fb = mean(temp_fb, na.rm = TRUE),
@@ -664,11 +691,19 @@ selected_data_hour <- selected_data_minute%>%
                    pco2_inst= mean(pco2_inst, na.rm = TRUE),
                    ta_inst= mean(ta_inst, na.rm = TRUE),
                    seafet_inst= mean(seafet_inst, na.rm = TRUE) ,
-                   par_insitu_profile = mean(par_insitu_profile, na.rm = TRUE),
+                   par_insitu_profile_1m = mean(par_insitu_profile_1m, na.rm = TRUE),
+                   par_insitu_profile_3m = mean(par_insitu_profile_3m, na.rm = TRUE),
+                   par_insitu_profile_5m = mean(par_insitu_profile_5m, na.rm = TRUE),
+                   par_insitu_profile_7m = mean(par_insitu_profile_7m, na.rm = TRUE),
+                   par_insitu_profile_9m = mean(par_insitu_profile_9m, na.rm = TRUE),
                    par_insitu_10m = mean(par_insitu_10m, na.rm = TRUE),
                    par_air = mean(par_air, na.rm = TRUE),
                    turb_fb = mean(turb_fb, na.rm = TRUE),
-                   temp_insitu_ctd= mean(temp_insitu_ctd, na.rm = TRUE)) %>%
+                   temp_insitu_ctd_1m = mean(temp_insitu_ctd_1m, na.rm = TRUE),
+                   temp_insitu_ctd_3m = mean(temp_insitu_ctd_3m, na.rm = TRUE),
+                   temp_insitu_ctd_5m = mean(temp_insitu_ctd_5m, na.rm = TRUE),
+                   temp_insitu_ctd_7m = mean(temp_insitu_ctd_7m, na.rm = TRUE),
+                   temp_insitu_ctd_9m = mean(temp_insitu_ctd_9m, na.rm = TRUE))%>%
   dplyr::mutate(datetime = ymd_h(paste(date, hour, sep=" ", tz = "UTC"))) %>%
   dplyr::ungroup() %>% # this is to be able to perform the following changes
   dplyr::select(datetime, everything()) %>%
