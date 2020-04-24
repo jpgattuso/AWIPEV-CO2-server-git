@@ -407,6 +407,7 @@ data <- data %>%
 # classified as id 7 when failing the regional range test 
 # classified as id 12 when failing the spike test (NAs from despike)
 # classified as id 13 when failing the gradient test
+# classified as id 15 when the instrument was not deployed or operated
 # classified as 99  when failing the final visual inspection of the data. 
 
 #### Argo impossible date test
@@ -426,26 +427,61 @@ data <- data %>%
 # Removing outliers due to acid flush in the FB at 12:00 and 00:00 
 # pco2_raw = Raw data from the sensor (use to be PCO2_Corr before April 2020)
 # pco2_corr = Final corrected data from Contros "data processing document", (use to be PCO2_corr_contros before April 2020)
-data <- data %>% 
+data <- data %>%
   dplyr::mutate(
-    pco2_raw_qf = ifelse(State_Zero >= 1 | State_Flush >= 1, 4,
-                      ifelse(pco2_raw < 100 | pco2_raw > 450 , 7,
-                      ifelse(Time >= "00:00:00" & Time <= "01:30:00" | Time >= "12:00:00" & Time <= "13:00:00" |datetime >= "2017-03-10 08:00:00" & datetime < "2017-03-21 20:00:00", 99,
-      1))),
-    pco2_raw = ifelse(pco2_raw_qf !=1 , NA, pco2_raw),
-    pco2_corr_qf = ifelse(State_Zero >= 1 | State_Flush >= 1, 4,
-                          ifelse(pco2_raw < 100 | pco2_raw > 450 , 7,
-                                 ifelse(Time >= "00:00:00" & Time <= "01:30:00" | Time >= "12:00:00" & Time <= "13:00:00" |datetime >= "2017-03-10 08:00:00" & datetime < "2017-03-21 20:00:00", 99,
-                                        1))),
-    pco2_corr = ifelse(pco2_corr_qf !=1 , NA, pco2_corr)
+    pco2_raw_qf = ifelse(
+      State_Zero >= 1 | State_Flush >= 1,
+      4,
+      ifelse(pco2_raw < 100 | pco2_raw > 450 , 7,
+             ifelse(
+               is.na(pco2_raw),
+               15,
+               ifelse(
+                 Time >= "00:00:00" &
+                   Time <= "01:30:00" |
+                   Time >= "12:00:00" &
+                   Time <= "13:00:00" |
+                   datetime >= "2017-03-10 08:00:00" &
+                   datetime < "2017-03-21 20:00:00",
+                 99,
+                 1
+               )
+             ))
+    ),
+    pco2_raw = ifelse(pco2_raw_qf != 1 , NA, pco2_raw),
+    pco2_corr_qf = ifelse(
+      State_Zero >= 1 | State_Flush >= 1,
+      4,
+      ifelse(pco2_corr < 100 |
+               pco2_corr > 450 , 7,
+             ifelse(
+               is.na(pco2_corr),
+               15,
+               ifelse(
+                 Time >= "00:00:00" &
+                   Time <= "01:30:00" |
+                   Time >= "12:00:00" &
+                   Time <= "13:00:00" |
+                   datetime >= "2017-03-10 08:00:00" &
+                   datetime < "2017-03-21 20:00:00",
+                 99,
+                 1
+               )
+             ))
+    ),
+    pco2_corr = ifelse(pco2_corr_qf != 1 , NA, pco2_corr)
   )
 
 ## filter salinities above 28
-data <- data %>% 
+data <- data %>%
   dplyr::mutate(
-    sal_fb_qf = ifelse(sal_fb < 28 | sal_fb > 36, 7, 1), 
+    sal_fb_qf = ifelse(sal_fb < 28 | sal_fb > 36, 7,
+                       ifelse(is.na(sal_fb), 15,
+                              1)),
     sal_fb = ifelse(sal_fb_qf != 1 , NA, sal_fb),
-    sal_insitu_ctd_qf = ifelse(sal_insitu_ctd < 28 | sal_fb > 36, 7, 1),
+    sal_insitu_ctd_qf = ifelse(sal_insitu_ctd < 28 | sal_fb > 36, 7,
+                               ifelse(is.na(sal_insitu_ctd), 15,
+                                      1)),
     sal_insitu_ctd_qf = ifelse(datetime > "2019-12-26 00:00:00", 99, 1),
     sal_insitu_ctd = ifelse(sal_insitu_ctd_qf != 1 , NA, sal_insitu_ctd),
   )
@@ -453,28 +489,42 @@ data <- data %>%
 ## filter temperatures above 10
 data <- data %>% 
   dplyr::mutate(
-    temp_dur_qf = ifelse(temp_dur > 10 | temp_dur < -2 , 7, 1), 
+    temp_dur_qf = ifelse(temp_dur > 10 | temp_dur < -2 , 7, 
+                         ifelse(is.na(temp_dur), 15,
+                                1)), 
     temp_dur = ifelse(temp_dur_qf != 1 , NA, temp_dur),
-    temp_fb_qf = ifelse(temp_fb > 10 | temp_fb < -2 , 7, 1), 
+    temp_fb_qf = ifelse(temp_fb > 10 | temp_fb < -2 , 7, 
+                        ifelse(is.na(temp_fb), 15,
+                               1)), 
     temp_fb = ifelse(temp_fb_qf != 1 , NA, temp_fb),
-    temp_insitu_11m_qf = ifelse(temp_insitu_11m > 10 | temp_insitu_11m < -2 , 7, 1), 
+    temp_insitu_11m_qf = ifelse(temp_insitu_11m > 10 | temp_insitu_11m < -2 , 7,
+                                ifelse(is.na(temp_insitu_11m), 15,
+                                       1)), 
     temp_insitu_11m = ifelse(temp_insitu_11m_qf != 1 , NA, temp_insitu_11m),
   )
 ## filter Voltages seaFET to remove outliers when calculating final corrected pH.
-data <- data %>% 
+data <- data %>%
   dplyr::mutate(
-    voltINT_qf = ifelse(voltINT > 0 , 99, 1), 
+    voltINT_qf = ifelse(voltINT > 0 , 99,
+                        ifelse(is.na(voltINT), 15,
+                               1)),
     voltINT = ifelse(voltINT_qf != 1 , NA, voltINT),
-    voltEXT_qf = ifelse(voltINT > -0.4 , 99, 1), 
+    voltEXT_qf = ifelse(voltEXT > -0.4 , 99,
+                        ifelse(is.na(voltEXT), 15,
+                               1)),
     voltEXT = ifelse(voltEXT_qf != 1 , NA, voltEXT)
   )
 
 ## seaFET
 data <- data %>% 
   dplyr::mutate(
-    phINT_qf = ifelse(phINT < 7.5 | phINT > 8.5 , 7, 1), 
+    phINT_qf = ifelse(phINT < 7.5 | phINT > 8.5 , 7, 
+                      ifelse(is.na(phINT), 15,
+                             1)), 
     phINT = ifelse(phINT_qf != 1 , NA, phINT),
-    phEXT_qf = ifelse(phEXT < 7.5 | phEXT > 8.5 , 7, 1), 
+    phEXT_qf = ifelse(phEXT < 7.5 | phEXT > 8.5 , 7, 
+                      ifelse(is.na(phEXT), 15,
+                             1)), 
     phEXT = ifelse(phEXT_qf != 1 , NA, phEXT)
   )
 # data <- data %>%
@@ -496,7 +546,15 @@ data <- data %>%
                  temp_insitu_11m_filtered= despike(data$temp_insitu_11m, reference= "median", n=2, k=5761, replace="NA"),
                  date = as.Date(data$datetime),
                  hour = hour(data$datetime)
-  )
+  ) %>% #Now one adds flag 12 when new NAs were introduced by despike
+  dplyr::mutate(pco2_raw_qf = ifelse(!is.na(pco2_raw) & is.na(pco2_raw_filtered), 12, pco2_raw_qf),
+                pco2_corr_qf = ifelse(!is.na(pco2_corr) & is.na(pco2_corr_filtered), 12, pco2_corr_qf),
+                sal_fb_qf = ifelse(!is.na(sal_fb) & is.na(sal_fb_filtered), 12, sal_fb_qf),
+                temp_fb_qf = ifelse(!is.na(temp_fb) & is.na(temp_fb_filtered), 12, temp_fb_qf),
+                ph_dur_qf = ifelse(!is.na(ph_dur) & is.na(ph_dur_filtered), 12, ph_dur_qf),
+                temp_dur_qf = ifelse(!is.na(temp_dur) & is.na(temp_dur_filtered), 12, temp_dur_qf),
+                temp_insitu_11m_qf = ifelse(!is.na(temp_insitu_11m) & is.na(temp_insitu_11m_filtered), 12, temp_insitu_11m_qf))
+                
 
 # # for 2015 because special year not complete with NA. 
 # data <- data %>%     

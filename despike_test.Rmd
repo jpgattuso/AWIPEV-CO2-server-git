@@ -9,6 +9,9 @@ output:
 theme: cerulean
 ---
 
+This was used in April 2020 to determine the best way to despike the data.
+
+
 ```{r setup and prepare data, include=FALSE}
 rm(list = ls())
 if (!require("tidyverse")) install.packages("tidyverse")
