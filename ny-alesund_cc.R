@@ -526,6 +526,14 @@ data <- data %>%
                              1)), 
     phEXT = ifelse(phEXT_qf != 1 , NA, phEXT)
   )
+
+## durafet  
+data <- data %>% 
+  dplyr::mutate(
+    pH_dur = ifelse(pH_dur < 7.5 | pH_dur > 8.5 , 7, 
+                      ifelse(is.na(pH_dur), 15,
+                             1)))
+
 # data <- data %>%
 #   dplyr::mutate(phINT = ifelse(phINT >7.5  & phINT <8.5, phINT, NA), 
 #                 phEXT = ifelse(phEXT >7.5  & phEXT <8.5, phEXT, NA))
