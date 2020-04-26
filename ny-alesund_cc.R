@@ -722,7 +722,8 @@ selected_data_minute$seafet_inst <- as.numeric(selected_data_minute$seafet_inst)
 
 selected_data_hour <- selected_data_minute%>%
   dplyr::group_by( date, hour) %>%
-  dplyr::summarise(sal_insitu_ctd_1m = mean(sal_insitu_ctd_1m, na.rm = TRUE),
+  dplyr::summarise(sal_insitu_ctd = mean(sal_insitu_ctd, na.rm = TRUE),
+                   sal_insitu_ctd_1m = mean(sal_insitu_ctd_1m, na.rm = TRUE),
                    sal_insitu_ctd_3m = mean(sal_insitu_ctd_3m, na.rm = TRUE),
                    sal_insitu_ctd_5m = mean(sal_insitu_ctd_5m, na.rm = TRUE),
                    sal_insitu_ctd_7m = mean(sal_insitu_ctd_7m, na.rm = TRUE),
