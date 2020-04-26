@@ -88,7 +88,7 @@ read_nrt <- function(agg_time = agg_time) {
 # end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
 # enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 
-  for (i in c(2015:2020)) {
+  for (i in c(2019:2019)) {
     print(i)
     startdate <- ymd_hms(paste0(as.character(i), "-01-01 00:00:00"))
     startdate <- format(startdate, "%Y-%m-%dT%H:%M:%S")
@@ -530,9 +530,10 @@ data <- data %>%
 ## durafet  
 data <- data %>% 
   dplyr::mutate(
-    pH_dur = ifelse(pH_dur < 7.5 | pH_dur > 8.5 , 7, 
-                      ifelse(is.na(pH_dur), 15,
-                             1)))
+    ph_dur_qf = ifelse(ph_dur < 7.5 | ph_dur > 8.5 , 7, 
+                      ifelse(is.na(ph_dur), 15,
+                             1)), 
+    ph_dur = ifelse(ph_dur_qf != 1 , NA, ph_dur))
 
 # data <- data %>%
 #   dplyr::mutate(phINT = ifelse(phINT >7.5  & phINT <8.5, phINT, NA), 
@@ -729,7 +730,7 @@ selected_data_minute$ta_inst <- as.numeric(selected_data_minute$ta_inst)
 selected_data_minute$seafet_inst <- as.numeric(selected_data_minute$seafet_inst)
 
 selected_data_hour <- selected_data_minute%>%
-  dplyr::group_by( date, hour) %>%
+  dplyr::group_by(date, hour) %>%
   dplyr::summarise(sal_insitu_ctd = mean(sal_insitu_ctd, na.rm = TRUE),
                    sal_insitu_ctd_1m = mean(sal_insitu_ctd_1m, na.rm = TRUE),
                    sal_insitu_ctd_3m = mean(sal_insitu_ctd_3m, na.rm = TRUE),
