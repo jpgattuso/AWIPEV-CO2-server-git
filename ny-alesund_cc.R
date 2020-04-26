@@ -580,22 +580,22 @@ data <- data %>%
 
 #MINUTE
 # save all parameters in long format (not selected data)
-if (file.exists(paste0(path, "all_parameters_nydata_minute.rds")) == TRUE) {
-  previous_all_parameters_data_minute <- readRDS(paste0(path, "all_parameters_nydata_minute.rds"))   %>%
+if (file.exists(paste0(path, "all_nydata_minute.rds")) == TRUE) {
+  previous_all_nydata_minute <- readRDS(paste0(path, "all_nydata_minute.rds"))   %>%
     dplyr::filter(datetime - days(60) ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
   #### Binding data (previous + new) ####
-  data <- rbind(previous_all_parameters_data_minute, data)
+  data <- rbind(previous_all_nydata_minute, data)
   #Remove duplicate due to binding
   data <-  data %>%
   distinct(datetime, .keep_all = T)
-saveRDS(file= paste0(path, "all_parameters_nydata_minute.rds"), data)
+saveRDS(file= paste0(path, "all_nydata_minute.rds"), data)
 } else {
-  saveRDS(file= paste0(path, "all_parameters_nydata_minute.rds"), data)
+  saveRDS(file= paste0(path, "all_nydata_minute.rds"), data)
 }
 
 # HOUR
 data_hour <- data%>%
-  dplyr::group_by( date, hour) %>%
+  dplyr::group_by(date, hour) %>%
   dplyr::summarise( State_Zero = mean(State_Zero, na.rm = TRUE),
                     State_Flush = mean(State_Flush, na.rm = TRUE),
                     Signal_Ref= mean(Signal_Ref, na.rm = TRUE),
@@ -628,16 +628,16 @@ data_hour <- data%>%
   dplyr::arrange(desc(datetime))
 
 #### Download previous data ####
-if (file.exists(paste0(path, "all_parameters_nydata_hour.rds")) == TRUE) {
-  previous_all_parameters_data_hour <- readRDS(paste0(path, "all_parameters_nydata_hour.rds"))
+if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
+  previous_all_nydata_hour <- readRDS(paste0(path, "all_nydata_hour.rds"))
   #### Binding data (previous + new) ####
-  data_hour <- rbind(previous_all_parameters_data_hour, data_hour)
+  data_hour <- rbind(previous_all_nynydata_hour, data_hour)
   #Remove duplicate due to binding
   data_hour <-  data_hour %>%
     distinct(datetime, .keep_all = T)
-  saveRDS(file= paste0(path, "all_parameters_nydata_hour.rds"), data_hour)
+  saveRDS(file= paste0(path, "all_nydata_hour.rds"), data_hour)
 } else {
-  saveRDS(file= paste0(path, "all_parameters_nydata_hour.rds"), data_hour)
+  saveRDS(file= paste0(path, "all_nydata_hour.rds"), data_hour)
 }
 
 #### MINUTE format (small format) ####
@@ -689,20 +689,20 @@ selected_data_minute <- data  %>%
                    hour)
 
 if (file.exists(paste0(path, "all_nydata_minute.rds")) == TRUE) {
-  previous_data_minute <- readRDS(paste0(path, "all_nydata_minute.rds"))
+  previous_nydata_minute <- readRDS(paste0(path, "all_nydata_minute.rds"))
   #### Binding data (previous + new) ####
-  selected_data_minute <- rbind(previous_data_minute, selected_data_minute)
+  selected_nydata_minute <- rbind(previous_nydata_minute, selected_nydata_minute)
   #Remove duplicate due to binding
-  selected_data_minute <-  selected_data_minute %>%
+  selected_nydata_minute <-  selected_nydata_minute %>%
     distinct(datetime, .keep_all = T)
-  saveRDS(file= paste0(path, "all_nydata_minute.rds"), selected_data_minute)
+  saveRDS(file= paste0(path, "all_nydata_minute.rds"), selected_nydata_minute)
 } else {
-  saveRDS(file= paste0(path, "all_nydata_minute.rds"), selected_data_minute)
+  saveRDS(file= paste0(path, "all_nydata_minute.rds"), selected_nydata_minute)
 }
 
 #### HOUR format ####
 # Make groups for data on the profiler
-selected_data_minute <- selected_data_minute%>%
+selected_nydata_minute <- selected_nydata_minute%>%
   dplyr::mutate(depth = ifelse(pressure_insitu_ctd <=2, 1, 
                                ifelse(pressure_insitu_ctd >2 & pressure_insitu_ctd <=4, 3, 
                                       ifelse(pressure_insitu_ctd >4 & pressure_insitu_ctd <=6, 5,
@@ -725,11 +725,11 @@ selected_data_minute <- selected_data_minute%>%
                 par_insitu_profile_9m = ifelse(depth == 9, par_insitu_profile, NA ))
                 
 # to add instrument S/N columns
-selected_data_minute$pco2_inst <- as.numeric(selected_data_minute$pco2_inst)
-selected_data_minute$ta_inst <- as.numeric(selected_data_minute$ta_inst)
-selected_data_minute$seafet_inst <- as.numeric(selected_data_minute$seafet_inst)
+selected_nydata_minute$pco2_inst <- as.numeric(selected_nydata_minute$pco2_inst)
+selected_nydata_minute$ta_inst <- as.numeric(selected_nydata_minute$ta_inst)
+selected_nydata_minute$seafet_inst <- as.numeric(selected_nydata_minute$seafet_inst)
 
-selected_data_hour <- selected_data_minute%>%
+selected_nydata_hour <- selected_nydata_minute%>%
   dplyr::group_by(date, hour) %>%
   dplyr::summarise(sal_insitu_ctd = mean(sal_insitu_ctd, na.rm = TRUE),
                    sal_insitu_ctd_1m = mean(sal_insitu_ctd_1m, na.rm = TRUE),
@@ -777,12 +777,12 @@ selected_data_hour <- selected_data_minute%>%
 #   dplyr::mutate(AT_filtered = despike(selected_data_hour$AT_filtered, reference= "median", n=0.3, k=217, replace="NA")) 
 
 # HOUR format
-d_hour <- selected_data_hour
+d_hour <- selected_nydata_hour
 
 if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
   previous_data_hour <- readRDS(paste0(path, "all_nydata_hour.rds"))
   #### Binding data (previous + new) ####
-  d_hour <- rbind(previous_data_hour, d_hour)
+  d_hour <- rbind(previous_nydata_hour, d_hour)
   #Remove duplicate due to binding
   d_hour <-  d_hour %>%
     distinct(datetime, .keep_all = T)
