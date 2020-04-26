@@ -641,7 +641,7 @@ if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
 }
 
 #### MINUTE format (small format) ####
-selected_data_minute <- data  %>%
+selected_nydata_minute <- data  %>%
     dplyr::select( datetime,
                    dt_qf,
                    pco2_raw,
@@ -688,16 +688,16 @@ selected_data_minute <- data  %>%
                    date,
                    hour)
 
-if (file.exists(paste0(path, "all_nydata_minute.rds")) == TRUE) {
-  previous_nydata_minute <- readRDS(paste0(path, "all_nydata_minute.rds"))
+if (file.exists(paste0(path, "nydata_minute.rds")) == TRUE) {
+  previous_nydata_minute <- readRDS(paste0(path, "nydata_minute.rds"))
   #### Binding data (previous + new) ####
   selected_nydata_minute <- rbind(previous_nydata_minute, selected_nydata_minute)
   #Remove duplicate due to binding
   selected_nydata_minute <-  selected_nydata_minute %>%
     distinct(datetime, .keep_all = T)
-  saveRDS(file= paste0(path, "all_nydata_minute.rds"), selected_nydata_minute)
+  saveRDS(file= paste0(path, "nydata_minute.rds"), selected_nydata_minute)
 } else {
-  saveRDS(file= paste0(path, "all_nydata_minute.rds"), selected_nydata_minute)
+  saveRDS(file= paste0(path, "nydata_minute.rds"), selected_nydata_minute)
 }
 
 #### HOUR format ####
@@ -779,16 +779,16 @@ selected_nydata_hour <- selected_nydata_minute%>%
 # HOUR format
 d_hour <- selected_nydata_hour
 
-if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
-  previous_data_hour <- readRDS(paste0(path, "all_nydata_hour.rds"))
+if (file.exists(paste0(path, "nydata_hour.rds")) == TRUE) {
+  previous_nydata_hour <- readRDS(paste0(path, "nydata_hour.rds"))
   #### Binding data (previous + new) ####
   d_hour <- rbind(previous_nydata_hour, d_hour)
   #Remove duplicate due to binding
   d_hour <-  d_hour %>%
     distinct(datetime, .keep_all = T)
-  saveRDS(file= paste0(path, "all_nydata_hour.rds"), d_hour)
+  saveRDS(file= paste0(path, "nydata_hour.rds"), d_hour)
 } else {
-  saveRDS(file= paste0(path, "all_nydata_hour.rds"), d_hour)
+  saveRDS(file= paste0(path, "nydata_hour.rds"), d_hour)
 }
 
 #save(file= paste0(path, "fb_awipev-co2_server/ny-alesund/data/processed/all_nydata_hour.Rdata"), d_hour)
