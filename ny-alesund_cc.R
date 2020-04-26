@@ -79,21 +79,21 @@ read_nrt <- function(agg_time = agg_time) {
   data <- NULL
   tmp <- NULL
   
-selected_data_minute <- readRDS(file = paste0(path, "all_nydata_minute.rds"))
-start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(60)
-startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
+# selected_data_minute <- readRDS(file = paste0(path, "all_nydata_minute.rds"))
+# start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(60)
+# startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
+# 
+# # end_date <- ymd_hms("2017-12-31 23:59:59")
+# # end_date <- ymd_hms("2020-02-15 23:59:59")
+# end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
+# enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 
-# end_date <- ymd_hms("2017-12-31 23:59:59")
-# end_date <- ymd_hms("2020-02-15 23:59:59")
-end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
-enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
-
-  # for (i in c(2015:2020)) {
-  #   print(i)
-  #   startdate <- ymd_hms(paste0(as.character(i), "-01-01 00:00:00"))
-  #   startdate <- format(startdate, "%Y-%m-%dT%H:%M:%S")
-  #   enddate <- ymd_hms(paste0(as.character(i), "-12-31 23:59:59"))
-  #   enddate <- format(enddate, "%Y-%m-%dT%H:%M:%S")
+  for (i in c(2015:2020)) {
+    print(i)
+    startdate <- ymd_hms(paste0(as.character(i), "-01-01 00:00:00"))
+    startdate <- format(startdate, "%Y-%m-%dT%H:%M:%S")
+    enddate <- ymd_hms(paste0(as.character(i), "-12-31 23:59:59"))
+    enddate <- format(enddate, "%Y-%m-%dT%H:%M:%S")
 
 if(agg_time=="MINUTE"){
   aggregate_string=paste0("&aggregate=",agg_time)
@@ -182,7 +182,7 @@ if(i == 2015) {
   } else {
     data <- dplyr::bind_rows(data, tmp)
   }
-# }
+ }
 return(data)
 }
 
@@ -284,7 +284,7 @@ data <- data %>%
 
 # T_seaF _007 et _1005
 data <- data %>%
-  dplyr::mutate(T_seaF = ifelse(!is.na(T_seaF_007),T_seaF_007,
+  dplyr::mutate(temp_sf = ifelse(!is.na(T_seaF_007),T_seaF_007,
                                 ifelse(!is.na(T_seaF_1005),T_seaF_1005, NA))
   ) 
 
@@ -667,7 +667,7 @@ selected_data_minute <- data  %>%
                    phINT_qf,
                    phEXT,
                    phEXT_qf,
-                   T_seaF,
+                   temp_sf,
                    pco2_inst,
                    ta_inst,
                    seafet_inst,
@@ -730,20 +730,20 @@ selected_data_hour <- selected_data_minute%>%
                    sal_insitu_ctd_9m = mean(sal_insitu_ctd_9m, na.rm = TRUE),
                    sal_fb_filtered = mean(sal_fb_filtered, na.rm = TRUE),
                    temp_fb_filtered = mean(temp_fb_filtered, na.rm = TRUE),
-                   temp_insitu_11m_filtered= mean(temp_insitu_11m_filtered, na.rm = TRUE),
+                   temp_insitu_11m_filtered = mean(temp_insitu_11m_filtered, na.rm = TRUE),
                    pco2_raw_filtered = mean(pco2_raw_filtered, na.rm = TRUE),
                    PeriodDeplpCO2 = mean(PeriodDeplpCO2, na.rm = TRUE),
-                   pco2_corr_filtered= mean(pco2_corr_filtered, na.rm = TRUE),
-                   ph_dur_filtered= mean(ph_dur_filtered, na.rm = TRUE),
-                   temp_dur_filtered= mean(temp_dur_filtered, na.rm = TRUE),
-                   T_seaF= mean(T_seaF, na.rm = TRUE),
-                   phINT= mean(phINT, na.rm = TRUE),
-                   phEXT= mean(phEXT, na.rm = TRUE),
-                   voltINT= mean(voltINT, na.rm = TRUE),
-                   voltEXT= mean(voltEXT, na.rm = TRUE),
-                   pco2_inst= mean(pco2_inst, na.rm = TRUE),
-                   ta_inst= mean(ta_inst, na.rm = TRUE),
-                   seafet_inst= mean(seafet_inst, na.rm = TRUE) ,
+                   pco2_corr_filtered = mean(pco2_corr_filtered, na.rm = TRUE),
+                   ph_dur_filtered = mean(ph_dur_filtered, na.rm = TRUE),
+                   temp_dur_filtered = mean(temp_dur_filtered, na.rm = TRUE),
+                   temp_sf = mean(temp_sf, na.rm = TRUE),
+                   phINT = mean(phINT, na.rm = TRUE),
+                   phEXT = mean(phEXT, na.rm = TRUE),
+                   voltINT = mean(voltINT, na.rm = TRUE),
+                   voltEXT = mean(voltEXT, na.rm = TRUE),
+                   pco2_inst = mean(pco2_inst, na.rm = TRUE),
+                   ta_inst = mean(ta_inst, na.rm = TRUE),
+                   seafet_inst = mean(seafet_inst, na.rm = TRUE) ,
                    par_insitu_profile_1m = mean(par_insitu_profile_1m, na.rm = TRUE),
                    par_insitu_profile_3m = mean(par_insitu_profile_3m, na.rm = TRUE),
                    par_insitu_profile_5m = mean(par_insitu_profile_5m, na.rm = TRUE),
