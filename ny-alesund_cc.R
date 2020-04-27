@@ -474,14 +474,13 @@ data <- data %>%
 ## filter salinities above 28
 data <- data %>%
   dplyr::mutate(
-    sal_fb_qf = ifelse(sal_fb < 28 | sal_fb > 36, 7,
+    sal_fb_qf = ifelse(sal_fb < 28 | sal_fb > 37, 7,
                        ifelse(is.na(sal_fb), 15,
                               1)),
     sal_fb = ifelse(sal_fb_qf != 1 , NA, sal_fb),
-    sal_insitu_ctd_qf = ifelse(sal_insitu_ctd < 28 | sal_fb > 36, 7,
+    sal_insitu_ctd_qf = ifelse(sal_insitu_ctd < 28 | sal_fb > 37, 7,
                                ifelse(is.na(sal_insitu_ctd), 15,
-                                      1)),
-    sal_insitu_ctd_qf = ifelse(datetime > "2019-12-26 00:00:00", 99, 1),
+                                      ifelse(datetime > "2019-12-26 00:00:00", 99, 1))),
     sal_insitu_ctd = ifelse(sal_insitu_ctd_qf != 1 , NA, sal_insitu_ctd),
   )
 
@@ -501,6 +500,7 @@ data <- data %>%
                                        1)), 
     temp_insitu_11m = ifelse(temp_insitu_11m_qf != 1 , NA, temp_insitu_11m),
   )
+
 ## filter Voltages seaFET to remove outliers when calculating final corrected pH.
 data <- data %>%
   dplyr::mutate(
