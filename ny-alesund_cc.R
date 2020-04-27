@@ -88,7 +88,7 @@ read_nrt <- function(agg_time = agg_time) {
 # end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
 # enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 
-  for (i in c(2019:2019)) {
+  for (i in c(2015:2019)) {
     print(i)
     startdate <- ymd_hms(paste0(as.character(i), "-01-01 00:00:00"))
     startdate <- format(startdate, "%Y-%m-%dT%H:%M:%S")
@@ -631,7 +631,7 @@ data_hour <- data%>%
 if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
   previous_all_nydata_hour <- readRDS(paste0(path, "all_nydata_hour.rds"))
   #### Binding data (previous + new) ####
-  data_hour <- rbind(previous_all_nynydata_hour, data_hour)
+  data_hour <- rbind(previous_all_nydata_hour, data_hour)
   #Remove duplicate due to binding
   data_hour <-  data_hour %>%
     distinct(datetime, .keep_all = T)
@@ -761,6 +761,7 @@ selected_nydata_hour <- selected_nydata_minute%>%
                    par_insitu_10m = mean(par_insitu_10m, na.rm = TRUE),
                    par_air = mean(par_air, na.rm = TRUE),
                    turb_fb = mean(turb_fb, na.rm = TRUE),
+                   temp_insitu_ctd = mean(sal_insitu_ctd, na.rm = TRUE),
                    temp_insitu_ctd_1m = mean(temp_insitu_ctd_1m, na.rm = TRUE),
                    temp_insitu_ctd_3m = mean(temp_insitu_ctd_3m, na.rm = TRUE),
                    temp_insitu_ctd_5m = mean(temp_insitu_ctd_5m, na.rm = TRUE),
