@@ -40,14 +40,14 @@ rm(list = ls())
 
 if (Sys.getenv("LOGNAME") == "gattuso") path = "../../pCloud\ Sync/Documents/experiments/exp168_AWIPEV-CO2/fb_awipev-co2_server/ny-alesund/data/NRT_data/"
 if (Sys.getenv("LOGNAME") == "samir") path = "../../pCloud\ Sync/exp168_AWIPEV-CO2/fb_awipev-co2_server/ny-alesund/data/NRT_data/"
-# if (system('echo "$USER"') == "awipev") {
-#   setwd("/home/awipev/ny-alesund/") #to run on server
-#   path = "data/NRT_data/"
-# }
+if (system('echo "$USER"') == "awipev") {
+  setwd("/home/awipev/ny-alesund/") #to run on server
+  path = "data/NRT_data/"
+}
 
-# sur serveur
-setwd("/home/awipev/ny-alesund/") #to run on server
-path = "data/NRT_data/"
+# # sur serveur
+# setwd("/home/awipev/ny-alesund/") #to run on server
+# path = "data/NRT_data/"
 
 ####Set environmental variables####
 Sys.setenv(TZ="UTC")
@@ -88,7 +88,7 @@ read_nrt <- function(agg_time = agg_time) {
 # end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
 # enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 
-  for (i in c(2015:2019)) {
+  for (i in c(2019:2019)) {
     print(i)
     startdate <- ymd_hms(paste0(as.character(i), "-01-01 00:00:00"))
     startdate <- format(startdate, "%Y-%m-%dT%H:%M:%S")
@@ -282,7 +282,7 @@ data <- data %>%
                                  ifelse(!is.na(voltEXT_1005),voltEXT_1005, NA))
   )
 
-# T_seaF _007 et _1005
+# temp_sf _007 et _1005
 data <- data %>%
   dplyr::mutate(temp_sf = ifelse(!is.na(T_seaF_007),T_seaF_007,
                                 ifelse(!is.na(T_seaF_1005),T_seaF_1005, NA))
@@ -297,12 +297,8 @@ data <- data %>%
  # Adding manualy data into Data_Processing_sheet_pCO2 file.
  # Open the data calibration sheet and convert the dates. 
 
- data_process <- read_excel(paste0(path, "Data_Processing_sheet_pCO2.xlsx"), col_types = c("text","text","text","text", "date","date", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "date", "date", "numeric",  "date","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric"))
- # data_process$DateCalibration <- dmy(data_process$DateCalibration)
- # data_process$DateCalibrationPost <- dmy(data_process$DateCalibrationPost)
- # data_process$DateDelivery <- dmy(data_process$DateDelivery)
- # data_process$StartDeployment <- ymd_hms(data_process$StartDeployment)
- # data_process$EndDeployment <- ymd_hms(data_process$EndDeployment)
+data_process <- read_excel(paste0(path, "Data_Processing_sheet_pCO2.xlsx"))
+
  # Adding the PeriodDeplpCO2 column to z first.
  # Adding the others parameters according to the Contros formula PDF
  # Adding the new period ech time we receive the pCO2 sensor from the calibration
@@ -349,18 +345,7 @@ data <- data %>%
 # To calculate the drift-corrected polynomial coefficients from the pre and post calibration
 # Calculate the new k1 k2 k3
 # Extract the first and last S'2beamZ of each periode of deployment.
-# the s dataframe needs to be created again with the new pco2 period when the periode will be known.
-
-
-# s <- ddply(data[,c("datetime","PeriodDeplpCO2","Sprim2beamZ_interp")], .(PeriodDeplpCO2), function(x) x[c(1, nrow(x)), ])
-# write.table(s,file= paste0(path, "fb_data/NRT_data/" ),  sep=",", dec=".")
-
-s <- read.table(file= paste0(path, "SpreambeamZ_extraction.csv"), header = TRUE, dec = ".", sep=",")
-#s <- s[-c(nrow(s), nrow(s)-1),]
-#s$datetime <- ymd_hms(s$datetime)
-#ss <- ddply(data[,c("datetime","PeriodDeplpCO2","Sprim2beamZ_interp")], .(PeriodDeplpCO2), function(x) x[c(1, nrow(x)), ])
-#s <- rbind(s, ss)
-#write.table(s,file= paste0(path, "SpreambeamZ_extraction.csv" ),  sep=",", dec=".", row.names = F)
+# the s dataframe needs to be created again with the new pco2 period when the period will be known.
 
 data <- data %>%
   dplyr::mutate(k1t = ifelse(PeriodDeplpCO2 == 1, k1 + ((s[1,3] - Sprim2beamZ_interp) / (s[1,3]  - s[2,3] )) * k1_post,
@@ -399,15 +384,17 @@ data <- data %>%
   )
 
 ##### First cleaning
-# classified as id 1 when good data
-# classified as id 3 when impossible date and time test
-# classified as id 4 when data not usable according to manufacturer (flush mode, zero mode, calibration mode...) 
-# classified as id 6 when failing the manufacturer range test (not used)
-# classified as id 7 when failing the regional range test 
-# classified as id 12 when failing the spike test (NAs from despike)
-# classified as id 13 when failing the gradient test
-# classified as id 15 when the instrument was not deployed or operated
-# classified as 99  when failing the final visual inspection of the data. 
+
+# quality flags
+# 1: good data
+# 3: impossible date and time test
+# 4: data not usable according to manufacturer (flush mode, zero mode, calibration mode...) 
+# 6: failing the manufacturer range test (not used)
+# 7: failing the regional range test 
+# 12: failing the spike test (NAs from despike)
+# 13: failing the gradient test
+# 15: the instrument was not deployed or operated
+# 99: failing the final visual inspection of the data. 
 
 #### Argo impossible date test
 data <- data %>%
@@ -535,15 +522,7 @@ data <- data %>%
                              1)), 
     ph_dur = ifelse(ph_dur_qf != 1 , NA, ph_dur))
 
-# data <- data %>%
-#   dplyr::mutate(phINT = ifelse(phINT >7.5  & phINT <8.5, phINT, NA), 
-#                 phEXT = ifelse(phEXT >7.5  & phEXT <8.5, phEXT, NA))
-
-
 ##########   first data cleaning : despike()  ###########
-#pco2_raw_filtered = raw pco2 data from sensor + despike. use to be PCO2_Corr_filtered before April 2020
-#pco2_corr_filtered = final pco2 data from sensor corrected by "contros" document correction + despike. use to be PCO2_corr_contros_filtered before April 2020
-
 data <- data %>%     
    dplyr::mutate(pco2_raw_filtered= despike(data$pco2_raw, reference= "median", n=2, k=5761, replace="NA"),
                  pco2_corr_filtered= despike(data$pco2_corr, reference= "median", n=2, k=5761, replace="NA"),
@@ -562,26 +541,11 @@ data <- data %>%
                 ph_dur_qf = ifelse(!is.na(ph_dur) & is.na(ph_dur_filtered), 12, ph_dur_qf),
                 temp_dur_qf = ifelse(!is.na(temp_dur) & is.na(temp_dur_filtered), 12, temp_dur_qf),
                 temp_insitu_11m_qf = ifelse(!is.na(temp_insitu_11m) & is.na(temp_insitu_11m_filtered), 12, temp_insitu_11m_qf))
-                
-
-# # for 2015 because special year not complete with NA. 
-# data <- data %>%     
-#   dplyr::mutate(pco2_raw_filtered= pco2_raw,
-#                 pco2_corr_filtered= pco2_corr, 
-#                 Salinity_filtered= despike(data$Salinity, reference= "median", n=1, k=65, replace="NA"),
-#                 Temperature_filtered= despike(data$Temperature, reference= "median", n=1, k=65, replace="NA"),
-#                 Temp_SBE38_filtered= despike(data$Temp_SBE38, reference= "median", n=0.5, k=65, replace="NA"),
-#                 temp_dur_filtered= "NA",
-#                 ph_dur_filtered= "NA",
-#                 AT_filtered="NA",
-#                 phINT_filtered= "NA",
-#                 phEXT_filtered= "NA"
-#               )
 
 #MINUTE
 # save all parameters in long format (not selected data)
 if (file.exists(paste0(path, "all_nydata_minute.rds")) == TRUE) {
-  previous_all_nydata_minute <- readRDS(paste0(path, "all_nydata_minute.rds"))   %>%
+  previous_all_nydata_minute <- readRDS(paste0(path, "all_nydata_minute.rds")) %>%
     dplyr::filter(datetime - days(60) ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
   #### Binding data (previous + new) ####
   data <- rbind(previous_all_nydata_minute, data)
@@ -773,10 +737,6 @@ selected_nydata_hour <- selected_nydata_minute%>%
   dplyr::select(-c( hour)) %>% # not needed in the shiny display
   dplyr::arrange(desc(datetime))
 
-# # despike is run a 2nd time ON HOUR FORMAT DATA for TA in order to remove wrong flush measurements
-# selected_data_hour <- selected_data_hour %>%     
-#   dplyr::mutate(AT_filtered = despike(selected_data_hour$AT_filtered, reference= "median", n=0.3, k=217, replace="NA")) 
-
 # HOUR format
 d_hour <- selected_nydata_hour
 
@@ -791,47 +751,3 @@ if (file.exists(paste0(path, "nydata_hour.rds")) == TRUE) {
 } else {
   saveRDS(file= paste0(path, "nydata_hour.rds"), d_hour)
 }
-
-#save(file= paste0(path, "fb_awipev-co2_server/ny-alesund/data/processed/all_nydata_hour.Rdata"), d_hour)
-
-#@@@@@@@@@@@@@@@@@@@@@@@@
-#load(file = paste0(path, "all_nydata_hour.Rdata"))
-
-
-# # PLOT TEST
-# at_contros_cleaned_xts <- dplyr::select(d_hour,datetime,temp_insitu_ctd_filtered )
-# at_contros_cleaned_xts <- as.xts(at_contros_cleaned_xts, order.by = d_hour$datetime)
-# dygraph(at_contros_cleaned_xts, group = "awipev", main=" ", ylab="PAR profile") %>%
-# #dySeries("Sproct",  label = "Sproct", color = "red", strokeWidth = 0, pointSize=2) %>%
-#   dySeries("temp_insitu_ctd_filtered", label="PAR profile", color = "black", strokeWidth = 0, pointSize=4) %>%
-# #dySeries( "sal_fb_filtered", label = "sal_fb_filtered",  color = "red", strokeWidth = 0, pointSize=2) %>%
-#  # dySeries("sal_insitu_filtered", label = " sal_insitu_filtered",color = "green", strokeWidth = 0, pointSize=0.5) %>%
-#   #dySeries("Sprim2beamZ_interp", label = "Sprim2beamZ_interp",color =" grey", strokeWidth = 0, pointSize=1) %>%
-#  #dyAxis("y",valueRange = c(-3, 8)) %>%
-#   dyLimit(0,color = "black", strokePattern ="dashed") %>%
-#   dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
-#   dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0, digitsAfterDecimal = 5) %>%
-#   dyRangeSelector(height = 30)
-#colnames(d_hour)
-# # Bad period for pCO2 (N°4) - look at period 5 - 6
-# tmp <- data_hour %>%
-#   dplyr::mutate(PeriodDeplpCO2 = ifelse(datetime >= "2015-07-23 00:00:00" & datetime <= "2016-02-23 22:00:00", 1, 
-#                                         ifelse(datetime >= "2016-02-23 23:00:00" & datetime <= "2017-02-04 23:00:00", 2 ,
-#                                                ifelse(datetime >= "2017-02-09 00:00:00" & datetime <= "2018-02-09 00:00:00", 3 ,
-#                                                       ifelse(datetime >= "2018-04-14 00:00:00" & datetime <= "2018-10-31 00:00:00", 4 , 
-#                                                              ifelse(datetime >= "2018-10-31 15:00:00" & datetime <= "2019-09-03 12:00:00", 5 ,
-#                                                                     ifelse(datetime >= "2019-09-03 17:00:00" & datetime <= "2099-12-02 23:59:59", 6 ,NA )))))))
-# 
-# tmp <- tmp %>%
-#   dplyr::filter(PeriodDeplpCO2 <= 4)%>%
-# dplyr::select(-c(date, hour, PeriodDeplpCO2))
-# #Plot les parametres en facette
-# 
-# tmp_melt<- melt(tmp, id.vars="datetime")
-# 
-# several_pco2_parameters <- ggplot(tmp_melt) + geom_point(aes(x=datetime, y=value, color=variable),size=0.5) +
-#   facet_grid(variable~., scales="free_y") + 
-#   theme_bw()+ xlab("Time")+ylab("")+
-#   scale_colour_discrete(guide="none")
-# 
-# ggsave("../../pCloud Sync/exp168_AWIPEV-CO2/fb_figures/pCO2/Bad_period/several_pco2_parameters.png",several_pco2_parameters, height= 108,width = 24, units="cm")
