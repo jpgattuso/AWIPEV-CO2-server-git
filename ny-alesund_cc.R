@@ -74,20 +74,22 @@ agg_fun_3 = "N"
 #  stop()
 #  }
 
-# read past data
-previous_NRT_data <- NULL
-for (i in c(2015:2020)) {
-  print(i)
-  fil <- paste0(path, "NRT_data_", as.character(i), ".rds")
-  if (file.exists(fil) == TRUE) {
-    tmp <- as_tibble(readRDS(fil))
-    #### Binding data (previous + new) ####
-    previous_NRT_data <- bind_rows(previous_NRT_data, tmp)
-  }}
-#previous_NRT_data <- as_tibble(previous_NRT_data)
-#previous_NRT_data$datetime <- ymd_hms(previous_NRT_data$datetime)
-summary(previous_NRT_data$datetime)
+# # read past data if needed
+# previous_NRT_data <- NULL
+# for (i in c(2015:2020)) {
+#   print(i)
+#   fil <- paste0(path, "NRT_data_", as.character(i), ".rds")
+#   if (file.exists(fil) == TRUE) {
+#     tmp <- as_tibble(readRDS(fil))
+#     #### Binding data (previous + new) ####
+#     previous_NRT_data <- bind_rows(previous_NRT_data, tmp)
+#   }}
+# saveRDS(file = paste0(path, "previous_NRT_data.rds"), previous_NRT_data)
+previous_NRT_data <- readRDS(file = paste0(path, "previous_NRT_data.rds"))
+
   
+
+# Function to read NRT database
 read_nrt <- function(agg_time = agg_time) {
  data <- NULL
  tmp <- NULL
@@ -101,12 +103,12 @@ read_nrt <- function(agg_time = agg_time) {
 # end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
 # enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 
- for (i in c(2019:2020)) {
-  print(i)
-  startdate <- ymd_hms(paste0(as.character(i), "-01-01 00:00:00"))
-  startdate <- format(startdate, "%Y-%m-%dT%H:%M:%S")
-  enddate <- ymd_hms(paste0(as.character(i), "-12-31 23:59:59"))
-  enddate <- format(enddate, "%Y-%m-%dT%H:%M:%S")
+ # for (i in c(2019:2020)) {
+ #  print(i)
+ #  startdate <- ymd_hms(paste0(as.character(i), "-01-01 00:00:00"))
+ #  startdate <- format(startdate, "%Y-%m-%dT%H:%M:%S")
+ #  enddate <- ymd_hms(paste0(as.character(i), "-12-31 23:59:59"))
+ #  enddate <- format(enddate, "%Y-%m-%dT%H:%M:%S")
 
 if(agg_time=="MINUTE"){
  aggregate_string=paste0("&aggregate=",agg_time)
@@ -195,7 +197,7 @@ if(i == 2015) {
  } else {
   data <- dplyr::bind_rows(data, tmp)
  }
-saveRDS(tmp, file = paste0(path, "NRT_data_", as.character(i), ".rds"))
+#saveRDS(tmp, file = paste0(path, "NRT_data_", as.character(i), ".rds"))
  }
 return(data)
 }
