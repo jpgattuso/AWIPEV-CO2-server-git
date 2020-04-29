@@ -86,22 +86,24 @@ agg_fun_3 = "N"
 #   }}
 # saveRDS(file = paste0(path, "previous_NRT_data.rds"), previous_NRT_data)
 previous_NRT_data <- readRDS(file = paste0(path, "previous_NRT_data.rds"))
+previous_NRT_data$datetime <- ymd_hms(previous_NRT_data$datetime)
 
   
 
-# Function to read NRT database
-read_nrt <- function(agg_time = agg_time) {
- data <- NULL
- tmp <- NULL
- 
+# # Function to read NRT database
+# read_nrt <- function(agg_time = agg_time) {
+#  data <- NULL
+#  tmp <- NULL
+#  
 # selected_data_minute <- readRDS(file = paste0(path, "all_nydata_minute.rds"))
-# start_date <- ymd_hms(selected_data_minute$datetime[nrow(selected_data_minute)-1]) - days(60)
-# startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
+#start_date <- ymd_hms(previous_NRT_data$datetime[nrow(previous_NRT_data)-1]) - days(60)
+start_date <- ymd_hms("2020-01-01 00:00:00")
+startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
 # 
 # # end_date <- ymd_hms("2017-12-31 23:59:59")
 # # end_date <- ymd_hms("2020-02-15 23:59:59")
-# end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
-# enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
+end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
+enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 
  # for (i in c(2019:2020)) {
  #  print(i)
@@ -190,21 +192,27 @@ code <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdat
         
         )
 
-tmp <- data.table::fread(code, encoding = "UTF-8", showProgress	= TRUE)
-colnames(tmp) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317", "InvAT_0317", "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215", "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215","pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515","pco2_raw_Zero_0515", "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103" )
-if(i == 2015) {
- data <- tmp 
- } else {
-  data <- dplyr::bind_rows(data, tmp)
- }
-#saveRDS(tmp, file = paste0(path, "NRT_data_", as.character(i), ".rds"))
- }
-return(data)
-}
+data <- data.table::fread(code, encoding = "UTF-8", showProgress	= TRUE)
+colnames(data) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317", "InvAT_0317", "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215", "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215","pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515","pco2_raw_Zero_0515", "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103" )
+data$datetime <- ymd_hms(data$datetime)
+
+previous_NRT_data <- dplyr::bind_rows(previous_NRT_data, data) %>%
+  distinct(datetime, .keep_all = T)
+
+saveRDS(file = paste0(path,"previous_NRT_data.rds"),previous_NRT_data)
+# if(i == 2015) {
+# data <- tmp 
+#  } else {
+#   data <- dplyr::bind_rows(data, tmp)
+#  }
+# #saveRDS(tmp, file = paste0(path, "NRT_data_", as.character(i), ".rds"))
+#  }
+# return(data)
+# }
 
 #data <- as_tibble(read_nrt(agg_time = "MINUTE"))
-data <- previous_NRT_data
-data$datetime <- ymd_hms(data$datetime)
+#data <- previous_NRT_data
+
 #data2 <- data
 # Create instrument column as flag
 data <- data %>%
@@ -781,9 +789,10 @@ data <- data %>%
 #MINUTE: save all parameters in long format (not selected data)
 if (file.exists(paste0(path, "all_nydata_minute.rds")) == TRUE) {
  previous_all_nydata_minute <- readRDS(paste0(path, "all_nydata_minute.rds")) %>%
-  dplyr::filter(datetime - days(60) ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
+   dplyr::filter(datetime < "2020-01-01 00:00:00" ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
+  #dplyr::filter(datetime - days(60) ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
  #### Binding data (previous + new) ####
- data <- rbind(previous_all_nydata_minute, data)
+ data <- dplyr::bind_rows(previous_all_nydata_minute, data) 
  #Remove duplicate due to binding
  data <- data %>%
  distinct(datetime, .keep_all = T)
@@ -828,9 +837,12 @@ data_hour <- data%>%
 
 #### Download previous data ####
 if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
- previous_all_nydata_hour <- readRDS(paste0(path, "all_nydata_hour.rds"))
+ previous_all_nydata_hour <- readRDS(paste0(path, "all_nydata_hour.rds")) %>%
+ dplyr::filter(datetime < "2020-01-01 00:00:00" ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
+ 
  #### Binding data (previous + new) ####
- data_hour <- rbind(previous_all_nydata_hour, data_hour)
+ data_hour <- dplyr::bind_rows(previous_all_nydata_hour, data_hour) 
+ 
  #Remove duplicate due to binding
  data_hour <- data_hour %>%
   distinct(datetime, .keep_all = T)
@@ -888,11 +900,14 @@ selected_nydata_minute <- data %>%
     date,
     hour
   )
+#### Download previous data ####
 if (file.exists(paste0(path, "nydata_minute.rds")) == TRUE) {
-  previous_nydata_minute <- readRDS(paste0(path, "nydata_minute.rds"))
+  previous_nydata_minute <- readRDS(paste0(path, "nydata_minute.rds")) %>%
+  dplyr::filter(datetime < "2020-01-01 00:00:00" ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
+  
   #### Binding data (previous + new) ####
-  selected_nydata_minute <-
-    rbind(previous_nydata_minute, selected_nydata_minute)
+  selected_nydata_minute <- dplyr::bind_rows(previous_nydata_minute, selected_nydata_minute)
+  
   #Remove duplicate due to binding
   selected_nydata_minute <- selected_nydata_minute %>%
     distinct(datetime, .keep_all = T)
@@ -994,10 +1009,13 @@ selected_nydata_hour <- selected_nydata_minute %>%
 # HOUR format
 d_hour <- selected_nydata_hour
 
+#### Download previous data ####
 if (file.exists(paste0(path, "nydata_hour.rds")) == TRUE) {
-  previous_nydata_hour <- readRDS(paste0(path, "nydata_hour.rds"))
+  previous_nydata_hour <- readRDS(paste0(path, "nydata_hour.rds")) %>%
+  dplyr::filter(datetime < "2020-01-01 00:00:00" ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
+  
   #### Binding data (previous + new) ####
-  d_hour <- rbind(previous_nydata_hour, d_hour)
+  d_hour <- dplyr::bind_rows(previous_nydata_hour, d_hour)
   #Remove duplicate due to binding
   d_hour <- d_hour %>%
     distinct(datetime, .keep_all = T)
