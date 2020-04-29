@@ -900,6 +900,7 @@ selected_nydata_minute <- data %>%
     date,
     hour
   )
+#### Download previous data ####
 if (file.exists(paste0(path, "nydata_minute.rds")) == TRUE) {
   previous_nydata_minute <- readRDS(paste0(path, "nydata_minute.rds")) %>%
   dplyr::filter(datetime < "2020-01-01 00:00:00" ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
@@ -1008,6 +1009,7 @@ selected_nydata_hour <- selected_nydata_minute %>%
 # HOUR format
 d_hour <- selected_nydata_hour
 
+#### Download previous data ####
 if (file.exists(paste0(path, "nydata_hour.rds")) == TRUE) {
   previous_nydata_hour <- readRDS(paste0(path, "nydata_hour.rds")) %>%
   dplyr::filter(datetime < "2020-01-01 00:00:00" ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
