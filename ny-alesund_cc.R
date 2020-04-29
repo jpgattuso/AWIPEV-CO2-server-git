@@ -85,10 +85,14 @@ agg_fun_3 = "N"
 #     previous_NRT_data <- bind_rows(previous_NRT_data, tmp)
 #   }}
 # saveRDS(file = paste0(path, "previous_NRT_data.rds"), previous_NRT_data)
-previous_NRT_data <- readRDS(file = paste0(path, "previous_NRT_data.rds"))
-previous_NRT_data$datetime <- ymd_hms(previous_NRT_data$datetime)
+previous_NRT_data <- readRDS(file = paste0(path, "previous_NRT_data.rds")) %>% 
+  dplyr::select(-c(PeriodDeplpCO2, T0, P0, F, fTsensor, k1, k2, k3, T0_post, P0_post, F_post, fTsensor_post, k1_post, k2_post,
+                   k3_post)) %>% #will be reintroduced later
+  dplyr::mutate(datetime = ymd_hms(datetime)
+  )
 
-  
+#data <- previous_NRT_data
+
 
 # # Function to read NRT database
 # read_nrt <- function(agg_time = agg_time) {
@@ -737,7 +741,7 @@ data <- data %>%
 ## filter Voltages seaFET to remove outliers when calculating final corrected pH.
 data <- data %>%
   dplyr::mutate(
-    voltINT_qf = ifelse(voltINT > 0 , 99,
+    voltINT_qf = ifelse(voltINT > 0.1 , 99,
                         ifelse(is.na(voltINT), 15,
                                1)),
     voltINT = ifelse(voltINT_qf != 1 , NA, voltINT),
