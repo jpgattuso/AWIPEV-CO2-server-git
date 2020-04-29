@@ -790,6 +790,7 @@ if (file.exists(paste0(path, "all_nydata_minute.rds")) == TRUE) {
 saveRDS(file= paste0(path, "all_nydata_minute.rds"), data)
 } else {
  saveRDS(file= paste0(path, "all_nydata_minute.rds"), data)
+ fwrite(data, file = paste0(path, "all_nydata_minute.csv.gz"), na="NA", col.names = TRUE)
 }
 
 # HOUR
@@ -837,6 +838,7 @@ if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
  saveRDS(file= paste0(path, "all_nydata_hour.rds"), data_hour)
 } else {
  saveRDS(file= paste0(path, "all_nydata_hour.rds"), data_hour)
+ fwrite(data_hour, file = paste0(path, "all_nydata_hour.csv.gz"), na="NA", col.names = TRUE)
 }
 
 #### MINUTE format (small format) ####
@@ -899,6 +901,7 @@ if (file.exists(paste0(path, "nydata_minute.rds")) == TRUE) {
   saveRDS(file = paste0(path, "nydata_minute.rds"), selected_nydata_minute)
 } else {
   saveRDS(file = paste0(path, "nydata_minute.rds"), selected_nydata_minute)
+  fwrite(selected_nydata_minute, file = paste0(path, "nydata_minute.csv.gz"), na="NA", col.names = TRUE)
 }
 #### HOUR format ####
 # Make groups for data on the profiler
@@ -1004,4 +1007,5 @@ if (file.exists(paste0(path, "nydata_hour.rds")) == TRUE) {
   saveRDS(file = paste0(path, "nydata_hour.rds"), d_hour)
 } else {
   saveRDS(file = paste0(path, "nydata_hour.rds"), d_hour)
+  fwrite(d_hour, file = paste0(path, "d_hour.csv.gz"), na="NA", col.names = TRUE)
 }
