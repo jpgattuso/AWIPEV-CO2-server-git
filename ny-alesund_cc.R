@@ -565,7 +565,7 @@ data <- data %>%
     pco2_corr = xco2wet * (P_In / 1013.25)
   )
 
-##### First cleaning
+##### First cleaning ##### 
 
 # quality flags
 # 1: good data
@@ -692,7 +692,7 @@ data <- data %>%
                                1)),
     voltEXT = ifelse(voltEXT_qf != 1 , NA, voltEXT)
   )
-## seaFET
+## seaFET pH
 data <- data %>%
   dplyr::mutate(
     phINT_qf = ifelse(phINT < 7.5 | phINT > 8.5 , 7,
@@ -712,7 +712,7 @@ data <- data %>%
                               1)),
     ph_dur = ifelse(ph_dur_qf != 1 , NA, ph_dur)
   )
-##########  first data cleaning : despike() ###########
+##########  Despike() ###########
 data <- data %>%   
   dplyr::mutate(pco2_raw_filtered= despike(data$pco2_raw, reference= "median", n=2, k=5761, replace="NA"),
          pco2_corr_filtered= despike(data$pco2_corr, reference= "median", n=2, k=5761, replace="NA"),
