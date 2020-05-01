@@ -6,7 +6,7 @@ if (!require("oce")) install.packages("oce")
 library(oce)
 if (!require("dygraphs")) install.packages("dygraphs")
 library(dygraphs)
-if (!require("tidyverse")) install.packages("tidyverse")
+if (!require("xts")) install.packages("xts")
 library(xts)
 if (!require("curl")) install.packages("curl")
 library(curl)
@@ -16,23 +16,22 @@ if (!require("data.table")) install.packages("data.table")
 library(data.table)
 if (!require("tsibble")) install.packages("tsibble")
 library(tsibble)
-if (!require("cowplot")) install.packages("cowplot")
-library(cowplot)
-if (!require("plotly")) install.packages("plotly")
-library(plotly)
-if (!require("htmlwidgets")) install.packages("htmlwidgets")
-library(htmlwidgets)
-if (!require("xts")) install.packages("xts")
+# if (!require("cowplot")) install.packages("cowplot")
+# library(cowplot)
+# if (!require("plotly")) install.packages("plotly")
+# library(plotly)
+# if (!require("htmlwidgets")) install.packages("htmlwidgets")
+# library(htmlwidgets)
 if (!require("stringr")) install.packages("stringr")
 library(stringr)
-if (!require("devtools")) install.packages("devtools")
-library(devtools)
-if (!require("feasts")) install.packages("feasts")
-library(feasts)
-if (!require("knitr")) install.packages("knitr")
-library(knitr)
-if (!require("kableExtra")) install.packages("kableExtra")
-library(kableExtra)
+# if (!require("devtools")) install.packages("devtools")
+# library(devtools)
+# if (!require("feasts")) install.packages("feasts")
+# library(feasts)
+# if (!require("knitr")) install.packages("knitr")
+# library(knitr)
+# if (!require("kableExtra")) install.packages("kableExtra")
+# library(kableExtra)
 
 
 ####define who is the user and define path
@@ -61,60 +60,23 @@ agg_fun_2 = "STDDEV"
 agg_fun_3 = "N"
 #*********************************
 
-#### Download current data ####
-# Generally data from yesterday
-# Create end_date (data until yesterday 23:59:59) and start_date (last data from previous data minute).
-
-# start_date = Open the last "year" file (minute fomat) and take the last line date - 1 day. like that we avoid NA to interpolate Sprim2beamZ (pCO2) later.
-# start_date <- ymd_hms("2015-07-25 00:00:00")
-# start_date <- ymd_hms("2018-01-01 00:00:00")
-
-# # if enddate - startdate < 1 d one skips everything until the end of this script
-# if (end_date-start_date <= days(1)) {
-#  stop()
-#  }
-
-# # read past data if needed
-# previous_NRT_data <- NULL
-# for (i in c(2015:2020)) {
-#   print(i)
-#   fil <- paste0(path, "NRT_data_", as.character(i), ".rds")
-#   if (file.exists(fil) == TRUE) {
-#     tmp <- as_tibble(readRDS(fil))
-#     #### Binding data (previous + new) ####
-#     previous_NRT_data <- bind_rows(previous_NRT_data, tmp)
-#   }}
-# saveRDS(file = paste0(path, "previous_NRT_data.rds"), previous_NRT_data)
+# read past data 
 previous_NRT_data <- readRDS(file = paste0(path, "previous_NRT_data.rds")) %>% 
-  dplyr::select(-c(PeriodDeplpCO2, T0, P0, F, fTsensor, k1, k2, k3, T0_post, P0_post, F_post, fTsensor_post, k1_post, k2_post,
-                   k3_post)) %>% #will be reintroduced later
+  #dplyr::select(-c(PeriodDeplpCO2, T0, P0, F, fTsensor, k1, k2, k3, T0_post, P0_post, F_post, 
+  #                 fTsensor_post, k1_post, k2_post, k3_post)) %>% #will be reintroduced later
   dplyr::mutate(datetime = ymd_hms(datetime)
   )
-
 #data <- previous_NRT_data
 
-
-# # Function to read NRT database
-# read_nrt <- function(agg_time = agg_time) {
-#  data <- NULL
-#  tmp <- NULL
-#  
-# selected_data_minute <- readRDS(file = paste0(path, "all_nydata_minute.rds"))
-#start_date <- ymd_hms(previous_NRT_data$datetime[nrow(previous_NRT_data)-1]) - days(60)
+# This is to process the whole data set, from 2015
+if (file.exists(paste0(path, "all_nydata_minute.rds")) == FALSE) {
+  data <- previous_NRT_data
+} else {
+#### Download recent data ####
 start_date <- ymd_hms("2020-01-01 00:00:00")
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
-# 
-# # end_date <- ymd_hms("2017-12-31 23:59:59")
-# # end_date <- ymd_hms("2020-02-15 23:59:59")
 end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
 enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
-
- # for (i in c(2019:2020)) {
- #  print(i)
- #  startdate <- ymd_hms(paste0(as.character(i), "-01-01 00:00:00"))
- #  startdate <- format(startdate, "%Y-%m-%dT%H:%M:%S")
- #  enddate <- ymd_hms(paste0(as.character(i), "-12-31 23:59:59"))
- #  enddate <- format(enddate, "%Y-%m-%dT%H:%M:%S")
 
 if(agg_time=="MINUTE"){
  aggregate_string=paste0("&aggregate=",agg_time)
@@ -193,31 +155,17 @@ code <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdat
         "&sensors=station:svluwobs:svluw2:ctd_964:temperature_awi_04:temperature",
         "&sensors=station:svluwobs:svluw2:ctd_awi_964:temperature_002",
         "&sensors=station:svluwobs:svluw2:ctd_103:temperature_awi_01:temperature"
-        
         )
 
 data <- data.table::fread(code, encoding = "UTF-8", showProgress	= TRUE)
 colnames(data) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317", "InvAT_0317", "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215", "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215","pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515","pco2_raw_Zero_0515", "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103" )
 data$datetime <- ymd_hms(data$datetime)
 
-previous_NRT_data <- dplyr::bind_rows(previous_NRT_data, data) %>%
+previous_NRT_data <- dplyr::bind_rows(previous_NRT_data, data) %>% #save updated previous_NRT_data 
   distinct(datetime, .keep_all = T)
-
-saveRDS(file = paste0(path,"previous_NRT_data.rds"),previous_NRT_data)
-# if(i == 2015) {
-# data <- tmp 
-#  } else {
-#   data <- dplyr::bind_rows(data, tmp)
-#  }
-# #saveRDS(tmp, file = paste0(path, "NRT_data_", as.character(i), ".rds"))
-#  }
-# return(data)
-# }
-
-#data <- as_tibble(read_nrt(agg_time = "MINUTE"))
-#data <- previous_NRT_data
-
-#data2 <- data
+saveRDS(file = paste0(path,"previous_NRT_data.rds"), previous_NRT_data)
+}
+  
 # Create instrument column as flag
 data <- data %>%
  dplyr::mutate(
@@ -468,13 +416,6 @@ data <- data %>%
  # Adding manualy data into Data_Processing_sheet_pCO2 file.
  # Open the data calibration sheet and convert the dates. 
 data_process <- read_xlsx(range="A1:AF8", na = "NA", paste0(path, "Data_Processing_sheet_pCO2.xlsx"), col_types = c("text","text","text","text", "date","date", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "date", "date", "numeric",  "date","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric"))
-
-# data_process$DateCalibration <- dmy(data_process$DateCalibration)
-# data_process$DateCalibrationPost <- dmy(data_process$DateCalibrationPost)
-# data_process$DateDelivery <- dmy(data_process$DateDelivery)
-# data_process$StartDeployment <- ymd_hms(data_process$StartDeployment)
-# data_process$EndDeployment <- ymd_hms(data_process$EndDeployment)
-
 
  # Adding the PeriodDeplpCO2 column to z first.
  # Adding the others parameters according to the Contros formula PDF
@@ -741,7 +682,7 @@ data <- data %>%
 ## filter Voltages seaFET to remove outliers when calculating final corrected pH.
 data <- data %>%
   dplyr::mutate(
-    voltINT_qf = ifelse(voltINT > 0.1 , 99,
+    voltINT_qf = ifelse(voltINT > 0.1, 99,
                         ifelse(is.na(voltINT), 15,
                                1)),
     voltINT = ifelse(voltINT_qf != 1 , NA, voltINT),
@@ -794,7 +735,7 @@ data <- data %>%
 if (file.exists(paste0(path, "all_nydata_minute.rds")) == TRUE) {
  previous_all_nydata_minute <- readRDS(paste0(path, "all_nydata_minute.rds")) %>%
    dplyr::filter(datetime < "2020-01-01 00:00:00" ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
-  #dplyr::filter(datetime - days(60) ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
+
  #### Binding data (previous + new) ####
  data <- dplyr::bind_rows(previous_all_nydata_minute, data) 
  #Remove duplicate due to binding
@@ -802,7 +743,7 @@ if (file.exists(paste0(path, "all_nydata_minute.rds")) == TRUE) {
  distinct(datetime, .keep_all = T)
 saveRDS(file= paste0(path, "all_nydata_minute.rds"), data)
 } else {
- saveRDS(file= paste0(path, "all_nydata_minute.rds"), data)
+  saveRDS(file= paste0(path, "all_nydata_minute.rds"), data)
  fwrite(data, file = paste0(path, "all_nydata_minute.csv.gz"), na="NA", col.names = TRUE)
 }
 
@@ -840,21 +781,27 @@ data_hour <- data%>%
  dplyr::select(datetime, everything()) %>%
  dplyr::arrange(desc(datetime))
 
+
 #### Download previous data ####
 if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
  previous_all_nydata_hour <- readRDS(paste0(path, "all_nydata_hour.rds")) %>%
  dplyr::filter(datetime < "2020-01-01 00:00:00" ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
  
  #### Binding data (previous + new) ####
- data_hour <- dplyr::bind_rows(previous_all_nydata_hour, data_hour) 
+ data_hour <- dplyr::bind_rows(previous_all_nydata_hour, data_hour)
  
- #Remove duplicate due to binding
+ # Remove duplicate due to binding
  data_hour <- data_hour %>%
-  distinct(datetime, .keep_all = T)
- saveRDS(file= paste0(path, "all_nydata_hour.rds"), data_hour)
+   distinct(datetime, .keep_all = T)
+ saveRDS(file = paste0(path, "all_nydata_hour.rds"), data_hour)
 } else {
- saveRDS(file= paste0(path, "all_nydata_hour.rds"), data_hour)
- fwrite(data_hour, file = paste0(path, "all_nydata_hour.csv.gz"), na="NA", col.names = TRUE)
+  saveRDS(file = paste0(path, "all_nydata_hour.rds"), data_hour)
+  fwrite(
+    data_hour,
+    file = paste0(path, "all_nydata_hour.csv.gz"),
+    na = "NA",
+    col.names = TRUE
+  )
 }
 
 #### MINUTE format (small format) ####
@@ -1013,6 +960,7 @@ selected_nydata_hour <- selected_nydata_minute %>%
   dplyr::select(datetime, everything()) %>%
   dplyr::select(-c(hour)) %>% # not needed in the shiny display
   dplyr::arrange(desc(datetime))
+
 # HOUR format
 d_hour <- selected_nydata_hour
 
@@ -1031,3 +979,44 @@ if (file.exists(paste0(path, "nydata_hour.rds")) == TRUE) {
   saveRDS(file = paste0(path, "nydata_hour.rds"), d_hour)
   fwrite(d_hour, file = paste0(path, "d_hour.csv.gz"), na="NA", col.names = TRUE)
 }
+
+
+# #d_hour <- readRDS(paste0(path, "nydata_hour.rds"))
+# pco2_contros_xts <- d_hour %>%
+#   #dplyr::filter(datetime > "2017-12-08 00:00:00" & datetime < "2017-12-12 00:00:00") %>%
+#   dplyr::select(datetime, voltINT, voltEXT)
+# pco2_contros_xts <-
+#   as.xts(pco2_contros_xts, order.by = pco2_contros_xts$datetime)
+# dygraph(pco2_contros_xts,
+#         group = "awipev",
+#         main = "<i>p</i>CO<sub>2</sub>",
+#         ylab = "<i>p</i>CO<sub>2</sub>") %>%
+#   dySeries(
+#     axis = "y2",
+#     "voltINT",
+#     label = "voltINT",
+#     color =  "blue",
+#     strokeWidth = 0,
+#     pointSize = 2
+#   ) %>%
+#   dySeries(axis="y2",
+#            "voltEXT",
+#            label = "voltEXT",
+#            color =  "red",
+#            strokeWidth = 0,
+#            pointSize = 2
+#   ) %>%
+#   dyHighlight(
+#     highlightCircleSize = 8,
+#     highlightSeriesBackgroundAlpha = 0.5,
+#     hideOnMouseOut = TRUE
+#   ) %>%
+#   dyLegend(show = "follow")   %>%
+#   dyAxis("y2",valueRange = c(-2,2))%>%
+#   dyOptions(
+#     drawGrid = TRUE,
+#     drawPoints = TRUE,
+#     pointSize = c(1, 8, 1),
+#     useDataTimezone = TRUE
+#   ) %>%
+#   dyRangeSelector(height = 30, dateWindow = NULL)
