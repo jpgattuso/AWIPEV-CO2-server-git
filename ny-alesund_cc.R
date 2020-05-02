@@ -44,10 +44,6 @@ if (system('echo "$USER"', intern = TRUE) == "awipev") {
  path = "data/NRT_data/"
 }
 
-# # sur serveur
-# setwd("/home/awipev/ny-alesund/") #to run on server
-# path = "data/NRT_data/"
-
 ####Set environmental variables####
 Sys.setenv(TZ="UTC")
 ##Provide in this section the parameters to be downloaded
@@ -163,7 +159,7 @@ data$datetime <- ymd_hms(data$datetime)
 
 previous_NRT_data <- dplyr::bind_rows(previous_NRT_data, data) %>% #save updated previous_NRT_data 
   distinct(datetime, .keep_all = T)
-saveRDS(file = paste0(path,"previous_NRT_data.rds"), previous_NRT_data)
+saveRDS(previous_NRT_data, file = paste0(path,"previous_NRT_data.rds"), version = 2)
 }
   
 # Create instrument column as flag
@@ -741,9 +737,9 @@ if (file.exists(paste0(path, "all_nydata_minute.rds")) == TRUE) {
  #Remove duplicate due to binding
  data <- data %>%
  distinct(datetime, .keep_all = T)
-saveRDS(file= paste0(path, "all_nydata_minute.rds"), data)
+saveRDS(data, file= paste0(path, "all_nydata_minute.rds"), version = 2)
 } else {
-  saveRDS(file= paste0(path, "all_nydata_minute.rds"), data)
+  saveRDS(data, file= paste0(path, "all_nydata_minute.rds"), version = 2)
  fwrite(data, file = paste0(path, "all_nydata_minute.csv.gz"), na="NA", col.names = TRUE)
 }
 
@@ -793,9 +789,9 @@ if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
  # Remove duplicate due to binding
  data_hour <- data_hour %>%
    distinct(datetime, .keep_all = T)
- saveRDS(file = paste0(path, "all_nydata_hour.rds"), data_hour)
+ saveRDS(data_hour, file = paste0(path, "all_nydata_hour.rds"), version = 2)
 } else {
-  saveRDS(file = paste0(path, "all_nydata_hour.rds"), data_hour)
+  saveRDS(data_hour, file = paste0(path, "all_nydata_hour.rds"), version = 2)
   fwrite(
     data_hour,
     file = paste0(path, "all_nydata_hour.csv.gz"),
@@ -864,9 +860,9 @@ if (file.exists(paste0(path, "nydata_minute.rds")) == TRUE) {
   #Remove duplicate due to binding
   selected_nydata_minute <- selected_nydata_minute %>%
     distinct(datetime, .keep_all = T)
-  saveRDS(file = paste0(path, "nydata_minute.rds"), selected_nydata_minute)
+  saveRDS(selected_nydata_minute, file = paste0(path, "nydata_minute.rds"), version = 2)
 } else {
-  saveRDS(file = paste0(path, "nydata_minute.rds"), selected_nydata_minute)
+  saveRDS(selected_nydata_minute, file = paste0(path, "nydata_minute.rds"), version = 2)
   fwrite(selected_nydata_minute, file = paste0(path, "nydata_minute.csv.gz"), na="NA", col.names = TRUE)
 }
 #### HOUR format ####
@@ -974,9 +970,9 @@ if (file.exists(paste0(path, "nydata_hour.rds")) == TRUE) {
   #Remove duplicate due to binding
   d_hour <- d_hour %>%
     distinct(datetime, .keep_all = T)
-  saveRDS(file = paste0(path, "nydata_hour.rds"), d_hour)
+  saveRDS(d_hour, file = paste0(path, "nydata_hour.rds"), version = 2)
 } else {
-  saveRDS(file = paste0(path, "nydata_hour.rds"), d_hour)
+  saveRDS(d_hour, file = paste0(path, "nydata_hour.rds"), version = 2)
   fwrite(d_hour, file = paste0(path, "d_hour.csv.gz"), na="NA", col.names = TRUE)
 }
 
