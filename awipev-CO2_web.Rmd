@@ -57,8 +57,12 @@ which.closest <- function(x, table, ...) {
 ```
 
 ```{r Read and prepare data, echo=FALSE, warning=FALSE, message=FALSE}
+if (system('echo "$USER"', intern = TRUE) == "awipev") {
 d_all <-readRDS(file = "nydata_hour.rds")
-#d_all <-readRDS(file = paste0(path, "nydata_hour.rds"))
+} else {
+  d_all <-readRDS(file = paste0(path, "nydata_hour.rds"))
+}
+#
 # d_hour <- d_hour %>%
 #   dplyr::select(-date) %>%
 #   dplyr::mutate(AT = ifelse(datetime > "2016-02-26 12:00:00", AT, NA), # beginning of data series for AT
