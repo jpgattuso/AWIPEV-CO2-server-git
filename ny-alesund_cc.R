@@ -39,15 +39,14 @@ rm(list = ls())
 
 if (Sys.getenv("LOGNAME") == "gattuso") path = "../../pCloud\ Sync/Documents/experiments/exp168_AWIPEV-CO2/fb_awipev-co2_server/ny-alesund/data/NRT_data/"
 if (Sys.getenv("LOGNAME") == "samir") path = "../../pCloud\ Sync/exp168_AWIPEV-CO2/fb_awipev-co2_server/ny-alesund/data/NRT_data/"
-# if (system('echo "$USER"') == "awipev") {
-#  print("blabla")
-#   setwd("/home/awipev/ny-alesund/") #to run on server
-#  path = "data/NRT_data/"
-# }
+if (system('echo "$USER"', intern = TRUE) == "awipev") {
+  setwd("/home/awipev/ny-alesund/") #to run on server
+ path = "data/NRT_data/"
+}
 
 # # sur serveur
-setwd("/home/awipev/ny-alesund/") #to run on server
-path = "data/NRT_data/"
+# setwd("/home/awipev/ny-alesund/") #to run on server
+# path = "data/NRT_data/"
 
 ####Set environmental variables####
 Sys.setenv(TZ="UTC")
