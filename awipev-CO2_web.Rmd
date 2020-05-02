@@ -17,7 +17,7 @@ output:
 <br>
 **Check the "Infos" tab for other important informations**
 <br>
-**Please note that the system is shut down due to freezing since 18 February**</span></p>
+**Please note that the FerryBox is shut down due to freezing since 18 February**</span></p>
 </br>
 <p align="center">
 ![ ](AWIPEV-Logo.jpg){width=250px}
