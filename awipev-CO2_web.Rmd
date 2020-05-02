@@ -42,11 +42,12 @@ rm(list = ls())
 if (Sys.getenv("LOGNAME") == "gattuso") path = "../../pCloud\ Sync/Documents/experiments/exp168_AWIPEV-CO2/fb_awipev-co2_server/ny-alesund/data/NRT_data/"
 if (Sys.getenv("LOGNAME") == "samir") path = "../../pCloud\ Sync/exp168_AWIPEV-CO2/fb_awipev-co2_server/ny-alesund/data/NRT_data/"
 if (system('echo "$USER"', intern = TRUE) == "awipev") {
-  setwd("/home/awipev/ny-alesund/") #to run on server
+  #setwd("/home/awipev/ny-alesund/") #to run on server
  path = "data/NRT_data/"
+ knitr::opts_knit$set(root.dir = '/home/awipev/ny-alesund/data/NRT_data/')
 }
 
-####Set environmental variables####
+####Set environment variables####
 Sys.setenv(TZ="UTC")
 
 #################### which.closest function
@@ -56,7 +57,8 @@ which.closest <- function(x, table, ...) {
 ```
 
 ```{r Read and prepare data, echo=FALSE, warning=FALSE, message=FALSE}
-d_all <-readRDS(file = paste0(path, "nydata_hour.rds"))
+d_all <-readRDS(file = "nydata_hour.rds")
+#d_all <-readRDS(file = paste0(path, "nydata_hour.rds"))
 # d_hour <- d_hour %>%
 #   dplyr::select(-date) %>%
 #   dplyr::mutate(AT = ifelse(datetime > "2016-02-26 12:00:00", AT, NA), # beginning of data series for AT
