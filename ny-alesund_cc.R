@@ -71,8 +71,9 @@ if (file.exists(paste0(path, "all_nydata_minute.rds")) == FALSE) {
 #### Download recent data ####
 start_date <- ymd_hms("2020-01-01 00:00:00")
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
-end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
-enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
+# end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
+# enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
+enddate <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
 
 if(agg_time=="MINUTE"){
  aggregate_string=paste0("&aggregate=",agg_time)
