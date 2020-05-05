@@ -281,7 +281,7 @@ Four last days data are shown here.
 ```{r Data, fig.width=10, fig.height=4, echo=FALSE, message= FALSE}
 #table of last 4 last data days
 kable <- d_all%>%
-  dplyr::filter(datetime < Sys.Date() & datetime > Sys.Date() - days(4))%>%
+  dplyr::filter(datetime < Sys.time() & datetime > Sys.Date() - days(4))%>%
   dplyr::select(datetime, sal_fb_filtered, temp_fb_filtered, temp_insitu_11m_filtered, pco2_corr_filtered, ph_dur_filtered, phINT, at_calc)%>%
   dplyr::rename(Salinity = sal_fb_filtered, Temperature_Ferrybox = temp_fb_filtered,
                 Temperature_insitu = temp_insitu_11m_filtered, pCO2 = pco2_corr_filtered, 
