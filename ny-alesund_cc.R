@@ -162,7 +162,7 @@ previous_NRT_data <- dplyr::bind_rows(previous_NRT_data, data) %>% #save updated
   distinct(datetime, .keep_all = T)
 saveRDS(previous_NRT_data, file = paste0(path,"previous_NRT_data.rds"), version = 2)
 }
-  
+
 # Create instrument column as flag
 data <- data %>%
  dplyr::mutate(
@@ -830,6 +830,7 @@ selected_nydata_minute <- data %>%
     temp_dur_qf,
     ph_dur,
     ph_dur_filtered,
+    ph_dur_qf,
     voltINT,
     voltINT_qf,
     voltEXT,
