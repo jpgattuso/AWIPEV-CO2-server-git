@@ -2,6 +2,8 @@ if (!require("tidyverse")) install.packages("tidyverse")
 library("tidyverse")
 if (!require("lubridate")) install.packages("lubridate")
 library("lubridate")
+if (!require("hms")) install.packages("hms")
+library(hms)
 if (!require("oce")) install.packages("oce")
 library(oce)
 if (!require("dygraphs")) install.packages("dygraphs")
@@ -595,7 +597,7 @@ data <- data %>%
 # Removing outliers due to acid flush in the FB at 12:00 and 00:00 
 # pco2_raw = Raw data from the sensor (use to be PCO2_Corr before April 2020)
 # pco2_corr = Final corrected data from Contros "data processing document", (use to be PCO2_corr_contros before April 2020)
-data <- data %>%
+zzz <- data %>%
   dplyr::mutate(
     pco2_raw_qf = ifelse(
       State_Zero >= 1 | State_Flush >= 1,
@@ -617,26 +619,13 @@ data <- data %>%
              ))
     ),
     pco2_raw = ifelse(pco2_raw_qf != 1 , NA, pco2_raw),
-    pco2_corr_qf = ifelse(
-      State_Zero >= 1 | State_Flush >= 1,
-      4,
-      ifelse(pco2_corr < 100 |
-               pco2_corr > 450 , 7,
-             ifelse(
-               is.na(pco2_corr),
-               15,
-               ifelse(
-                 Time >= "00:00:00" &
-                   Time <= "01:30:00" |
-                   Time >= "12:00:00" &
-                   Time <= "13:00:00" |
-                   datetime >= "2017-03-10 08:00:00" &
-                   datetime < "2017-03-21 20:00:00",
-                 99,
-                 1
-               )
-             ))
-    ),
+    pco2_corr_qf = ifelse(State_Zero >= 1 | State_Flush >= 1, 4,
+      ifelse(pco2_corr < 100 | pco2_corr > 450 , 7,
+             ifelse(is.na(pco2_corr), 15,
+                    ifelse(Time >= "00:00:00" & Time <= "01:30:00" | Time >= "12:00:00" & Time <= "13:00:00" |
+                             datetime >= "2017-03-10 08:00:00" & datetime < "2017-03-21 20:00:00", 99,
+                           1)
+                    ))),
     pco2_corr = ifelse(pco2_corr_qf != 1 , NA, pco2_corr)
   )
 
