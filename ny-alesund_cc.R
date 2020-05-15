@@ -493,16 +493,16 @@ data <- data %>%
 # We keep in Sprim2beamZ the 2nd value of the zeroing (at 00:02:00 and 12:02:00) when it exists 
 # if it does not, we keep the 1st value (at 00:01:00 and 12:01:00) of the zeroing 
 # see Steffen's email on the 2016-12-13 11:11
-data$Time <- strftime(data$datetime, "%H:%M:%S")
-data$Sprim2beamZ[which(data$Time == "00:02:00" &
+data$time <- strftime(data$datetime, "%H:%M:%S")
+data$Sprim2beamZ[which(data$time == "00:02:00" &
                          !is.na(data$Sprim2beamZ)) - 1] <- NA
-data$Sprim2beamZ[which(data$Time == "12:02:00" &
+data$Sprim2beamZ[which(data$time == "12:02:00" &
                          !is.na(data$Sprim2beamZ)) - 1] <- NA
-#z$Sprim2beamZ[which(z$Time == "00:03:00" | z$Time == "12:03:00")] <- NA
+#z$Sprim2beamZ[which(z$time == "00:03:00" | z$time == "12:03:00")] <- NA
 data$Sprim2beamZ[which(
-  data$Time != "00:02:00" &
-    data$Time != "12:02:00" &
-    data$Time != "12:01:00" & data$Time != "00:01:00"
+  data$time != "00:02:00" &
+    data$time != "12:02:00" &
+    data$time != "12:01:00" & data$time != "00:01:00"
 )] <- NA
 
 # We interpolate Sprim2beamZ and we convert it from "list" to "dataframe"
@@ -607,10 +607,10 @@ zzz <- data %>%
                is.na(pco2_raw),
                15,
                ifelse(
-                 Time >= "00:00:00" &
-                   Time <= "01:30:00" |
-                   Time >= "12:00:00" &
-                   Time <= "13:00:00" |
+                 time >= "00:00:00" &
+                   time <= "01:30:00" |
+                   time >= "12:00:00" &
+                   time <= "13:00:00" |
                    datetime >= "2017-03-10 08:00:00" &
                    datetime < "2017-03-21 20:00:00",
                  99,
@@ -622,7 +622,7 @@ zzz <- data %>%
     pco2_corr_qf = ifelse(State_Zero >= 1 | State_Flush >= 1, 4,
       ifelse(pco2_corr < 100 | pco2_corr > 450 , 7,
              ifelse(is.na(pco2_corr), 15,
-                    ifelse(Time >= "00:00:00" & Time <= "01:30:00" | Time >= "12:00:00" & Time <= "13:00:00" |
+                    ifelse(time >= "00:00:00" & time <= "01:30:00" | time >= "12:00:00" & time <= "13:00:00" |
                              datetime >= "2017-03-10 08:00:00" & datetime < "2017-03-21 20:00:00", 99,
                            1)
                     ))),
