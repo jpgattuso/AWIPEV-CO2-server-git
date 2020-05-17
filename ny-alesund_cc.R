@@ -495,15 +495,15 @@ data <- data %>%
 # see Steffen's email on the 2016-12-13 11:11
 #data$time <- strftime(data$datetime, "%H:%M:%S")
 data$time <- as_hms(data$datetime)
-data$Sprim2beamZ[which(data$time == "00:02:00" &
+data$Sprim2beamZ[which(data$time == as_hms("00:02:00") &
                          !is.na(data$Sprim2beamZ)) - 1] <- NA
-data$Sprim2beamZ[which(data$time == "12:02:00" &
+data$Sprim2beamZ[which(data$time == as_hms("12:02:00") &
                          !is.na(data$Sprim2beamZ)) - 1] <- NA
 #z$Sprim2beamZ[which(z$time == "00:03:00" | z$time == "12:03:00")] <- NA
 data$Sprim2beamZ[which(
-  data$time != "00:02:00" &
-    data$time != "12:02:00" &
-    data$time != "12:01:00" & data$time != "00:01:00"
+  data$time != as_hms("00:02:00") &
+    data$time != as_hms("12:02:00") &
+    data$time != as_hms("12:01:00") & data$time != as_hms("00:01:00")
 )] <- NA
 
 # We interpolate Sprim2beamZ and we convert it from "list" to "dataframe"
