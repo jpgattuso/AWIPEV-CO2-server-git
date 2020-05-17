@@ -494,6 +494,7 @@ data <- data %>%
 # if it does not, we keep the 1st value (at 00:01:00 and 12:01:00) of the zeroing 
 # see Steffen's email on the 2016-12-13 11:11
 data$time <- strftime(data$datetime, "%H:%M:%S")
+#data$time <- as_hms(data$datetime)
 data$Sprim2beamZ[which(data$time == "00:02:00" &
                          !is.na(data$Sprim2beamZ)) - 1] <- NA
 data$Sprim2beamZ[which(data$time == "12:02:00" &
@@ -574,6 +575,7 @@ data <- data %>%
 # 12: failing the spike test (NAs from despike)
 # 13: failing the gradient test
 # 15: the instrument was not deployed or operated
+# 16: acid flush
 # 99: failing the final visual inspection of the data. 
 
 #### Argo impossible date test
@@ -597,104 +599,102 @@ data <- data %>%
 # Removing outliers due to acid flush in the FB at 12:00 and 00:00 
 # pco2_raw = Raw data from the sensor (use to be PCO2_Corr before April 2020)
 # pco2_corr = Final corrected data from Contros "data processing document", (use to be PCO2_corr_contros before April 2020)
-zzz <- data %>%
+data <- data %>%
   dplyr::mutate(
-    pco2_raw_qf = ifelse(
-      State_Zero >= 1 | State_Flush >= 1,
-      4,
-      ifelse(pco2_raw < 100 | pco2_raw > 450 , 7,
-             ifelse(
-               is.na(pco2_raw),
-               15,
-               ifelse(
-                 time >= "00:00:00" &
-                   time <= "01:30:00" |
-                   time >= "12:00:00" &
-                   time <= "13:00:00" |
-                   datetime >= "2017-03-10 08:00:00" &
-                   datetime < "2017-03-21 20:00:00",
-                 99,
-                 1
-               )
-             ))
-    ),
+    pco2_raw_qf = case_when(
+      is.na(pco2_raw) ~ 15,
+      State_Zero >= 1 | State_Flush >= 1 ~ 4,
+      pco2_corr < 100 | pco2_corr > 450 ~ 7,
+      (time >= as_hms("00:00:00") & time <= as_hms("01:30:00")) |
+        (time >= as_hms("12:00:00") & time <= as_hms("13:00:00")) ~ 16,
+      datetime >= as.POSIXct("2017-03-10 08:00:00") &
+        datetime < as.POSIXct("2017-03-21 20:00:00") ~ 99,
+      TRUE ~ 1),
     pco2_raw = ifelse(pco2_raw_qf != 1 , NA, pco2_raw),
-    pco2_corr_qf = ifelse(State_Zero >= 1 | State_Flush >= 1, 4,
-      ifelse(pco2_corr < 100 | pco2_corr > 450 , 7,
-             ifelse(is.na(pco2_corr), 15,
-                    ifelse(time >= "00:00:00" & time <= "01:30:00" | time >= "12:00:00" & time <= "13:00:00" |
-                             datetime >= "2017-03-10 08:00:00" & datetime < "2017-03-21 20:00:00", 99,
-                           1)
-                    ))),
+    pco2_corr_qf = case_when(
+      is.na(pco2_corr) ~ 15,
+      State_Zero >= 1 | State_Flush >= 1 ~ 4,
+      pco2_corr < 100 | pco2_corr > 450 ~ 7,
+      (time >= as_hms("00:00:00") & time <= as_hms("01:30:00")) |
+        (time >= as_hms("12:00:00") &
+           time <= as_hms("13:00:00")) ~ 16,
+      datetime >= as.POSIXct("2017-03-10 08:00:00") &
+        datetime < as.POSIXct("2017-03-21 20:00:00") ~ 99,
+      TRUE ~ 1
+    ),
     pco2_corr = ifelse(pco2_corr_qf != 1 , NA, pco2_corr)
   )
 
 ## filter salinities above 28
 data <- data %>%
   dplyr::mutate(
-    sal_fb_qf = ifelse(sal_fb < 28 | sal_fb > 37, 7,
-                       ifelse(is.na(sal_fb), 15,
-                              1)),
+    sal_fb_qf = case_when(is.na(sal_fb) ~ 15,
+                          sal_fb < 28 | sal_fb > 37 ~ 7,
+                          TRUE ~ 1),
     sal_fb = ifelse(sal_fb_qf != 1 , NA, sal_fb),
-    sal_insitu_ctd_qf = ifelse(sal_insitu_ctd < 28 | sal_fb > 37, 7,
-                               ifelse(
-                                 is.na(sal_insitu_ctd),
-                                 15,
-                                 ifelse(datetime > "2019-12-26 00:00:00", 99, 1)
-                               )),
+    sal_insitu_ctd_qf = case_when(
+      is.na(sal_insitu_ctd) ~ 15,
+      sal_insitu_ctd < 28 |
+        sal_insitu_ctd > 37 ~ 7,
+      datetime > as.POSIXct("2019-12-26 00:00:00") ~ 99,
+      TRUE ~ 1
+    ),
     sal_insitu_ctd = ifelse(sal_insitu_ctd_qf != 1 , NA, sal_insitu_ctd),
   )
 
-## filter temperatures above 10
+## filter temperatures above 10 and below -2
 data <- data %>%
   dplyr::mutate(
-    temp_dur_qf = ifelse(temp_dur > 10 | temp_dur < -2 , 7,
-                         ifelse(is.na(temp_dur), 15,
-                                1)),
+    temp_dur_qf = case_when(
+      is.na(temp_dur) ~ 15,
+      temp_dur > 10 | temp_dur < -2 ~ 7,
+             TRUE ~ 1),
     temp_dur = ifelse(temp_dur_qf != 1 , NA, temp_dur),
-    temp_fb_qf = ifelse(temp_fb > 10 | temp_fb < -2 , 7,
-                        ifelse(is.na(temp_fb), 15,
-                               1)),
-    temp_fb = ifelse(temp_fb_qf != 1 , NA, temp_fb),
-    temp_insitu_11m_qf = ifelse(
-      temp_insitu_11m > 10 | temp_insitu_11m < -2 ,
-      7,
-      ifelse(is.na(temp_insitu_11m), 15,
-             1)
+    temp_fb_qf = case_when(
+      is.na(temp_fb) ~ 15,
+      temp_fb > 10 | temp_fb < -2 ~ 7,
+      ifelse(is.na(temp_fb), 15,
+             TRUE ~ 1)
     ),
+    temp_fb = ifelse(temp_fb_qf != 1 , NA, temp_fb),
+    temp_insitu_11m_qf = case_when(
+      is.na(temp_insitu_11m) ~ 15,
+      temp_insitu_11m > 10 |
+        temp_insitu_11m < -2 ~ 7,
+             TRUE ~ 1),
     temp_insitu_11m = ifelse(temp_insitu_11m_qf != 1 , NA, temp_insitu_11m),
   )
 
 ## filter Voltages seaFET to remove outliers when calculating final corrected pH.
 data <- data %>%
   dplyr::mutate(
-    voltINT_qf = ifelse(voltINT > 0.1, 99,
-                        ifelse(is.na(voltINT), 15,
-                               1)),
+    voltINT_qf = case_when(is.na(voltINT) ~ 15,
+                           voltINT > 0.1 ~ 99,
+                           TRUE ~ 1),
     voltINT = ifelse(voltINT_qf != 1 , NA, voltINT),
-    voltEXT_qf = ifelse(voltEXT > -0.4 , 99,
-                        ifelse(is.na(voltEXT), 15,
-                               1)),
+    voltEXT_qf = case_when(is.na(voltEXT) ~ 15,
+                           voltEXT > 0.1 ~ 99,
+                           TRUE ~ 1),
     voltEXT = ifelse(voltEXT_qf != 1 , NA, voltEXT)
   )
 ## seaFET pH
 data <- data %>%
   dplyr::mutate(
-    phINT_qf = ifelse(phINT < 7.5 | phINT > 8.5 , 7,
-                      ifelse(is.na(phINT), 15,
-                             1)),
+    phINT_qf = case_when(is.na(phINT) ~ 15,
+                         phINT < 7.5 | phINT > 8.5 ~ 7,
+                         TRUE ~ 1),
     phINT = ifelse(phINT_qf != 1 , NA, phINT),
-    phEXT_qf = ifelse(phEXT < 7.5 | phEXT > 8.5 , 7,
-                      ifelse(is.na(phEXT), 15,
-                             1)),
+    phEXT_qf = case_when(is.na(phEXT) ~ 15,
+                         phEXT < 7.5 | phEXT > 8.5 ~ 7,
+                         TRUE ~ 1),
     phEXT = ifelse(phEXT_qf != 1 , NA, phEXT)
   )
 ## durafet 
 data <- data %>%
   dplyr::mutate(
-    ph_dur_qf = ifelse(ph_dur < 7.5 | ph_dur > 8.5 , 7,
-                       ifelse(is.na(ph_dur), 15,
-                              1)),
+    ph_dur_qf = case_when(is.na(ph_dur) ~ 15,
+                          ph_dur < 7.5 | ph_dur > 8.5 ~ 7,
+                          TRUE ~ 1),
     ph_dur = ifelse(ph_dur_qf != 1 , NA, ph_dur)
   )
 ##########  Despike() ###########
