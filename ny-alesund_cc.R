@@ -18,23 +18,8 @@ if (!require("data.table")) install.packages("data.table")
 library(data.table)
 if (!require("tsibble")) install.packages("tsibble")
 library(tsibble)
-# if (!require("cowplot")) install.packages("cowplot")
-# library(cowplot)
-# if (!require("plotly")) install.packages("plotly")
-# library(plotly)
-# if (!require("htmlwidgets")) install.packages("htmlwidgets")
-# library(htmlwidgets)
 if (!require("stringr")) install.packages("stringr")
 library(stringr)
-# if (!require("devtools")) install.packages("devtools")
-# library(devtools)
-# if (!require("feasts")) install.packages("feasts")
-# library(feasts)
-# if (!require("knitr")) install.packages("knitr")
-# library(knitr)
-# if (!require("kableExtra")) install.packages("kableExtra")
-# library(kableExtra)
-
 
 ####define who is the user and define path
 rm(list = ls())
@@ -60,21 +45,17 @@ agg_fun_3 = "N"
 
 # read past data 
 previous_NRT_data <- readRDS(file = paste0(path, "previous_NRT_data.rds")) %>% 
-  #dplyr::select(-c(PeriodDeplpCO2, T0, P0, F, fTsensor, k1, k2, k3, T0_post, P0_post, F_post, 
-  #                 fTsensor_post, k1_post, k2_post, k3_post)) %>% #will be reintroduced later
   dplyr::mutate(datetime = ymd_hms(datetime)
   )
-#data <- previous_NRT_data
 
 # This is to process the whole data set, from 2015
 if (file.exists(paste0(path, "all_nydata_minute.rds")) == FALSE) {
   data <- previous_NRT_data
 } else {
-#### Download recent data ####
+
+  #### Download recent data ####
 start_date <- ymd_hms("2020-01-01 00:00:00")
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
-# end_date <- ymd_hms(paste0(Sys.Date(), " 00:00:00 UTC"))
-# enddate <- format(end_date,"%Y-%m-%dT%H:%M:%S")
 enddate <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
 
 if(agg_time=="MINUTE"){
@@ -963,44 +944,3 @@ if (file.exists(paste0(path, "nydata_hour.rds")) == TRUE) {
   saveRDS(d_hour, file = paste0(path, "nydata_hour.rds"), version = 2)
   fwrite(d_hour, file = paste0(path, "d_hour.csv.gz"), na="NA", col.names = TRUE)
 }
-
-
-# #d_hour <- readRDS(paste0(path, "nydata_hour.rds"))
-# pco2_contros_xts <- d_hour %>%
-#   #dplyr::filter(datetime > "2017-12-08 00:00:00" & datetime < "2017-12-12 00:00:00") %>%
-#   dplyr::select(datetime, voltINT, voltEXT)
-# pco2_contros_xts <-
-#   as.xts(pco2_contros_xts, order.by = pco2_contros_xts$datetime)
-# dygraph(pco2_contros_xts,
-#         group = "awipev",
-#         main = "<i>p</i>CO<sub>2</sub>",
-#         ylab = "<i>p</i>CO<sub>2</sub>") %>%
-#   dySeries(
-#     axis = "y2",
-#     "voltINT",
-#     label = "voltINT",
-#     color =  "blue",
-#     strokeWidth = 0,
-#     pointSize = 2
-#   ) %>%
-#   dySeries(axis="y2",
-#            "voltEXT",
-#            label = "voltEXT",
-#            color =  "red",
-#            strokeWidth = 0,
-#            pointSize = 2
-#   ) %>%
-#   dyHighlight(
-#     highlightCircleSize = 8,
-#     highlightSeriesBackgroundAlpha = 0.5,
-#     hideOnMouseOut = TRUE
-#   ) %>%
-#   dyLegend(show = "follow")   %>%
-#   dyAxis("y2",valueRange = c(-2,2))%>%
-#   dyOptions(
-#     drawGrid = TRUE,
-#     drawPoints = TRUE,
-#     pointSize = c(1, 8, 1),
-#     useDataTimezone = TRUE
-#   ) %>%
-#   dyRangeSelector(height = 30, dateWindow = NULL)
