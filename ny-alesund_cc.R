@@ -169,28 +169,28 @@ saveRDS(previous_NRT_data, file = paste0(path,"previous_NRT_data.rds"), version 
 data <- data %>%
  dplyr::mutate(
   pco2_inst = ifelse(
-   datetime >= "2015-07-19 00:00:00" &
-    datetime <= "2016-02-23 12:00:00",
+   datetime >= as.POSIXct("2015-07-19 00:00:00") &
+    datetime <= as.POSIXct("2016-02-23 12:00:00"),
    "0215",
    ifelse(
-    datetime >= "2016-02-23 23:00:00" &
-     datetime <= "2017-02-04 23:00:00",
+    datetime >= as.POSIXct("2016-02-23 23:00:00") &
+     datetime <= as.POSIXct("2017-02-04 23:00:00"),
     "0515" ,
     ifelse(
-     datetime >= "2017-02-09 00:00:00" &
-      datetime <= "2018-02-09 00:00:00",
+     datetime >= as.POSIXct("2017-02-09 00:00:00") &
+      datetime <= as.POSIXct("2018-02-09 00:00:00"),
      "0215" ,
      ifelse(
-      datetime >= "2018-04-14 00:00:00" &
-       datetime <= "2018-10-31 00:00:00",
+      datetime >= as.POSIXct("2018-04-14 00:00:00") &
+       datetime <= as.POSIXct("2018-10-31 00:00:00"),
       "0515" ,
       ifelse(
-       datetime >= "2018-10-31 15:00:00" &
-        datetime <= "2019-09-03 12:00:00",
+       datetime >= as.POSIXct("2018-10-31 15:00:00") &
+        datetime <= as.POSIXct("2019-09-03 12:00:00"),
        "0215" ,
        ifelse(
-        datetime >= "2019-09-03 17:00:00" &
-         datetime <= "2099-12-02 23:59:59",
+        datetime >= as.POSIXct("2019-09-03 17:00:00") &
+         datetime <= as.POSIXct("2099-12-02 23:59:59"),
         "0515" ,
         NA
        )
@@ -201,32 +201,32 @@ data <- data %>%
   ),
   
   seafet_inst = ifelse(
-   datetime >= "2017-08-24 12:00:00" &
-    datetime <= "2018-04-17 12:00:00",
+   datetime >= as.POSIXct("2017-08-24 12:00:00") &
+    datetime <= as.POSIXct("2018-04-17 12:00:00"),
    "1005",
    ifelse(
-    datetime >= "2018-04-17 12:00:00" &
-     datetime <= "2099-12-02 23:59:59",
+    datetime >= as.POSIXct("2018-04-17 12:00:00") &
+     datetime <= as.POSIXct("2099-12-02 23:59:59"),
     "007" ,
     NA
    )
   ),
   
   ta_inst = ifelse(
-   datetime >= "2016-02-26 00:00:00" &
-    datetime <= "2017-03-21 12:00:00",
+   datetime >= as.POSIXct("2016-02-26 00:00:00") &
+    datetime <= as.POSIXct("2017-03-21 12:00:00"),
    "1215",
    ifelse(
-    datetime >= "2018-01-08 12:55:00" &
-     datetime <= "2018-06-20 00:00:00",
+    datetime >= as.POSIXct("2018-01-08 12:55:00") &
+     datetime <= as.POSIXct("2018-06-20 00:00:00"),
     "0317",
     ifelse(
-     datetime >= "2018-07-31 00:00:00" &
-      datetime <= "2018-10-30 18:00:00",
+     datetime >= as.POSIXct("2018-07-31 00:00:00") &
+      datetime <= as.POSIXct("2018-10-30 18:00:00"),
      "1215",
      ifelse(
-      datetime >= "2018-10-30 18:00:00" &
-       datetime <= "2099-12-02 23:59:59",
+      datetime >= as.POSIXct("2018-10-30 18:00:00") &
+       datetime <= as.POSIXct("2099-12-02 23:59:59"),
       "0317" ,
       NA
      )
@@ -422,28 +422,28 @@ data_process <- read_xlsx(range="A1:AF8", na = "NA", paste0(path, "Data_Processi
 data <- data %>%
   dplyr::mutate(
     PeriodDeplpCO2 = ifelse(
-      datetime >= "2015-07-23 00:00:00" &
-        datetime <= "2016-02-23 22:00:00",
+      datetime >= as.POSIXct("2015-07-23 00:00:00") &
+        datetime <= as.POSIXct("2016-02-23 22:00:00"),
       1,
       ifelse(
-        datetime >= "2016-02-23 23:00:00" &
-          datetime <= "2017-02-04 23:00:00",
+        datetime >= as.POSIXct("2016-02-23 23:00:00") &
+          datetime <= as.POSIXct("2017-02-04 23:00:00"),
         2 ,
         ifelse(
-          datetime >= "2017-02-09 00:00:00" &
-            datetime <= "2018-02-09 00:00:00",
+          datetime >= as.POSIXct("2017-02-09 00:00:00") &
+            datetime <= as.POSIXct("2018-02-09 00:00:00"),
           3 ,
           ifelse(
-            datetime >= "2018-04-14 00:00:00" &
-              datetime <= "2018-10-31 00:00:00",
+            datetime >= as.POSIXct("2018-04-14 00:00:00") &
+              datetime <= as.POSIXct("2018-10-31 00:00:00"),
             4 ,
             ifelse(
-              datetime >= "2018-10-31 15:00:00" &
-                datetime <= "2019-09-03 12:00:00",
+              datetime >= as.POSIXct("2018-10-31 15:00:00") &
+                datetime <= as.POSIXct("2019-09-03 12:00:00"),
               5 ,
               ifelse(
-                datetime >= "2019-09-03 17:00:00" &
-                  datetime <= "2099-12-02 23:59:59",
+                datetime >= as.POSIXct("2019-09-03 17:00:00") &
+                  datetime <= as.POSIXct("2099-12-02 23:59:59"),
                 6 ,
                 NA
               )
