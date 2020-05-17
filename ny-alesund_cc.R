@@ -160,9 +160,9 @@ data <- data.table::fread(code, encoding = "UTF-8", showProgress	= TRUE)
 colnames(data) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317", "InvAT_0317", "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215", "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215","pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515","pco2_raw_Zero_0515", "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103" )
 data$datetime <- ymd_hms(data$datetime)
 
-previous_NRT_data <- dplyr::bind_rows(previous_NRT_data, data) %>% #save updated previous_NRT_data 
-  distinct(datetime, .keep_all = T)
-saveRDS(previous_NRT_data, file = paste0(path,"previous_NRT_data.rds"), version = 2)
+# previous_NRT_data <- dplyr::bind_rows(previous_NRT_data, data) %>% #save updated previous_NRT_data 
+#   distinct(datetime, .keep_all = T)
+# saveRDS(previous_NRT_data, file = paste0(path,"previous_NRT_data.rds"), version = 2)
 }
 
 # Create instrument column as flag
@@ -636,7 +636,7 @@ data <- data %>%
       is.na(sal_insitu_ctd) ~ 15,
       sal_insitu_ctd < 28 |
         sal_insitu_ctd > 37 ~ 7,
-      datetime > as.POSIXct("2019-12-26 00:00:00") ~ 99,
+      #datetime > as.POSIXct("2019-12-26 00:00:00") ~ 99,
       TRUE ~ 1
     ),
     sal_insitu_ctd = ifelse(sal_insitu_ctd_qf != 1 , NA, sal_insitu_ctd),
@@ -662,7 +662,7 @@ data <- data %>%
       temp_insitu_11m > 10 |
         temp_insitu_11m < -2 ~ 7,
              TRUE ~ 1),
-    temp_insitu_11m = ifelse(temp_insitu_11m_qf != 1 , NA, temp_insitu_11m),
+    temp_insitu_11m = ifelse(temp_insitu_11m_qf != 1 , NA, temp_insitu_11m)
   )
 
 ## filter Voltages seaFET to remove outliers when calculating final corrected pH.
