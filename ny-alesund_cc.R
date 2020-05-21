@@ -871,21 +871,21 @@ selected_nydata_minute <- selected_nydata_minute %>%
   )
 
 
-tmp <- selected_nydata_minute %>% 
-  dplyr::filter(datetime > as.POSIXct("2017-08-24 00:00:00") & datetime < as.POSIXct("2017-08-24 23:00:00"))
-sal_xts <- dplyr::select(tmp, datetime, sal_insitu_ctd_1m, sal_insitu_ctd_3m, sal_insitu_ctd_5m, sal_insitu_ctd_7m, sal_insitu_ctd_9m)
-sal_xts <- as.xts(sal_xts, order.by = sal_xts$datetime)
-dygraph(sal_xts, group = "awipev", main="Salinity (in situ CTD, all depths)", ylab="Salinity") %>%
-  dySeries("sal_insitu_ctd_1m", color = RColorBrewer::brewer.pal(5, "Set1")[1], strokeWidth = 0, label = "1m") %>%
-  dySeries("sal_insitu_ctd_3m", color = RColorBrewer::brewer.pal(5, "Set1")[2], strokeWidth = 0, label = "3m") %>%
-  dySeries("sal_insitu_ctd_5m", color = RColorBrewer::brewer.pal(5, "Set1")[3], strokeWidth = 0, label = "5m") %>%
-  dySeries("sal_insitu_ctd_7m", color = RColorBrewer::brewer.pal(5, "Set1")[4], strokeWidth = 0, label = "7m") %>%
-  dySeries("sal_insitu_ctd_9m", color = RColorBrewer::brewer.pal(5, "Set1")[5], strokeWidth = 0, label = "9m") %>%
-  dyHighlight(highlightCircleSize = 8,highlightSeriesBackgroundAlpha =0.2,hideOnMouseOut =TRUE) %>%
-  dyOptions( drawGrid = TRUE, drawPoints = TRUE, pointSize = 2,useDataTimezone = TRUE) %>%
-  dyLegend(show = "follow")   %>%
-  dyAxis("y",valueRange = c(30, 37)) %>%
-  dyRangeSelector(height = 30, dateWindow= NULL)
+# tmp <- selected_nydata_minute %>% 
+#   dplyr::filter(datetime > as.POSIXct("2017-08-24 00:00:00") & datetime < as.POSIXct("2017-08-24 23:00:00"))
+# sal_xts <- dplyr::select(tmp, datetime, sal_insitu_ctd_1m, sal_insitu_ctd_3m, sal_insitu_ctd_5m, sal_insitu_ctd_7m, sal_insitu_ctd_9m)
+# sal_xts <- as.xts(sal_xts, order.by = sal_xts$datetime)
+# dygraph(sal_xts, group = "awipev", main="Salinity (in situ CTD, all depths)", ylab="Salinity") %>%
+#   dySeries("sal_insitu_ctd_1m", color = RColorBrewer::brewer.pal(5, "Set1")[1], strokeWidth = 0, label = "1m") %>%
+#   dySeries("sal_insitu_ctd_3m", color = RColorBrewer::brewer.pal(5, "Set1")[2], strokeWidth = 0, label = "3m") %>%
+#   dySeries("sal_insitu_ctd_5m", color = RColorBrewer::brewer.pal(5, "Set1")[3], strokeWidth = 0, label = "5m") %>%
+#   dySeries("sal_insitu_ctd_7m", color = RColorBrewer::brewer.pal(5, "Set1")[4], strokeWidth = 0, label = "7m") %>%
+#   dySeries("sal_insitu_ctd_9m", color = RColorBrewer::brewer.pal(5, "Set1")[5], strokeWidth = 0, label = "9m") %>%
+#   dyHighlight(highlightCircleSize = 8,highlightSeriesBackgroundAlpha =0.2,hideOnMouseOut =TRUE) %>%
+#   dyOptions( drawGrid = TRUE, drawPoints = TRUE, pointSize = 2,useDataTimezone = TRUE) %>%
+#   dyLegend(show = "follow")   %>%
+#   dyAxis("y",valueRange = c(30, 37)) %>%
+#   dyRangeSelector(height = 30, dateWindow= NULL)
    
 # to add instrument S/N columns
 selected_nydata_minute$pco2_inst <-
@@ -898,6 +898,7 @@ selected_nydata_minute$seafet_inst <-
 selected_nydata_hour <- selected_nydata_minute %>%
   dplyr::group_by(date, hour) %>%
   dplyr::summarise(
+    pressure_insitu_ctd = mean(pressure_insitu_ctd, na.rm = TRUE),
     sal_insitu_ctd = mean(sal_insitu_ctd, na.rm = TRUE),
     sal_insitu_ctd_1m = mean(sal_insitu_ctd_1m, na.rm = TRUE),
     sal_insitu_ctd_3m = mean(sal_insitu_ctd_3m, na.rm = TRUE),
