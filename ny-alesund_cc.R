@@ -929,7 +929,7 @@ selected_nydata_hour <- selected_nydata_minute %>%
     par_insitu_10m = mean(par_insitu_10m, na.rm = TRUE),
     par_air = mean(par_air, na.rm = TRUE),
     turb_fb = mean(turb_fb, na.rm = TRUE),
-    temp_insitu_ctd = mean(sal_insitu_ctd, na.rm = TRUE),
+    temp_insitu_ctd = mean(temp_insitu_ctd, na.rm = TRUE),
     temp_insitu_ctd_1m = mean(temp_insitu_ctd_1m, na.rm = TRUE),
     temp_insitu_ctd_3m = mean(temp_insitu_ctd_3m, na.rm = TRUE),
     temp_insitu_ctd_5m = mean(temp_insitu_ctd_5m, na.rm = TRUE),
