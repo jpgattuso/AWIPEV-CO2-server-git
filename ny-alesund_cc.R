@@ -671,7 +671,7 @@ data <- data %>%
 data <- data %>%
   dplyr::mutate(
     ph_dur_qf = case_when(is.na(ph_dur) ~ 15,
-                          ph_dur < 7.5 | ph_dur > 8.5 ~ 7,
+                          ph_dur < 7.5 | ph_dur > 8.75 ~ 7,
                           TRUE ~ 1),
     ph_dur = ifelse(ph_dur_qf != 1 , NA, ph_dur)
   )
