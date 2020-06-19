@@ -256,7 +256,7 @@ durafet_contros_xts <- dplyr::select(d_all, datetime, ph_dur_filtered)
 durafet_contros_xts <- as.xts(durafet_contros_xts, order.by = d_all$datetime)
 dygraph(durafet_contros_xts, group = "awipev", main="pH durafet (in Ferrybox)", ylab="pHT") %>%
     dySeries("ph_dur_filtered", label = "Raw data", color ="blue", strokeWidth=0, pointSize=2) %>%
-   dyAxis("y",valueRange = c(7.4, 8.6)) %>%
+   dyAxis("y",valueRange = c(7.4, 8.8)) %>%
     dyHighlight(highlightCircleSize = 8,highlightSeriesBackgroundAlpha = 0.2,hideOnMouseOut = TRUE) %>%
     dyOptions(drawGrid = TRUE, drawPoints = TRUE, pointSize = c(1,8,1),useDataTimezone = TRUE) %>%
     dyRangeSelector(height = 30) 
