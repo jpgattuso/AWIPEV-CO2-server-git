@@ -619,7 +619,7 @@ data <- data %>%
 data <- data %>%
   dplyr::mutate(
     sal_fb_qf = case_when(is.na(sal_fb) ~ 15,
-                          sal_fb < 28 | sal_fb > 37 ~ 7,
+                          sal_fb < 28 | sal_fb > 38 ~ 7,
                           TRUE ~ 1),
     sal_fb = ifelse(sal_fb_qf != 1 , NA, sal_fb),
     sal_insitu_ctd_qf = case_when(
