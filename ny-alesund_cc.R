@@ -61,7 +61,7 @@ if(agg_time=="MINUTE"){
 } else {
  aggregate_string=paste0("&aggregate=",agg_time,"&aggregateFunctions=",agg_fun_1,"&aggregateFunctions=",agg_fun_2,"&aggregateFunctions=",agg_fun_3)
 }
-code <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate,"&endDate=",enddate,"&format=text/tab-separated-values",aggregate_string,
+code1 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate,"&endDate=",enddate,"&format=text/tab-separated-values",aggregate_string,
         "&sensors=station:svluwobs:fb_731101:sbe45_awi_0403:salinity",
         "&sensors=station:svluwobs:fb_731101:sbe45_awi_0403:temperature",
         "&sensors=station:svluwobs:svluw2:ctd_183:conductivity_awi_01:salinity", 
@@ -98,7 +98,9 @@ code <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdat
         "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:volt_internal",
         "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:volt_external",
         "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:ph_temperature",
-        "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:internal_relative_humidity",
+        "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:internal_relative_humidity")
+
+code2 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate,"&endDate=",enddate,"&format=text/tab-separated-values",aggregate_string,
         "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:zero",
         "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:signal_proc",
         "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:signal_raw",
@@ -137,9 +139,16 @@ code <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdat
 
 #station:svluwobs:fb_731101:fluorometer_awi_3510:chlorophyll_a
 
-data <- data.table::fread(code, encoding = "UTF-8", showProgress	= TRUE)
-colnames(data) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317", "InvAT_0317", "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215", "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215","pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515","pco2_raw_Zero_0515", "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103" )
-data$datetime <- ymd_hms(data$datetime)
+data1 <- data.table::fread(code1, encoding = "UTF-8", showProgress	= TRUE)
+data2 <- data.table::fread(code2, encoding = "UTF-8", showProgress	= TRUE)
+
+colnames(data1) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317", "InvAT_0317", "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215", "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005")
+colnames(data2) <- c("datetime", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215","pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515","pco2_raw_Zero_0515", "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103" )
+
+data1$datetime <- ymd_hms(data1$datetime)
+data2$datetime <- ymd_hms(data2$datetime)
+
+data <- left_join(data1, data2, by = "datetime")
 
 previous_NRT_data <- dplyr::bind_rows(previous_NRT_data, data) %>% #save updated previous_NRT_data
   distinct(datetime, .keep_all = T)
