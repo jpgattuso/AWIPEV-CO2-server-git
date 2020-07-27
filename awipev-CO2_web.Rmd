@@ -280,9 +280,9 @@ Four last days data are shown here.
 kable <- d_all%>%
   dplyr::filter(datetime < Sys.time() & datetime > Sys.Date() - days(4))%>%
   dplyr::select(datetime, sal_fb_filtered, temp_fb_filtered, temp_insitu_11m_filtered, pco2_corr_filtered, ph_dur_filtered, phINT, at_calc)%>%
-  dplyr::rename(Salinity = sal_fb_filtered, Temperature_Ferrybox = temp_fb_filtered,
+  dplyr::rename(Salinity_Ferrybox = sal_fb_filtered, Temperature_Ferrybox = temp_fb_filtered,
                 Temperature_insitu = temp_insitu_11m_filtered, pCO2 = pco2_corr_filtered, 
-                pH_durafet = ph_dur_filtered, pH_raw_seaFET=phINT, AT = at_calc)
+                pH_durafet = ph_dur_filtered, pH_raw_seaFET=phINT, AT_calculated_from_salinity = at_calc)
 
 kable %>% 
   kable(digits = 4) %>%
