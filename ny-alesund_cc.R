@@ -41,19 +41,17 @@ agg_fun_2 = "STDDEV"
 agg_fun_3 = "N"
 #*********************************
 
-# # read past data 
-# previous_NRT_data <- readRDS(file = paste0(path, "previous_NRT_data.rds")) %>% 
-#   dplyr::mutate(datetime = ymd_hms(datetime)
-#   )
+# read past data 
+previous_NRT_data <- readRDS(file = paste0(path, "previous_NRT_data.rds")) %>% 
+  dplyr::mutate(datetime = ymd_hms(datetime)
+  )
 
 # This is to process the whole data set, from 2015
 if (file.exists(paste0(path, "all_nydata_minute.rds")) == FALSE) {
   data <- previous_NRT_data
 } else {
 
-#### Download all data, year by year ####
-
-#### Download recent data ####
+  #### Download recent data ####
 start_date <- ymd_hms("2020-01-01 00:00:00")
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
 enddate <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
