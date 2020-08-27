@@ -46,122 +46,134 @@ agg_fun_3 = "N"
 #   dplyr::mutate(datetime = ymd_hms(datetime)
 #   )
 
-# # # This is to process the whole data set, from 2015
-# # if (file.exists(paste0(path, "all_nydata_minute.rds")) == FALSE) {
-# #   data <- previous_NRT_data
-# # } else {
-# 
-# #### Download all data, year by year ####
-#   start_date <- c(ymd_hms("2015-07-22 00:00:00"), ymd_hms("2016-01-01 00:00:00"), ymd_hms("2017-01-01 00:00:00"), 
-#                   ymd_hms("2018-01-01 00:00:00"), ymd_hms("2019-01-01 00:00:00"), ymd_hms("2020-01-01 00:00:00"))
-#   startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
-#   end_date <- c(ymd_hms("2015-12-31 23:59:59"), ymd_hms("2016-12-31 23:59:59"), ymd_hms("2017-12-31 23:59:59"), 
-#                   ymd_hms("2018-12-31 23:59:59"), ymd_hms("2019-12-31 23:59:59"), ymd_hms("2020-12-31 23:59:59"))
-#   enddate <- format(end_date, "%Y-%m-%dT%H:%M:%S")
-#   file_name <- c("NRT_data_2015.rds","NRT_data_2016.rds","NRT_data_2017.rds","NRT_data_2018.rds","NRT_data_2019.rds","NRT_data_2020.rds")
-# 
-# for(i in 1:6) {
-#   if(agg_time=="MINUTE"){
-#     aggregate_string=paste0("&aggregate=",agg_time)
-#   } else {
-#     aggregate_string=paste0("&aggregate=",agg_time,"&aggregateFunctions=",agg_fun_1,"&aggregateFunctions=",agg_fun_2,"&aggregateFunctions=",agg_fun_3)
-#   }
-#   code1 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate[i],"&endDate=",enddate[i],"&format=text/tab-separated-values",aggregate_string,
-#                   "&sensors=station:svluwobs:fb_731101:sbe45_awi_0403:salinity",
-#                   "&sensors=station:svluwobs:fb_731101:sbe45_awi_0403:temperature",
-#                   "&sensors=station:svluwobs:svluw2:ctd_183:conductivity_awi_01:salinity", 
-#                   "&sensors=station:svluwobs:svluw2:ctd_181:conductivity_awi_02:salinity", 
-#                   "&sensors=station:svluwobs:svluw2:ctd_578:conductivity_awi_03:salinity",
-#                   "&sensors=station:svluwobs:svluw2:ctd_964:conductivity_awi_04:salinity",
-#                   "&sensors=station:svluwobs:svluw2:ctd_awi_964:salinity_004",
-#                   "&sensors=station:svluwobs:svluw2:ctd_103:conductivity_awi_01:salinity",
-#                   "&sensors=station:svluwobs:svluw2:ctd_103:pressure_awi_01:pressure",
-#                   "&sensors=station:svluwobs:svluw2:ctd_181:pressure_awi_02:pressure",
-#                   "&sensors=station:svluwobs:svluw2:ctd_183:pressure_awi_01:pressure",
-#                   "&sensors=station:svluwobs:svluw2:ctd_578:pressure_awi_03:depth",
-#                   "&sensors=station:svluwobs:svluw2:ctd_964:pressure_awi_04:depth",
-#                   "&sensors=station:svluwobs:svluw2:ctd_awi_964:pressure_002",
-#                   "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:ph",
-#                   "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:total_alcalinity",
-#                   "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:invalid_salinity",
-#                   "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:invalid_ph",
-#                   "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:invalid_ta",
-#                   "&sensors=station:svluwobs:fb_731101:hydrofia_awi_1215000:ph",
-#                   "&sensors=station:svluwobs:fb_731101:hydrofia_awi_1215000:total_alcalinity",
-#                   "&sensors=station:svluwobs:fb_731101:hydrofia_awi_1215000:invalid_salinity",
-#                   "&sensors=station:svluwobs:fb_731101:hydrofia_awi_1215000:invalid_ph",
-#                   "&sensors=station:svluwobs:fb_731101:hydrofia_awi_1215000:invalid_ta",
-#                   "&sensors=station:svluwobs:svluw2:sbe38_awi_0657:temperature",
-#                   "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_007:ph_internal",
-#                   "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_007:ph_external",
-#                   "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_007:voltage_internal",
-#                   "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_007:voltage_external",
-#                   "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_007:ph_temperature",
-#                   "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_007:internal_relative_humidity",
-#                   "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:ph_internal",
-#                   "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:ph_external",
-#                   "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:volt_internal",
-#                   "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:volt_external",
-#                   "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:ph_temperature",
-#                   "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:internal_relative_humidity")
-#   
-#   code2 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate[i],"&endDate=",enddate[i],"&format=text/tab-separated-values",aggregate_string,
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:zero",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:signal_proc",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:signal_raw",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:signal_ref",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:flush",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:p_in",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:p_ndir",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:t_gas",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:pco2_corr",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:pco2_corr_flush",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:pco2_corr_zero",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:zero",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:signal_proc",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:signal_raw",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:signal_ref",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:flush",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:p_in",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:p_ndir",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:t_gas",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:pco2_corr",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:pco2_corr_flush",
-#                   "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:pco2_corr_zero",
-#                   "&sensors=station:svluwobs:fb_731101:durafet_obsvlfr_01:hw_ph",
-#                   "&sensors=station:svluwobs:fb_731101:durafet_obsvlfr_01:hw_temperature",
-#                   "&sensors=station:svluwobs:svluw2:par_awi_401:par",
-#                   "&sensors=station:svluwobs:svluw2:par_awi_493:par",
-#                   "&sensors=station:svluwobs:fb_731101:par_awi_495:par",
-#                   "&sensors=station:svluwobs:fb_731101:turbidity_awi_01:turbidity",
-#                   "&sensors=station:svluwobs:svluw2:ctd_183:temperature_awi_01:temperature",
-#                   "&sensors=station:svluwobs:svluw2:ctd_181:temperature_awi_02:temperature",
-#                   "&sensors=station:svluwobs:svluw2:ctd_578:temperature_awi_03:temperature",
-#                   "&sensors=station:svluwobs:svluw2:ctd_964:temperature_awi_04:temperature",
-#                   "&sensors=station:svluwobs:svluw2:ctd_awi_964:temperature_002",
-#                   "&sensors=station:svluwobs:svluw2:ctd_103:temperature_awi_01:temperature"
-#   )
-#   data1 <- data.table::fread(code1, encoding = "UTF-8", showProgress	= TRUE)
-#   data2 <- data.table::fread(code2, encoding = "UTF-8", showProgress	= TRUE)
-#   colnames(data1) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317", "InvAT_0317", "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215", "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005")
-#   colnames(data2) <- c("datetime", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215","pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515","pco2_raw_Zero_0515", "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103" )
-#   data1$datetime <- ymd_hms(data1$datetime)
-#   data2$datetime <- ymd_hms(data2$datetime)
-#   tmp <- left_join(data1, data2, by = "datetime")
-#   saveRDS(tmp, file = paste0(path,file_name[i]), version = 2)
-#   if (exists("dat") == FALSE) {
-#     dat <- tmp
-#   } else {
-#     dat <- dplyr::bind_rows(dat, tmp)
-#   }
-#   saveRDS(dat, file = paste0(path, "NRT_data_all.rds"), version = 2)
-# } 
-  
+# # This is to process the whole data set, from 2015
+# if (file.exists(paste0(path, "all_nydata_minute.rds")) == FALSE) {
+#   data <- previous_NRT_data
+# } else {
+
+#### Download all data, year by year ####
+  start_date <- c(ymd_hms("2015-07-22 00:00:00"), ymd_hms("2016-01-01 00:00:00"), ymd_hms("2017-01-01 00:00:00"),
+                  ymd_hms("2018-01-01 00:00:00"), ymd_hms("2019-01-01 00:00:00"), ymd_hms("2020-01-01 00:00:00"))
+  startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
+  end_date <- c(ymd_hms("2015-12-31 23:59:59"), ymd_hms("2016-12-31 23:59:59"), ymd_hms("2017-12-31 23:59:59"),
+                  ymd_hms("2018-12-31 23:59:59"), ymd_hms("2019-12-31 23:59:59"), ymd_hms("2020-12-31 23:59:59"))
+  enddate <- format(end_date, "%Y-%m-%dT%H:%M:%S")
+  file_name <- c("NRT_data_2015.rds","NRT_data_2016.rds","NRT_data_2017.rds","NRT_data_2018.rds","NRT_data_2019.rds","NRT_data_2020.rds")
+
+for(i in 1:6) {
+  if(agg_time=="MINUTE"){
+    aggregate_string=paste0("&aggregate=",agg_time)
+  } else {
+    aggregate_string=paste0("&aggregate=",agg_time,"&aggregateFunctions=",agg_fun_1,"&aggregateFunctions=",agg_fun_2,"&aggregateFunctions=",agg_fun_3)
+  }
+  code1 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate[i],"&endDate=",enddate[i],"&format=text/tab-separated-values",aggregate_string,
+                  "&sensors=station:svluwobs:fb_731101:sbe45_awi_0403:salinity",
+                  "&sensors=station:svluwobs:fb_731101:sbe45_awi_0403:temperature",
+                  "&sensors=station:svluwobs:svluw2:ctd_183:conductivity_awi_01:salinity",
+                  "&sensors=station:svluwobs:svluw2:ctd_181:conductivity_awi_02:salinity",
+                  "&sensors=station:svluwobs:svluw2:ctd_578:conductivity_awi_03:salinity",
+                  "&sensors=station:svluwobs:svluw2:ctd_964:conductivity_awi_04:salinity",
+                  "&sensors=station:svluwobs:svluw2:ctd_awi_964:salinity_004",
+                  "&sensors=station:svluwobs:svluw2:ctd_103:conductivity_awi_01:salinity",
+                  "&sensors=station:svluwobs:svluw2:ctd_103:pressure_awi_01:pressure",
+                  "&sensors=station:svluwobs:svluw2:ctd_181:pressure_awi_02:pressure",
+                  "&sensors=station:svluwobs:svluw2:ctd_183:pressure_awi_01:pressure",
+                  "&sensors=station:svluwobs:svluw2:ctd_578:pressure_awi_03:depth",
+                  "&sensors=station:svluwobs:svluw2:ctd_964:pressure_awi_04:depth",
+                  "&sensors=station:svluwobs:svluw2:ctd_awi_964:pressure_002",
+                  "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:ph",
+                  "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:total_alcalinity",
+                  "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:invalid_salinity",
+                  "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:invalid_ph",
+                  "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:invalid_ta",
+                  "&sensors=station:svluwobs:fb_731101:hydrofia_awi_1215000:ph",
+                  "&sensors=station:svluwobs:fb_731101:hydrofia_awi_1215000:total_alcalinity",
+                  "&sensors=station:svluwobs:fb_731101:hydrofia_awi_1215000:invalid_salinity",
+                  "&sensors=station:svluwobs:fb_731101:hydrofia_awi_1215000:invalid_ph",
+                  "&sensors=station:svluwobs:fb_731101:hydrofia_awi_1215000:invalid_ta",
+                  "&sensors=station:svluwobs:svluw2:sbe38_awi_0657:temperature",
+                  "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_007:ph_internal",
+                  "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_007:ph_external",
+                  "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_007:voltage_internal",
+                  "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_007:voltage_external",
+                  "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_007:ph_temperature",
+                  "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_007:internal_relative_humidity",
+                  "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:ph_internal",
+                  "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:ph_external",
+                  "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:volt_internal",
+                  "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:volt_external",
+                  "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:ph_temperature",
+                  "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:internal_relative_humidity")
+
+  code2 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate[i],"&endDate=",enddate[i],"&format=text/tab-separated-values",aggregate_string,
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:zero",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:signal_proc",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:signal_raw",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:signal_ref",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:flush",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:p_in",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:p_ndir",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:t_gas",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:pco2_corr",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:pco2_corr_flush",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:pco2_corr_zero",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:zero",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:signal_proc",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:signal_raw",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:signal_ref",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:flush",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:p_in",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:p_ndir",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:t_gas",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:pco2_corr",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:pco2_corr_flush",
+                  "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:pco2_corr_zero",
+                  "&sensors=station:svluwobs:fb_731101:durafet_obsvlfr_01:hw_ph",
+                  "&sensors=station:svluwobs:fb_731101:durafet_obsvlfr_01:hw_temperature",
+                  "&sensors=station:svluwobs:svluw2:par_awi_401:par",
+                  "&sensors=station:svluwobs:svluw2:par_awi_493:par",
+                  "&sensors=station:svluwobs:fb_731101:par_awi_495:par",
+                  "&sensors=station:svluwobs:fb_731101:turbidity_awi_01:turbidity",
+                  "&sensors=station:svluwobs:svluw2:ctd_183:temperature_awi_01:temperature",
+                  "&sensors=station:svluwobs:svluw2:ctd_181:temperature_awi_02:temperature",
+                  "&sensors=station:svluwobs:svluw2:ctd_578:temperature_awi_03:temperature",
+                  "&sensors=station:svluwobs:svluw2:ctd_964:temperature_awi_04:temperature",
+                  "&sensors=station:svluwobs:svluw2:ctd_awi_964:temperature_002",
+                  "&sensors=station:svluwobs:svluw2:ctd_103:temperature_awi_01:temperature",
+                  "&sensors=station:svluwobs:validated_data_svluwobs:qc15_chlorophyll_a_10m"
+  )
+  data1 <- data.table::fread(code1, encoding = "UTF-8", showProgress	= TRUE)
+  data2 <- data.table::fread(code2, encoding = "UTF-8", showProgress	= TRUE)
+  colnames(data1) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", 
+                       "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181",
+                       "pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", 
+                       "AT_0317", "InvSal_0317", "InvpH_0317", "InvAT_0317", "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215",
+                       "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", 
+                       "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005")
+  colnames(data2) <- c("datetime", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", 
+                       "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215",
+                       "pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", 
+                       "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515",
+                       "pco2_raw_Zero_0515", "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", 
+                       "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b",
+                       "temp_insitu_103", "qc15_chlorophyll_a_10m")
+  data1$datetime <- ymd_hms(data1$datetime)
+  data2$datetime <- ymd_hms(data2$datetime)
+  tmp <- left_join(data1, data2, by = "datetime")
+  saveRDS(tmp, file = paste0(path,file_name[i]), version = 2)
+  if (exists("dat") == FALSE) {
+    dat <- tmp
+  } else {
+    dat <- dplyr::bind_rows(dat, tmp)
+  }
+  saveRDS(dat, file = paste0(path, "NRT_data_all.rds"), version = 2)
+}
+ 
   
   # previous_NRT_data <- dplyr::bind_rows(previous_NRT_data, data) %>% #save updated previous_NRT_data
   #   distinct(datetime, .keep_all = T)
   # saveRDS(previous_NRT_data, file = paste0(path,"previous_NRT_data.rds"), version = 2)
-dat <- readRDS(file = paste0(path, "NRT_data_all"))
+dat <- readRDS(file = paste0(path, "NRT_data_all.rds"))
 
 # Create instrument column as flag
 data <- dat %>%
@@ -690,7 +702,15 @@ data <- data %>%
     ph_dur_qf = case_when(is.na(ph_dur) ~ 15,
                           ph_dur < 7.5 | ph_dur > 8.75 ~ 7,
                           TRUE ~ 1),
-    ph_dur = ifelse(ph_dur_qf != 1 , NA, ph_dur)
+    ph_dur = ifelse(ph_dur_qf != 1, NA, ph_dur)
+  )
+## chlorophyll-a
+data <- data %>%
+  dplyr::mutate(
+    chl_a = qc15_chlorophyll_a_10m,
+    chl_a_qf = case_when(is.na(chl_a) ~ 15,
+                          TRUE ~ 1),
+    chl_a = ifelse(ph_dur_qf != 1, NA, chl_a)
   )
 ##########  Despike() ###########
 data <- data %>%   
@@ -700,7 +720,8 @@ data <- data %>%
                 temp_fb_filtered= despike(data$temp_fb, reference= "median", n=2, k=5761, replace="NA"),
                 ph_dur_filtered= despike(data$ph_dur, reference= "median", n=2, k=5761, replace="NA"),
                 temp_dur_filtered= despike(data$temp_dur, reference= "median", n=2, k=5761, replace="NA"),
-                temp_insitu_11m_filtered= despike(data$temp_insitu_11m, reference= "median", n=2, k=5761, replace="NA"),
+                temp_insitu_11m_filtered = despike(data$temp_insitu_11m, reference= "median", n=2, k=5761, replace="NA"),
+                chl_a_filtered = despike(data$chl_a, reference= "median", n=2, k=5761, replace="NA"),
                 date = as.Date(data$datetime),
                 hour = hour(data$datetime)
   ) %>% #Now one adds flag 12 when new NAs were introduced by despike
@@ -710,7 +731,8 @@ data <- data %>%
                 temp_fb_qf = ifelse(!is.na(temp_fb) & is.na(temp_fb_filtered), 12, temp_fb_qf),
                 ph_dur_qf = ifelse(!is.na(ph_dur) & is.na(ph_dur_filtered), 12, ph_dur_qf),
                 temp_dur_qf = ifelse(!is.na(temp_dur) & is.na(temp_dur_filtered), 12, temp_dur_qf),
-                temp_insitu_11m_qf = ifelse(!is.na(temp_insitu_11m) & is.na(temp_insitu_11m_filtered), 12, temp_insitu_11m_qf))
+                temp_insitu_11m_qf = ifelse(!is.na(temp_insitu_11m) & is.na(temp_insitu_11m_filtered), 12, temp_insitu_11m_qf),
+                chl_a_qf = ifelse(!is.na(chl_a) & is.na(chl_a_filtered), 12, chl_a_qf))
 
 #MINUTE: save all parameters in long format (not selected data)
 if (file.exists(paste0(path, "all_nydata_minute.rds")) == TRUE) {
@@ -832,6 +854,7 @@ selected_nydata_minute <- data %>%
     par_air,
     turb_fb,
     temp_insitu_ctd,
+    chl_a,
     date,
     hour
   )
@@ -887,7 +910,7 @@ selected_nydata_minute <- selected_nydata_minute %>%
     par_insitu_profile_5m = ifelse(depth == 5, par_insitu_profile, NA),
     par_insitu_profile_7m = ifelse(depth == 7, par_insitu_profile, NA),
     par_insitu_profile_9m = ifelse(depth == 9, par_insitu_profile, NA)
-  )
+    )
 
 
 # tmp <- selected_nydata_minute %>% 
@@ -953,7 +976,8 @@ selected_nydata_hour <- selected_nydata_minute %>%
     temp_insitu_ctd_3m = mean(temp_insitu_ctd_3m, na.rm = TRUE),
     temp_insitu_ctd_5m = mean(temp_insitu_ctd_5m, na.rm = TRUE),
     temp_insitu_ctd_7m = mean(temp_insitu_ctd_7m, na.rm = TRUE),
-    temp_insitu_ctd_9m = mean(temp_insitu_ctd_9m, na.rm = TRUE)
+    temp_insitu_ctd_9m = mean(temp_insitu_ctd_9m, na.rm = TRUE),
+    chl_a = mean(chl_a, na.rm = TRUE)
   ) %>%
   dplyr::mutate(datetime = ymd_h(paste(date, hour, sep = " ", tz = "UTC"))) %>%
   dplyr::ungroup() %>% # this is to be able to perform the following changes
@@ -979,3 +1003,4 @@ if (file.exists(paste0(path, "nydata_hour.rds")) == TRUE) {
   saveRDS(d_hour, file = paste0(path, "nydata_hour.rds"), version = 2)
   fwrite(d_hour, file = paste0(path, "d_hour.csv.gz"), na="NA", col.names = TRUE)
 }
+
