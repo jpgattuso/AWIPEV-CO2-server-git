@@ -167,7 +167,7 @@ saveRDS(previous_NRT_data, file = paste0(path,"previous_NRT_data.rds"), version 
 }
 
 # Create instrument column as flag
-data <- dat %>%
+data <- data %>%
   dplyr::mutate(
     pco2_inst = ifelse(
       datetime >= as.POSIXct("2015-07-19 00:00:00") &
