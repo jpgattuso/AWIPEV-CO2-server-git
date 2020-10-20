@@ -134,8 +134,7 @@ code2 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startda
         "&sensors=station:svluwobs:svluw2:ctd_578:temperature_awi_03:temperature",
         "&sensors=station:svluwobs:svluw2:ctd_964:temperature_awi_04:temperature",
         "&sensors=station:svluwobs:svluw2:ctd_awi_964:temperature_002",
-        "&sensors=station:svluwobs:svluw2:ctd_103:temperature_awi_01:temperature",
-        "&sensors=station:svluwobs:validated_data_svluwobs:qc15_chlorophyll_a_10m"
+        "&sensors=station:svluwobs:svluw2:ctd_103:temperature_awi_01:temperature"
         )
 
 #station:svluwobs:fb_731101:fluorometer_awi_3510:chlorophyll_a
@@ -143,19 +142,9 @@ code2 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startda
 data1 <- data.table::fread(code1, encoding = "UTF-8", showProgress	= TRUE)
 data2 <- data.table::fread(code2, encoding = "UTF-8", showProgress	= TRUE)
 
-colnames(data1) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", 
-                     "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181",
-                     "pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", 
-                     "AT_0317", "InvSal_0317", "InvpH_0317", "InvAT_0317", "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215",
-                     "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", 
-                     "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005")
-colnames(data2) <- c("datetime", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", 
-                     "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215",
-                     "pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", 
-                     "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515",
-                     "pco2_raw_Zero_0515", "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", 
-                     "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b",
-                     "temp_insitu_103", "qc15_chlorophyll_a_10m")
+colnames(data1) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317", "InvAT_0317", "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215", "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005")
+colnames(data2) <- c("datetime", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215","pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515","pco2_raw_Zero_0515", "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103" )
+
 data1$datetime <- ymd_hms(data1$datetime)
 data2$datetime <- ymd_hms(data2$datetime)
 
@@ -168,212 +157,212 @@ saveRDS(previous_NRT_data, file = paste0(path,"previous_NRT_data.rds"), version 
 
 # Create instrument column as flag
 data <- data %>%
-  dplyr::mutate(
-    pco2_inst = ifelse(
-      datetime >= as.POSIXct("2015-07-19 00:00:00") &
-        datetime <= as.POSIXct("2016-02-23 12:00:00"),
-      "0215",
+ dplyr::mutate(
+  pco2_inst = ifelse(
+   datetime >= as.POSIXct("2015-07-19 00:00:00") &
+    datetime <= as.POSIXct("2016-02-23 12:00:00"),
+   "0215",
+   ifelse(
+    datetime >= as.POSIXct("2016-02-23 23:00:00") &
+     datetime <= as.POSIXct("2017-02-04 23:00:00"),
+    "0515" ,
+    ifelse(
+     datetime >= as.POSIXct("2017-02-09 00:00:00") &
+      datetime <= as.POSIXct("2018-02-09 00:00:00"),
+     "0215" ,
+     ifelse(
+      datetime >= as.POSIXct("2018-04-14 00:00:00") &
+       datetime <= as.POSIXct("2018-10-31 00:00:00"),
+      "0515" ,
       ifelse(
-        datetime >= as.POSIXct("2016-02-23 23:00:00") &
-          datetime <= as.POSIXct("2017-02-04 23:00:00"),
+       datetime >= as.POSIXct("2018-10-31 15:00:00") &
+        datetime <= as.POSIXct("2019-09-03 12:00:00"),
+       "0215" ,
+       ifelse(
+        datetime >= as.POSIXct("2019-09-03 17:00:00") &
+         datetime <= as.POSIXct("2099-12-02 23:59:59"),
         "0515" ,
-        ifelse(
-          datetime >= as.POSIXct("2017-02-09 00:00:00") &
-            datetime <= as.POSIXct("2018-02-09 00:00:00"),
-          "0215" ,
-          ifelse(
-            datetime >= as.POSIXct("2018-04-14 00:00:00") &
-              datetime <= as.POSIXct("2018-10-31 00:00:00"),
-            "0515" ,
-            ifelse(
-              datetime >= as.POSIXct("2018-10-31 15:00:00") &
-                datetime <= as.POSIXct("2019-09-03 12:00:00"),
-              "0215" ,
-              ifelse(
-                datetime >= as.POSIXct("2019-09-03 17:00:00") &
-                  datetime <= as.POSIXct("2099-12-02 23:59:59"),
-                "0515" ,
-                NA
-              )
-            )
-          )
-        )
-      )
-    ),
-    
-    seafet_inst = ifelse(
-      datetime >= as.POSIXct("2017-08-24 12:00:00") &
-        datetime <= as.POSIXct("2018-04-17 12:00:00"),
-      "1005",
-      ifelse(
-        datetime >= as.POSIXct("2018-04-17 12:00:00") &
-          datetime <= as.POSIXct("2099-12-02 23:59:59"),
-        "007" ,
         NA
+       )
       )
-    ),
-    
-    ta_inst = ifelse(
-      datetime >= as.POSIXct("2016-02-26 00:00:00") &
-        datetime <= as.POSIXct("2017-03-21 12:00:00"),
-      "1215",
-      ifelse(
-        datetime >= as.POSIXct("2018-01-08 12:55:00") &
-          datetime <= as.POSIXct("2018-06-20 00:00:00"),
-        "0317",
-        ifelse(
-          datetime >= as.POSIXct("2018-07-31 00:00:00") &
-            datetime <= as.POSIXct("2018-10-30 18:00:00"),
-          "1215",
-          ifelse(
-            datetime >= as.POSIXct("2018-10-30 18:00:00") &
-              datetime <= as.POSIXct("2099-12-02 23:59:59"),
-            "0317" ,
-            NA
-          )
-        )
-      )
+     )
     )
+   )
+  ),
+  
+  seafet_inst = ifelse(
+   datetime >= as.POSIXct("2017-08-24 12:00:00") &
+    datetime <= as.POSIXct("2018-04-17 12:00:00"),
+   "1005",
+   ifelse(
+    datetime >= as.POSIXct("2018-04-17 12:00:00") &
+     datetime <= as.POSIXct("2099-12-02 23:59:59"),
+    "007" ,
+    NA
+   )
+  ),
+  
+  ta_inst = ifelse(
+   datetime >= as.POSIXct("2016-02-26 00:00:00") &
+    datetime <= as.POSIXct("2017-03-21 12:00:00"),
+   "1215",
+   ifelse(
+    datetime >= as.POSIXct("2018-01-08 12:55:00") &
+     datetime <= as.POSIXct("2018-06-20 00:00:00"),
+    "0317",
+    ifelse(
+     datetime >= as.POSIXct("2018-07-31 00:00:00") &
+      datetime <= as.POSIXct("2018-10-30 18:00:00"),
+     "1215",
+     ifelse(
+      datetime >= as.POSIXct("2018-10-30 18:00:00") &
+       datetime <= as.POSIXct("2099-12-02 23:59:59"),
+      "0317" ,
+      NA
+     )
+    )
+   )
   )
+ )
 
 ########### Binding different insitu salinity in one column ########### 
 data <- data %>%
-  dplyr::mutate(sal_insitu_ctd = ifelse(
-    !is.na(sal_insitu_183),
-    sal_insitu_183,
+ dplyr::mutate(sal_insitu_ctd = ifelse(
+  !is.na(sal_insitu_183),
+  sal_insitu_183,
+  ifelse(
+   !is.na(sal_insitu_181),
+   sal_insitu_181,
+   ifelse(
+    !is.na(sal_insitu_578),
+    sal_insitu_578,
     ifelse(
-      !is.na(sal_insitu_181),
-      sal_insitu_181,
-      ifelse(
-        !is.na(sal_insitu_578),
-        sal_insitu_578,
-        ifelse(
-          !is.na(sal_insitu_964b),
-          sal_insitu_964b,
-          ifelse(
-            !is.na(sal_insitu_103),
-            sal_insitu_103,
-            ifelse(!is.na(sal_insitu_964), sal_insitu_964, NA)
-          )
-        )
-      )
+     !is.na(sal_insitu_964b),
+     sal_insitu_964b,
+     ifelse(
+      !is.na(sal_insitu_103),
+      sal_insitu_103,
+      ifelse(!is.na(sal_insitu_964), sal_insitu_964, NA)
+     )
     )
-  ))
+   )
+  )
+ ))
 
 ########### Binding different insitu pressure in one column ########### 
 data <- data %>%
-  dplyr::mutate(pressure_insitu_ctd = ifelse(
-    !is.na(pressure_insitu_183),
-    pressure_insitu_183,
+ dplyr::mutate(pressure_insitu_ctd = ifelse(
+  !is.na(pressure_insitu_183),
+  pressure_insitu_183,
+  ifelse(
+   !is.na(pressure_insitu_181),
+   pressure_insitu_181,
+   ifelse(
+    !is.na(pressure_insitu_578),
+    pressure_insitu_578,
     ifelse(
-      !is.na(pressure_insitu_181),
-      pressure_insitu_181,
-      ifelse(
-        !is.na(pressure_insitu_578),
-        pressure_insitu_578,
-        ifelse(
-          !is.na(pressure_insitu_964b),
-          pressure_insitu_964b,
-          ifelse(
-            !is.na(pressure_insitu_103),
-            pressure_insitu_103,
-            ifelse(!is.na(pressure_insitu_964), pressure_insitu_964, NA)
-          )
-        )
-      )
+     !is.na(pressure_insitu_964b),
+     pressure_insitu_964b,
+     ifelse(
+      !is.na(pressure_insitu_103),
+      pressure_insitu_103,
+      ifelse(!is.na(pressure_insitu_964), pressure_insitu_964, NA)
+     )
     )
-  ))
+   )
+  )
+ ))
 ########### Binding different insitu temp in one column ###########
 data <- data %>%
-  dplyr::mutate(temp_insitu_ctd = ifelse(
-    !is.na(temp_insitu_183),
-    temp_insitu_183,
+ dplyr::mutate(temp_insitu_ctd = ifelse(
+  !is.na(temp_insitu_183),
+  temp_insitu_183,
+  ifelse(
+   !is.na(temp_insitu_181),
+   temp_insitu_181,
+   ifelse(
+    !is.na(temp_insitu_578),
+    temp_insitu_578,
     ifelse(
-      !is.na(temp_insitu_181),
-      temp_insitu_181,
-      ifelse(
-        !is.na(temp_insitu_578),
-        temp_insitu_578,
-        ifelse(
-          !is.na(temp_insitu_964b),
-          temp_insitu_964b,
-          ifelse(
-            !is.na(temp_insitu_103),
-            temp_insitu_103,
-            ifelse(!is.na(temp_insitu_964), temp_insitu_964, NA)
-          )
-        )
-      )
+     !is.na(temp_insitu_964b),
+     temp_insitu_964b,
+     ifelse(
+      !is.na(temp_insitu_103),
+      temp_insitu_103,
+      ifelse(!is.na(temp_insitu_964), temp_insitu_964, NA)
+     )
     )
-  ))
+   )
+  )
+ ))
 
 ########### Correction pCO2 Contros ########### 
 # Bind different pCO2 sensors (column with S/N) in the same column (without S/N): 0215 + 0515
 data <- data %>%
-  dplyr::mutate(
-    State_Zero = ifelse(
-      pco2_inst == "0215",
-      State_Zero_0215,
-      ifelse(pco2_inst == "0515", State_Zero_0515, NA)
-    ),
-    Signal_Proc = ifelse(
-      pco2_inst == "0215",
-      Signal_Proc_0215,
-      ifelse(pco2_inst == "0515", Signal_Proc_0515, NA)
-    ),
-    Signal_Raw = ifelse(
-      pco2_inst == "0215",
-      Signal_Raw_0215,
-      ifelse(pco2_inst == "0515", Signal_Raw_0515, NA)
-    ),
-    Signal_Ref = ifelse(
-      pco2_inst == "0215",
-      Signal_Ref_0215,
-      ifelse(pco2_inst == "0515", Signal_Ref_0515, NA)
-    ),
-    State_Flush = ifelse(
-      pco2_inst == "0215",
-      State_Flush_0215,
-      ifelse(pco2_inst == "0515", State_Flush_0515, NA)
-    ),
-    P_In =    ifelse(
-      pco2_inst == "0215",
-      P_In_0215,
-      ifelse(pco2_inst == "0515", P_In_0515, NA)
-    ),
-    P_NDIR =   ifelse(
-      pco2_inst == "0215",
-      P_NDIR_0215,
-      ifelse(pco2_inst == "0515", P_NDIR_0515, NA)
-    ),
-    T_Gas =    ifelse(
-      pco2_inst == "0215",
-      T_Gas_0215,
-      ifelse(pco2_inst == "0515", T_Gas_0515, NA)
-    ),
-    pco2_raw = ifelse(
-      pco2_inst == "0215",
-      pco2_raw_0215,
-      # USE TO BE: PCO2_Corr, before April 2020
-      ifelse(pco2_inst == "0515", pco2_raw_0515, NA)
-    ),
-    pco2_raw_Flush = ifelse(
-      pco2_inst == "0215",
-      pco2_raw_Flush_0215,
-      ifelse(pco2_inst == "0515", pco2_raw_Flush_0515, NA)
-    ),
-    pco2_raw_Zero = ifelse(
-      pco2_inst == "0215",
-      pco2_raw_Zero_0215,
-      ifelse(pco2_inst == "0515", pco2_raw_Zero_0515, NA)
-    )
+ dplyr::mutate(
+  State_Zero = ifelse(
+   pco2_inst == "0215",
+   State_Zero_0215,
+   ifelse(pco2_inst == "0515", State_Zero_0515, NA)
+  ),
+  Signal_Proc = ifelse(
+   pco2_inst == "0215",
+   Signal_Proc_0215,
+   ifelse(pco2_inst == "0515", Signal_Proc_0515, NA)
+  ),
+  Signal_Raw = ifelse(
+   pco2_inst == "0215",
+   Signal_Raw_0215,
+   ifelse(pco2_inst == "0515", Signal_Raw_0515, NA)
+  ),
+  Signal_Ref = ifelse(
+   pco2_inst == "0215",
+   Signal_Ref_0215,
+   ifelse(pco2_inst == "0515", Signal_Ref_0515, NA)
+  ),
+  State_Flush = ifelse(
+   pco2_inst == "0215",
+   State_Flush_0215,
+   ifelse(pco2_inst == "0515", State_Flush_0515, NA)
+  ),
+  P_In =    ifelse(
+   pco2_inst == "0215",
+   P_In_0215,
+   ifelse(pco2_inst == "0515", P_In_0515, NA)
+  ),
+  P_NDIR =   ifelse(
+   pco2_inst == "0215",
+   P_NDIR_0215,
+   ifelse(pco2_inst == "0515", P_NDIR_0515, NA)
+  ),
+  T_Gas =    ifelse(
+   pco2_inst == "0215",
+   T_Gas_0215,
+   ifelse(pco2_inst == "0515", T_Gas_0515, NA)
+  ),
+  pco2_raw = ifelse(
+   pco2_inst == "0215",
+   pco2_raw_0215,
+   # USE TO BE: PCO2_Corr, before April 2020
+   ifelse(pco2_inst == "0515", pco2_raw_0515, NA)
+  ),
+  pco2_raw_Flush = ifelse(
+   pco2_inst == "0215",
+   pco2_raw_Flush_0215,
+   ifelse(pco2_inst == "0515", pco2_raw_Flush_0515, NA)
+  ),
+  pco2_raw_Zero = ifelse(
+   pco2_inst == "0215",
+   pco2_raw_Zero_0215,
+   ifelse(pco2_inst == "0515", pco2_raw_Zero_0515, NA)
   )
+ )
 
 ##### Binding several TA instruments (different Serial Number) in one for each parameter ####
 # bind TA_0317 and TA_1215 data = AT
 data <- data %>%
-  dplyr::mutate(AT= ifelse(!is.na(AT_1215), AT_1215,
-                           ifelse(!is.na(AT_0317), AT_0317,NA)))
+ dplyr::mutate(AT= ifelse(!is.na(AT_1215), AT_1215,
+              ifelse(!is.na(AT_0317), AT_0317,NA)))
 ## seaFET ##
 # phINT et ph_EXT _007 et _1005
 data <- data %>%
@@ -407,19 +396,19 @@ data <- data %>%
     ifelse(!is.na(T_seaF_1005), T_seaF_1005, NA)
   ))
 
-# Data processing for pCO2 HydroC CO2 Contros in Ny-Alesund.
-# Documentation received by Steffen Assmann on the 2016-09-15/19 and 
-# stored on /fb_doc/Calibration/pCO2_#0215_#0515
-# Data from the documentation is stored on 
-# awipev/ny_alesund/data/Calibration_pCO2/Data_Processing_sheet_pCO2.txt
-
-# Adding manualy data into Data_Processing_sheet_pCO2 file.
-# Open the data calibration sheet and convert the dates. 
+ # Data processing for pCO2 HydroC CO2 Contros in Ny-Alesund.
+ # Documentation received by Steffen Assmann on the 2016-09-15/19 and 
+ # stored on /fb_doc/Calibration/pCO2_#0215_#0515
+ # Data from the documentation is stored on 
+ # awipev/ny_alesund/data/Calibration_pCO2/Data_Processing_sheet_pCO2.txt
+ 
+ # Adding manualy data into Data_Processing_sheet_pCO2 file.
+ # Open the data calibration sheet and convert the dates. 
 data_process <- read_xlsx(range="A1:AF8", na = "NA", paste0(path, "Data_Processing_sheet_pCO2.xlsx"), col_types = c("text","text","text","text", "date","date", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "date", "date", "numeric",  "date","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric"))
 
-# Adding the PeriodDeplpCO2 column to z first.
-# Adding the others parameters according to the Contros formula PDF
-# Adding the new period ech time we receive the pCO2 sensor from the calibration
+ # Adding the PeriodDeplpCO2 column to z first.
+ # Adding the others parameters according to the Contros formula PDF
+ # Adding the new period ech time we receive the pCO2 sensor from the calibration
 data <- data %>%
   dplyr::mutate(
     PeriodDeplpCO2 = ifelse(
@@ -528,32 +517,32 @@ data <- data %>%
 # the s dataframe needs to be created again with the new pco2 period when the period will be known.
 s <- read.table(file= paste0(path, "SpreambeamZ_extraction.csv"), header = TRUE, dec = ".", sep=",")
 data <- data %>%
-  dplyr::mutate(k1t = ifelse(PeriodDeplpCO2 == 1, k1 + ((s[1,3] - Sprim2beamZ_interp) / (s[1,3] - s[2,3] )) * k1_post,
-                             ifelse(PeriodDeplpCO2 == 2, k1 + ((s[3,3] - Sprim2beamZ_interp) / (s[3,3] - s[4,3] )) * k1_post,
-                                    ifelse(PeriodDeplpCO2 == 3, k1 + ((s[5,3] - Sprim2beamZ_interp) / (s[5,3] - s[6,3] )) * k1_post, 
-                                           ifelse(PeriodDeplpCO2 == 4, k1 + ((s[7,3] - Sprim2beamZ_interp) / (s[7,3] - s[8,3] )) * k1_post,
-                                                  ifelse(PeriodDeplpCO2 == 5, k1 + ((s[9,3] - Sprim2beamZ_interp) / (s[9,3] - s[10,3] )) * k1_post,
-                                                         ifelse(PeriodDeplpCO2 == 6, k1 + ((s[11,3] - Sprim2beamZ_interp) / (s[11,3] - s[12,3] )) * k1_post,NA)
-                                                  )))))) %>%
-  dplyr::mutate(k2t = ifelse(PeriodDeplpCO2 == 1, k2 + ((s[1,3] - Sprim2beamZ_interp) / (s[1,3] - s[2,3] )) * k2_post,
-                             ifelse(PeriodDeplpCO2 == 2, k2 + ((s[3,3] - Sprim2beamZ_interp) / (s[3,3] - s[4,3] )) * k2_post,
-                                    ifelse(PeriodDeplpCO2 == 3, k2 + ((s[5,3] - Sprim2beamZ_interp) / (s[5,3] - s[6,3] )) * k2_post, 
-                                           ifelse(PeriodDeplpCO2 == 4, k2 + ((s[7,3] - Sprim2beamZ_interp) / (s[7,3] - s[8,3] )) * k2_post, 
-                                                  ifelse(PeriodDeplpCO2 == 5, k2 + ((s[9,3] - Sprim2beamZ_interp) / (s[9,3] - s[10,3] )) * k2_post,
-                                                         ifelse(PeriodDeplpCO2 == 6, k2 + ((s[11,3] - Sprim2beamZ_interp) / (s[11,3] - s[12,3] )) * k2_post,NA)
-                                                  )))))) %>%
-  dplyr::mutate(k3t = ifelse(PeriodDeplpCO2 == 1, k3 + ((s[1,3] - Sprim2beamZ_interp) / (s[1,3] - s[2,3] )) * k3_post,
-                             ifelse(PeriodDeplpCO2 == 2, k3 + ((s[3,3] - Sprim2beamZ_interp) / (s[3,3] - s[4,3] )) * k3_post,
-                                    ifelse(PeriodDeplpCO2 == 3, k3 + ((s[5,3] - Sprim2beamZ_interp) / (s[5,3] - s[6,3] )) * k3_post, 
-                                           ifelse(PeriodDeplpCO2 == 4, k3 + ((s[7,3] - Sprim2beamZ_interp) / (s[7,3] - s[8,3] )) * k3_post, 
-                                                  ifelse(PeriodDeplpCO2 == 5, k3 + ((s[9,3] - Sprim2beamZ_interp) / (s[9,3] - s[10,3] )) * k3_post,
-                                                         ifelse(PeriodDeplpCO2 == 6, k3 + ((s[11,3] - Sprim2beamZ_interp) / (s[11,3] - s[12,3] )) * k3_post, NA)
-                                                  ))))))
+ dplyr::mutate(k1t = ifelse(PeriodDeplpCO2 == 1, k1 + ((s[1,3] - Sprim2beamZ_interp) / (s[1,3] - s[2,3] )) * k1_post,
+           ifelse(PeriodDeplpCO2 == 2, k1 + ((s[3,3] - Sprim2beamZ_interp) / (s[3,3] - s[4,3] )) * k1_post,
+           ifelse(PeriodDeplpCO2 == 3, k1 + ((s[5,3] - Sprim2beamZ_interp) / (s[5,3] - s[6,3] )) * k1_post, 
+           ifelse(PeriodDeplpCO2 == 4, k1 + ((s[7,3] - Sprim2beamZ_interp) / (s[7,3] - s[8,3] )) * k1_post,
+           ifelse(PeriodDeplpCO2 == 5, k1 + ((s[9,3] - Sprim2beamZ_interp) / (s[9,3] - s[10,3] )) * k1_post,
+           ifelse(PeriodDeplpCO2 == 6, k1 + ((s[11,3] - Sprim2beamZ_interp) / (s[11,3] - s[12,3] )) * k1_post,NA)
+                         )))))) %>%
+ dplyr::mutate(k2t = ifelse(PeriodDeplpCO2 == 1, k2 + ((s[1,3] - Sprim2beamZ_interp) / (s[1,3] - s[2,3] )) * k2_post,
+           ifelse(PeriodDeplpCO2 == 2, k2 + ((s[3,3] - Sprim2beamZ_interp) / (s[3,3] - s[4,3] )) * k2_post,
+           ifelse(PeriodDeplpCO2 == 3, k2 + ((s[5,3] - Sprim2beamZ_interp) / (s[5,3] - s[6,3] )) * k2_post, 
+           ifelse(PeriodDeplpCO2 == 4, k2 + ((s[7,3] - Sprim2beamZ_interp) / (s[7,3] - s[8,3] )) * k2_post, 
+           ifelse(PeriodDeplpCO2 == 5, k2 + ((s[9,3] - Sprim2beamZ_interp) / (s[9,3] - s[10,3] )) * k2_post,
+           ifelse(PeriodDeplpCO2 == 6, k2 + ((s[11,3] - Sprim2beamZ_interp) / (s[11,3] - s[12,3] )) * k2_post,NA)
+                         )))))) %>%
+ dplyr::mutate(k3t = ifelse(PeriodDeplpCO2 == 1, k3 + ((s[1,3] - Sprim2beamZ_interp) / (s[1,3] - s[2,3] )) * k3_post,
+           ifelse(PeriodDeplpCO2 == 2, k3 + ((s[3,3] - Sprim2beamZ_interp) / (s[3,3] - s[4,3] )) * k3_post,
+           ifelse(PeriodDeplpCO2 == 3, k3 + ((s[5,3] - Sprim2beamZ_interp) / (s[5,3] - s[6,3] )) * k3_post, 
+           ifelse(PeriodDeplpCO2 == 4, k3 + ((s[7,3] - Sprim2beamZ_interp) / (s[7,3] - s[8,3] )) * k3_post, 
+           ifelse(PeriodDeplpCO2 == 5, k3 + ((s[9,3] - Sprim2beamZ_interp) / (s[9,3] - s[10,3] )) * k3_post,
+           ifelse(PeriodDeplpCO2 == 6, k3 + ((s[11,3] - Sprim2beamZ_interp) / (s[11,3] - s[12,3] )) * k3_post, NA)
+                         ))))))
 
 data <- data %>%
-  dplyr::mutate(k1t = ifelse(!is.na(k1t), k1t, k1)) %>%
-  dplyr::mutate(k2t = ifelse(!is.na(k2t), k2t, k2)) %>%
-  dplyr::mutate(k3t = ifelse(!is.na(k3t), k3t, k3)) 
+ dplyr::mutate(k1t = ifelse(!is.na(k1t), k1t, k1)) %>%
+ dplyr::mutate(k2t = ifelse(!is.na(k2t), k2t, k2)) %>%
+ dplyr::mutate(k3t = ifelse(!is.na(k3t), k3t, k3)) 
 
 # Continue to calculate parameters and FINAL PCO2 CORRECTED (pco2_corr, use to be PCO2_corr_contros before April 2020)
 data <- data %>%
@@ -590,411 +579,6 @@ data <- data %>%
         minute(data$datetime) < 0 | minute(data$datetime) > 59,
       3,
       1
-    )
-  ) %>%
-  dplyr::filter(dt_qf == 1) # removes rows with wrong dates
-
-## pCO2 
-
-# Argo Global Range Test. If QF = 4 replace value by NA
-# Removing outliers due to acid flush in the FB at 12:00 and 00:00 
-# pco2_raw = Raw data from the sensor (use to be PCO2_Corr before April 2020)
-# pco2_corr = Final corrected data from Contros "data processing document", (use to be PCO2_corr_contros before April 2020)
-data <- data %>%
-  dplyr::mutate(
-    pco2_raw_qf = case_when(
-      is.na(pco2_raw) ~ 15,
-      State_Zero >= 1 | State_Flush >= 1 ~ 4,
-      pco2_corr < 100 | pco2_corr > 450 ~ 7,
-      (time >= as_hms("00:00:00") & time <= as_hms("01:30:00")) |
-        (time >= as_hms("12:00:00") & time <= as_hms("13:00:00")) ~ 16,
-      datetime >= as.POSIXct("2017-03-10 08:00:00") &
-        datetime < as.POSIXct("2017-03-21 20:00:00") ~ 99,
-      TRUE ~ 1),
-    pco2_raw = ifelse(pco2_raw_qf != 1 , NA, pco2_raw),
-    pco2_corr_qf = case_when(
-      is.na(pco2_corr) ~ 15,
-      State_Zero >= 1 | State_Flush >= 1 ~ 4,
-      pco2_corr < 100 | pco2_corr > 450 ~ 7,
-      (time >= as_hms("00:00:00") & time <= as_hms("01:30:00")) |
-        (time >= as_hms("12:00:00") &
-           time <= as_hms("13:00:00")) ~ 16,
-      datetime >= as.POSIXct("2017-03-10 08:00:00") &
-        datetime < as.POSIXct("2017-03-21 20:00:00") ~ 99,
-      TRUE ~ 1
-    ),
-    pco2_corr = ifelse(pco2_corr_qf != 1 , NA, pco2_corr)
-  )
-
-## filter salinities above 28
-data <- data %>%
-  dplyr::mutate(
-    sal_fb_qf = case_when(is.na(sal_fb) ~ 15,
-                          sal_fb < 28 | sal_fb > 38 ~ 7,
-                          TRUE ~ 1),
-    sal_fb = ifelse(sal_fb_qf != 1 , NA, sal_fb),
-    sal_insitu_ctd_qf = case_when(
-      is.na(sal_insitu_ctd) ~ 15,
-      sal_insitu_ctd < 28 |
-        sal_insitu_ctd > 37 ~ 7,
-      #datetime > as.POSIXct("2019-12-26 00:00:00") ~ 99,
-      TRUE ~ 1
-    ),
-    sal_insitu_ctd = ifelse(sal_insitu_ctd_qf != 1 , NA, sal_insitu_ctd),
-  )
-
-## filter temperatures above 10 and below -2
-data <- data %>%
-  dplyr::mutate(
-    temp_dur_qf = case_when(
-      is.na(temp_dur) ~ 15,
-      temp_dur > 10 | temp_dur < -2 ~ 7,
-      TRUE ~ 1),
-    temp_dur = ifelse(temp_dur_qf != 1 , NA, temp_dur),
-    temp_fb_qf = case_when(
-      is.na(temp_fb) ~ 15,
-      temp_fb > 10 | temp_fb < -2 ~ 7,
-      TRUE ~ 1),
-    temp_fb = ifelse(temp_fb_qf != 1 , NA, temp_fb),
-    temp_insitu_11m_qf = case_when(
-      is.na(temp_insitu_11m) ~ 15,
-      temp_insitu_11m > 10 | temp_insitu_11m < -2 ~ 7,
-      TRUE ~ 1),
-    temp_insitu_11m = ifelse(temp_insitu_11m_qf != 1 , NA, temp_insitu_11m)
-  )
-
-## filter Voltages seaFET to remove outliers when calculating final corrected pH.
-data <- data %>%
-  dplyr::mutate(
-    voltINT_qf = case_when(is.na(voltINT) ~ 15,
-                           voltINT > 0.1 ~ 99,
-                           TRUE ~ 1),
-    voltINT = ifelse(voltINT_qf != 1 , NA, voltINT),
-    voltEXT_qf = case_when(is.na(voltEXT) ~ 15,
-                           voltEXT > 0.1 ~ 99,
-                           TRUE ~ 1),
-    voltEXT = ifelse(voltEXT_qf != 1 , NA, voltEXT)
-  )
-## seaFET pH
-data <- data %>%
-  dplyr::mutate(
-    phINT_qf = case_when(is.na(phINT) ~ 15,
-                         phINT < 7.5 | phINT > 8.5 ~ 7,
-                         TRUE ~ 1),
-    phINT = ifelse(phINT_qf != 1 , NA, phINT),
-    phEXT_qf = case_when(is.na(phEXT) ~ 15,
-                         phEXT < 7.5 | phEXT > 8.5 ~ 7,
-                         TRUE ~ 1),
-    phEXT = ifelse(phEXT_qf != 1 , NA, phEXT)
-  )
-## durafet 
-data <- data %>%
-  dplyr::mutate(
-    ph_dur_qf = case_when(is.na(ph_dur) ~ 15,
-                          ph_dur < 7.5 | ph_dur > 8.75 ~ 7,
-                          TRUE ~ 1),
-    ph_dur = ifelse(ph_dur_qf != 1, NA, ph_dur)
-  )
-## chlorophyll-a
-data <- data %>%
-  dplyr::mutate(
-    chl_a = qc15_chlorophyll_a_10m,
-    chl_a_qf = case_when(is.na(chl_a) ~ 15,
-                         TRUE ~ 1),
-    chl_a = ifelse(ph_dur_qf != 1, NA, chl_a)
-  )
-##########  Despike() ###########
-data <- data %>%   
-  dplyr::mutate(pco2_raw_filtered= despike(data$pco2_raw, reference= "median", n=2, k=5761, replace="NA"),
-                pco2_corr_filtered= despike(data$pco2_corr, reference= "median", n=2, k=5761, replace="NA"),
-                sal_fb_filtered= despike(data$sal_fb, reference= "median", n=2, k=5761, replace="NA"),
-                temp_fb_filtered= despike(data$temp_fb, reference= "median", n=2, k=5761, replace="NA"),
-                ph_dur_filtered= despike(data$ph_dur, reference= "median", n=2, k=5761, replace="NA"),
-                temp_dur_filtered= despike(data$temp_dur, reference= "median", n=2, k=5761, replace="NA"),
-                temp_insitu_11m_filtered = despike(data$temp_insitu_11m, reference= "median", n=2, k=5761, replace="NA"),
-                chl_a_filtered = despike(data$chl_a, reference= "median", n=2, k=5761, replace="NA"),
-                date = as.Date(data$datetime),
-                hour = hour(data$datetime)
-  ) %>% #Now one adds flag 12 when new NAs were introduced by despike
-  dplyr::mutate(pco2_raw_qf = ifelse(!is.na(pco2_raw) & is.na(pco2_raw_filtered), 12, pco2_raw_qf),
-                pco2_corr_qf = ifelse(!is.na(pco2_corr) & is.na(pco2_corr_filtered), 12, pco2_corr_qf),
-                sal_fb_qf = ifelse(!is.na(sal_fb) & is.na(sal_fb_filtered), 12, sal_fb_qf),
-                temp_fb_qf = ifelse(!is.na(temp_fb) & is.na(temp_fb_filtered), 12, temp_fb_qf),
-                ph_dur_qf = ifelse(!is.na(ph_dur) & is.na(ph_dur_filtered), 12, ph_dur_qf),
-                temp_dur_qf = ifelse(!is.na(temp_dur) & is.na(temp_dur_filtered), 12, temp_dur_qf),
-                temp_insitu_11m_qf = ifelse(!is.na(temp_insitu_11m) & is.na(temp_insitu_11m_filtered), 12, temp_insitu_11m_qf),
-                chl_a_qf = ifelse(!is.na(chl_a) & is.na(chl_a_filtered), 12, chl_a_qf))
-
-#MINUTE: save all parameters in long format (not selected data)
-if (file.exists(paste0(path, "all_nydata_minute.rds")) == TRUE) {
-  previous_all_nydata_minute <- readRDS(paste0(path, "all_nydata_minute.rds")) %>%
-    dplyr::filter(datetime < "2020-01-01 00:00:00" ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
-  
-  #### Binding data (previous + new) ####
-  data <- dplyr::bind_rows(previous_all_nydata_minute, data) 
-  #Remove duplicate due to binding
-  data <- data %>%
-    distinct(datetime, .keep_all = T)
-  saveRDS(data, file= paste0(path, "all_nydata_minute.rds"), version = 2)
-} else {
-  saveRDS(data, file= paste0(path, "all_nydata_minute.rds"), version = 2)
-  fwrite(data, file = paste0(path, "all_nydata_minute.csv.gz"), na="NA", col.names = TRUE)
-}
-
-# HOUR
-data_hour <- data%>%
-  dplyr::group_by(date, hour) %>%
-  dplyr::summarise( State_Zero = mean(State_Zero, na.rm = TRUE),
-                    State_Flush = mean(State_Flush, na.rm = TRUE),
-                    Signal_Ref= mean(Signal_Ref, na.rm = TRUE),
-                    Signal_Raw = mean(Signal_Raw, na.rm = TRUE),
-                    Signal_Proc = mean(Signal_Proc, na.rm = TRUE),
-                    P_In= mean(P_In, na.rm = TRUE),
-                    P_NDIR= mean(P_NDIR, na.rm = TRUE),
-                    T_Gas= mean(T_Gas, na.rm = TRUE),
-                    pco2_raw= mean(pco2_raw, na.rm = TRUE),
-                    pco2_raw_Flush= mean(pco2_raw_Flush, na.rm = TRUE),
-                    pco2_raw_Zero= mean(pco2_raw_Zero, na.rm = TRUE),
-                    Signal_RefZ= mean(Signal_RefZ, na.rm = TRUE),
-                    Signal_RawZ= mean(Signal_RawZ, na.rm = TRUE),
-                    Signal_ProcZ= mean(Signal_ProcZ, na.rm = TRUE),
-                    S2beam= mean(S2beam, na.rm = TRUE),
-                    S2beamZ= mean(S2beamZ, na.rm = TRUE),
-                    Sprim2beam= mean(Sprim2beamZ, na.rm = TRUE),
-                    Sprim2beamZ= mean(Sprim2beam, na.rm = TRUE),
-                    Sprim2beamZ_interp= mean(Sprim2beamZ_interp, na.rm = TRUE),
-                    k1t= mean(k1t, na.rm = TRUE),
-                    k2t= mean(k2t, na.rm = TRUE) ,
-                    k3t= mean(k3t, na.rm = TRUE) ,
-                    SprimDCt= mean(SprimDCt, na.rm = TRUE) ,
-                    Sproct= mean(Sproct, na.rm = TRUE) ,
-                    xco2wet= mean(xco2wet, na.rm = TRUE) ,
-                    pco2_corr= mean(pco2_corr, na.rm = TRUE) ) %>%
-  dplyr::mutate(datetime = ymd_h(paste(date, hour, sep=" ", tz = "UTC"))) %>%
-  dplyr::ungroup() %>% # this is to be able to perform the following changes
-  dplyr::select(datetime, everything()) %>%
-  dplyr::arrange(desc(datetime))
-
-
-#### Download previous data ####
-if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
-  previous_all_nydata_hour <- readRDS(paste0(path, "all_nydata_hour.rds")) %>%
-    dplyr::filter(datetime < "2020-01-01 00:00:00" ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
-  
-  #### Binding data (previous + new) ####
-  data_hour <- dplyr::bind_rows(previous_all_nydata_hour, data_hour)
-  
-  # Remove duplicate due to binding
-  data_hour <- data_hour %>%
-    distinct(datetime, .keep_all = T)
-  saveRDS(data_hour, file = paste0(path, "all_nydata_hour.rds"), version = 2)
-} else {
-  saveRDS(data_hour, file = paste0(path, "all_nydata_hour.rds"), version = 2)
-  fwrite(
-    data_hour,
-    file = paste0(path, "all_nydata_hour.csv.gz"),
-    na = "NA",
-    col.names = TRUE
-  )
-}
-
-#### MINUTE format (small format) ####
-selected_nydata_minute <- data %>%
-  dplyr::select(
-    datetime,
-    dt_qf,
-    pco2_raw,
-    pco2_raw_filtered,
-    pco2_raw_qf,
-    pco2_corr,
-    pco2_corr_filtered,
-    pco2_corr_qf,
-    PeriodDeplpCO2,
-    pressure_insitu_ctd,
-    sal_fb,
-    sal_fb_filtered,
-    sal_fb_qf,
-    sal_insitu_ctd,
-    sal_insitu_ctd_qf,
-    temp_fb,
-    temp_fb_filtered,
-    temp_fb_qf,
-    temp_insitu_11m,
-    temp_insitu_11m_filtered,
-    temp_insitu_11m_qf,
-    temp_dur,
-    temp_dur_filtered,
-    temp_dur_qf,
-    ph_dur,
-    ph_dur_filtered,
-    ph_dur_qf,
-    voltINT,
-    voltINT_qf,
-    voltEXT,
-    voltEXT_qf,
-    phINT,
-    phINT_qf,
-    phEXT,
-    phEXT_qf,
-    temp_sf,
-    pco2_inst,
-    ta_inst,
-    seafet_inst,
-    par_insitu_profile,
-    par_insitu_10m,
-    par_air,
-    turb_fb,
-    temp_insitu_ctd,
-    chl_a,
-    date,
-    hour
-  )
-#### Download previous data ####
-if (file.exists(paste0(path, "nydata_minute.rds")) == TRUE) {
-  previous_nydata_minute <- readRDS(paste0(path, "nydata_minute.rds")) %>%
-    dplyr::filter(datetime < "2020-01-01 00:00:00" ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
-  
-  #### Binding data (previous + new) ####
-  selected_nydata_minute <- dplyr::bind_rows(previous_nydata_minute, selected_nydata_minute)
-  
-  #Remove duplicate due to binding
-  selected_nydata_minute <- selected_nydata_minute %>%
-    distinct(datetime, .keep_all = T)
-  saveRDS(selected_nydata_minute, file = paste0(path, "nydata_minute.rds"), version = 2)
-} else {
-  saveRDS(selected_nydata_minute, file = paste0(path, "nydata_minute.rds"), version = 2)
-  fwrite(selected_nydata_minute, file = paste0(path, "nydata_minute.csv.gz"), na="NA", col.names = TRUE)
-}
-#### HOUR format ####
-# Make groups for data on the profiler
-selected_nydata_minute <- selected_nydata_minute %>%
-  dplyr::mutate(
-    depth = ifelse(
-      pressure_insitu_ctd <= 2,
-      1,
-      ifelse(
-        pressure_insitu_ctd > 2 & pressure_insitu_ctd <= 4,
-        3,
-        ifelse(
-          pressure_insitu_ctd > 4 & pressure_insitu_ctd <= 6,
-          5,
-          ifelse(
-            pressure_insitu_ctd > 6 & pressure_insitu_ctd <= 8,
-            7,
-            ifelse(pressure_insitu_ctd > 8, 9, NA)
-          )
-        )
-      )
-    ),
-    sal_insitu_ctd_1m = ifelse(depth == 1, sal_insitu_ctd, NA),
-    sal_insitu_ctd_3m = ifelse(depth == 3, sal_insitu_ctd, NA),
-    sal_insitu_ctd_5m = ifelse(depth == 5, sal_insitu_ctd, NA),
-    sal_insitu_ctd_7m = ifelse(depth == 7, sal_insitu_ctd, NA),
-    sal_insitu_ctd_9m = ifelse(depth == 9, sal_insitu_ctd, NA),
-    temp_insitu_ctd_1m = ifelse(depth == 1, temp_insitu_ctd, NA),
-    temp_insitu_ctd_3m = ifelse(depth == 3, temp_insitu_ctd, NA),
-    temp_insitu_ctd_5m = ifelse(depth == 5, temp_insitu_ctd, NA),
-    temp_insitu_ctd_7m = ifelse(depth == 7, temp_insitu_ctd, NA),
-    temp_insitu_ctd_9m = ifelse(depth == 9, temp_insitu_ctd, NA),
-    par_insitu_profile_1m = ifelse(depth == 1, par_insitu_profile, NA),
-    par_insitu_profile_3m = ifelse(depth == 3, par_insitu_profile, NA),
-    par_insitu_profile_5m = ifelse(depth == 5, par_insitu_profile, NA),
-    par_insitu_profile_7m = ifelse(depth == 7, par_insitu_profile, NA),
-    par_insitu_profile_9m = ifelse(depth == 9, par_insitu_profile, NA)
-  )
-
-
-# tmp <- selected_nydata_minute %>% 
-#   dplyr::filter(datetime > as.POSIXct("2017-08-24 00:00:00") & datetime < as.POSIXct("2017-08-24 23:00:00"))
-# sal_xts <- dplyr::select(tmp, datetime, sal_insitu_ctd_1m, sal_insitu_ctd_3m, sal_insitu_ctd_5m, sal_insitu_ctd_7m, sal_insitu_ctd_9m)
-# sal_xts <- as.xts(sal_xts, order.by = sal_xts$datetime)
-# dygraph(sal_xts, group = "awipev", main="Salinity (in situ CTD, all depths)", ylab="Salinity") %>%
-#   dySeries("sal_insitu_ctd_1m", color = RColorBrewer::brewer.pal(5, "Set1")[1], strokeWidth = 0, label = "1m") %>%
-#   dySeries("sal_insitu_ctd_3m", color = RColorBrewer::brewer.pal(5, "Set1")[2], strokeWidth = 0, label = "3m") %>%
-#   dySeries("sal_insitu_ctd_5m", color = RColorBrewer::brewer.pal(5, "Set1")[3], strokeWidth = 0, label = "5m") %>%
-#   dySeries("sal_insitu_ctd_7m", color = RColorBrewer::brewer.pal(5, "Set1")[4], strokeWidth = 0, label = "7m") %>%
-#   dySeries("sal_insitu_ctd_9m", color = RColorBrewer::brewer.pal(5, "Set1")[5], strokeWidth = 0, label = "9m") %>%
-#   dyHighlight(highlightCircleSize = 8,highlightSeriesBackgroundAlpha =0.2,hideOnMouseOut =TRUE) %>%
-#   dyOptions( drawGrid = TRUE, drawPoints = TRUE, pointSize = 2,useDataTimezone = TRUE) %>%
-#   dyLegend(show = "follow")   %>%
-#   dyAxis("y",valueRange = c(30, 37)) %>%
-#   dyRangeSelector(height = 30, dateWindow= NULL)
-
-# to add instrument S/N columns
-selected_nydata_minute$pco2_inst <-
-  as.numeric(selected_nydata_minute$pco2_inst)
-selected_nydata_minute$ta_inst <-
-  as.numeric(selected_nydata_minute$ta_inst)
-selected_nydata_minute$seafet_inst <-
-  as.numeric(selected_nydata_minute$seafet_inst)
-
-selected_nydata_hour <- selected_nydata_minute %>%
-  dplyr::group_by(date, hour) %>%
-  dplyr::summarise(
-    pressure_insitu_ctd = mean(pressure_insitu_ctd, na.rm = TRUE),
-    sal_insitu_ctd = mean(sal_insitu_ctd, na.rm = TRUE),
-    sal_insitu_ctd_1m = mean(sal_insitu_ctd_1m, na.rm = TRUE),
-    sal_insitu_ctd_3m = mean(sal_insitu_ctd_3m, na.rm = TRUE),
-    sal_insitu_ctd_5m = mean(sal_insitu_ctd_5m, na.rm = TRUE),
-    sal_insitu_ctd_7m = mean(sal_insitu_ctd_7m, na.rm = TRUE),
-    sal_insitu_ctd_9m = mean(sal_insitu_ctd_9m, na.rm = TRUE),
-    sal_fb_filtered = mean(sal_fb_filtered, na.rm = TRUE),
-    temp_fb_filtered = mean(temp_fb_filtered, na.rm = TRUE),
-    temp_insitu_11m_filtered = mean(temp_insitu_11m_filtered, na.rm = TRUE),
-    pco2_raw_filtered = mean(pco2_raw_filtered, na.rm = TRUE),
-    PeriodDeplpCO2 = mean(PeriodDeplpCO2, na.rm = TRUE),
-    pco2_corr_filtered = mean(pco2_corr_filtered, na.rm = TRUE),
-    ph_dur_filtered = mean(ph_dur_filtered, na.rm = TRUE),
-    temp_dur_filtered = mean(temp_dur_filtered, na.rm = TRUE),
-    temp_sf = mean(temp_sf, na.rm = TRUE),
-    phINT = mean(phINT, na.rm = TRUE),
-    phEXT = mean(phEXT, na.rm = TRUE),
-    voltINT = mean(voltINT, na.rm = TRUE),
-    voltEXT = mean(voltEXT, na.rm = TRUE),
-    pco2_inst = mean(pco2_inst, na.rm = TRUE),
-    ta_inst = mean(ta_inst, na.rm = TRUE),
-    seafet_inst = mean(seafet_inst, na.rm = TRUE) ,
-    par_insitu_profile_1m = mean(par_insitu_profile_1m, na.rm = TRUE),
-    par_insitu_profile_3m = mean(par_insitu_profile_3m, na.rm = TRUE),
-    par_insitu_profile_5m = mean(par_insitu_profile_5m, na.rm = TRUE),
-    par_insitu_profile_7m = mean(par_insitu_profile_7m, na.rm = TRUE),
-    par_insitu_profile_9m = mean(par_insitu_profile_9m, na.rm = TRUE),
-    par_insitu_10m = mean(par_insitu_10m, na.rm = TRUE),
-    par_air = mean(par_air, na.rm = TRUE),
-    turb_fb = mean(turb_fb, na.rm = TRUE),
-    temp_insitu_ctd = mean(temp_insitu_ctd, na.rm = TRUE),
-    temp_insitu_ctd_1m = mean(temp_insitu_ctd_1m, na.rm = TRUE),
-    temp_insitu_ctd_3m = mean(temp_insitu_ctd_3m, na.rm = TRUE),
-    temp_insitu_ctd_5m = mean(temp_insitu_ctd_5m, na.rm = TRUE),
-    temp_insitu_ctd_7m = mean(temp_insitu_ctd_7m, na.rm = TRUE),
-    temp_insitu_ctd_9m = mean(temp_insitu_ctd_9m, na.rm = TRUE),
-    chl_a = mean(chl_a, na.rm = TRUE)
-  ) %>%
-  dplyr::mutate(datetime = ymd_h(paste(date, hour, sep = " ", tz = "UTC"))) %>%
-  dplyr::ungroup() %>% # this is to be able to perform the following changes
-  dplyr::select(datetime, everything()) %>%
-  dplyr::select(-c(hour)) %>% # not needed in the shiny display
-  dplyr::arrange(desc(datetime))
-
-# HOUR format
-d_hour <- selected_nydata_hour
-
-#### Download previous data ####
-if (file.exists(paste0(path, "nydata_hour.rds")) == TRUE) {
-  previous_nydata_hour <- readRDS(paste0(path, "nydata_hour.rds")) %>%
-    dplyr::filter(datetime < "2020-01-01 00:00:00" ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
-  
-  #### Binding data (previous + new) ####
-  d_hour <- dplyr::bind_rows(previous_nydata_hour, d_hour)
-  #Remove duplicate due to binding
-  d_hour <- d_hour %>%
-    distinct(datetime, .keep_all = T)
-  saveRDS(d_hour, file = paste0(path, "nydata_hour.rds"), version = 2)
-} else {
-  saveRDS(d_hour, file = paste0(path, "nydata_hour.rds"), version = 2)
-  fwrite(d_hour, file = paste0(path, "d_hour.csv.gz"), na="NA", col.names = TRUE)
-}
-
     )
   ) %>%
   dplyr::filter(dt_qf == 1) # removes rows with wrong dates
