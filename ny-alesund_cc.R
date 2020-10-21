@@ -52,7 +52,7 @@ if (file.exists(paste0(path, "all_nydata_minute.rds")) == FALSE) {
 } else {
 
   #### Download recent data ####
-start_date <- ymd_hms("2020-01-01 00:00:00")
+start_date <- ymd_hms("2020-10-01 00:00:00") 
 startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
 enddate <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
 
@@ -80,7 +80,9 @@ code1 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startda
         "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:total_alcalinity",
         "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:invalid_salinity",
         "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:invalid_ph",
-        "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:invalid_ta",
+        "&sensors=station:svluwobs:fb_731101:hydrofia_awi_0317001:invalid_ta")
+
+code2 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate,"&endDate=",enddate,"&format=text/tab-separated-values",aggregate_string,
         "&sensors=station:svluwobs:fb_731101:hydrofia_awi_1215000:ph",
         "&sensors=station:svluwobs:fb_731101:hydrofia_awi_1215000:total_alcalinity",
         "&sensors=station:svluwobs:fb_731101:hydrofia_awi_1215000:invalid_salinity",
@@ -100,7 +102,7 @@ code1 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startda
         "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:ph_temperature",
         "&sensors=station:svluwobs:svluw2:seafet_obsvlfr_1005:internal_relative_humidity")
 
-code2 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate,"&endDate=",enddate,"&format=text/tab-separated-values",aggregate_string,
+code3 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate,"&endDate=",enddate,"&format=text/tab-separated-values",aggregate_string,
         "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:zero",
         "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:signal_proc",
         "&sensors=station:svluwobs:fb_731101:co2ft_0215_obsvlfr_01:signal_raw",
@@ -122,7 +124,9 @@ code2 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startda
         "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:t_gas",
         "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:pco2_corr",
         "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:pco2_corr_flush",
-        "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:pco2_corr_zero",
+        "&sensors=station:svluwobs:fb_731101:co2ft_0515_obsvlfr_01:pco2_corr_zero")
+
+code4 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate,"&endDate=",enddate,"&format=text/tab-separated-values",aggregate_string,
         "&sensors=station:svluwobs:fb_731101:durafet_obsvlfr_01:hw_ph",
         "&sensors=station:svluwobs:fb_731101:durafet_obsvlfr_01:hw_temperature",
         "&sensors=station:svluwobs:svluw2:par_awi_401:par",
@@ -141,14 +145,27 @@ code2 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startda
 
 data1 <- data.table::fread(code1, encoding = "UTF-8", showProgress	= TRUE)
 data2 <- data.table::fread(code2, encoding = "UTF-8", showProgress	= TRUE)
+data3 <- data.table::fread(code3, encoding = "UTF-8", showProgress	= TRUE)
+data4 <- data.table::fread(code4, encoding = "UTF-8", showProgress	= TRUE)
 
-colnames(data1) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317", "InvAT_0317", "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215", "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007","phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005")
-colnames(data2) <- c("datetime", "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215","pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515","pco2_raw_Zero_0515", "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103" )
+
+
+colnames(data1) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317", "InvAT_0317") 
+colnames(data2) <- c("datetime", "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215", "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007", "phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005")
+colnames(data3) <- c("datetime","State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215","pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515","pco2_raw_Zero_0515")
+colnames(data4) <- c("datetime", "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103" )
 
 data1$datetime <- ymd_hms(data1$datetime)
 data2$datetime <- ymd_hms(data2$datetime)
+data3$datetime <- ymd_hms(data3$datetime)
+data4$datetime <- ymd_hms(data4$datetime)
+
 
 data <- left_join(data1, data2, by = "datetime")
+data <- left_join(data, data3, by = "datetime")
+data <- left_join(data, data4, by = "datetime")
+
+
 
 previous_NRT_data <- dplyr::bind_rows(previous_NRT_data, data) %>% #save updated previous_NRT_data
   distinct(datetime, .keep_all = T)
