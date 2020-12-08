@@ -43,6 +43,11 @@ agg_time = "MINUTE" #SECOND, MINUTE, HOUR, DAY, MONTH, YEAR
 agg_fun_1 = "MEAN" #MEDIAN
 agg_fun_2 = "STDDEV"
 agg_fun_3 = "N"
+if(agg_time=="MINUTE"){
+  aggregate_string=paste0("&aggregate=",agg_time)
+} else {
+  aggregate_string=paste0("&aggregate=",agg_time,"&aggregateFunctions=",agg_fun_1,"&aggregateFunctions=",agg_fun_2,"&aggregateFunctions=",agg_fun_3)
+}
 #*********************************
 
 # read past data 
@@ -57,63 +62,47 @@ if (file.exists(paste0(path, "all_nydata_minute.rds")) == FALSE) {
 
   #### Download recent data ####
 start_date <- ymd_hms("2020-10-01 00:00:00") 
-startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
-enddate <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
+#startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
+#enddate <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
 end_date <-  ymd_hms(Sys.time())
 
 
-if(agg_time=="MINUTE"){
- aggregate_string=paste0("&aggregate=",agg_time)
-} else {
- aggregate_string=paste0("&aggregate=",agg_time,"&aggregateFunctions=",agg_fun_1,"&aggregateFunctions=",agg_fun_2,"&aggregateFunctions=",agg_fun_3)
+ndays <- as.numeric(end_date - start_date)
+if (ndays < 11){ 
+n <- 1
+startdate[n] <- start_date
+enddate[n] <- end_date
+} else { 
+  startdate <-  NULL
+  enddate <-  NULL
+  n <- ceiling(ndays /11)
+  startdate[1] <- start_date
+  enddate[1] <- start_date + days(11)
+for (i in 2:n) { 
+  startdate[i] <-  enddate[i - 1]
+  enddate[i] <-  startdate[i] +11
 }
+}  
 
-
-##Put the list of sensors of code1 in this vector....
-
-code_1 =  c("svluwobs:fb_731101:sbe45_awi_0403:salinity",
-            "svluwobs:fb_731101:sbe45_awi_0403:temperature",
-            "svluwobs:svluw2:ctd_183:conductivity_awi_01:salinity",
-            "svluwobs:svluw2:ctd_181:conductivity_awi_02:salinity", 
-            "svluwobs:svluw2:ctd_578:conductivity_awi_03:salinity",
-            "svluwobs:svluw2:seafet_obsvlfr_007:ph_internal")
-
-            # "svluwobs:svluw2:ctd_964:conductivity_awi_04:salinity",
-            # "svluwobs:svluw2:ctd_awi_964:salinity_004",
-            # "svluwobs:svluw2:ctd_103:conductivity_awi_01:salinity",
-            # "svluwobs:svluw2:ctd_103:pressure_awi_01:pressure",
-            # "svluwobs:svluw2:ctd_181:pressure_awi_02:pressure",
-            # "svluwobs:svluw2:ctd_183:pressure_awi_01:pressure",
-            # "svluwobs:svluw2:ctd_578:pressure_awi_03:depth",
-            # "svluwobs:svluw2:ctd_964:pressure_awi_04:depth",
-            # "svluwobs:svluw2:ctd_awi_964:pressure_002",
-            # "svluwobs:fb_731101:hydrofia_awi_0317001:ph",
-            # "svluwobs:fb_731101:hydrofia_awi_0317001:total_alcalinity",
-            # "svluwobs:fb_731101:hydrofia_awi_0317001:invalid_salinity",
-            # "svluwobs:fb_731101:hydrofia_awi_0317001:invalid_ph",
-            # "svluwobs:fb_731101:hydrofia_awi_0317001:invalid_ta")
-
-## I suggest this loop
-## With a single variable, this should be enough to download 11 days with 1 second resolution or 700m days with a minute resolution please try this. 
-#If it does not work, please telle then I include the DWS function here.
-
-for (i in code_1) {
-  cat("Processing",i,"\n")
-  code1 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate,"&endDate=",enddate,"&format=text/tab-separated-values",aggregate_string,"&sensors=station:",i)
-  tmp_data <- data.table::fread(code1, encoding = "UTF-8", showProgress	= TRUE)
-
-if(!exists("data1")) {
-  data1 <- tmp_data
-} else {
-  if(nrow(tmp_data) == 0 ) { 
-    tmp_data[1:10,2] <- NA }
-    data1 <- dplyr::left_join(data1,tmp_data, by="datetime", all=TRUE) 
-#} else {
-}
-}
-
+  startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
+# ##Put the list of sensors of code1 in this vector....
+# 
+# 
+# for (i in code_1) {
+#   cat("Processing",i,"\n")
+#   code1 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate,"&endDate=",enddate,"&format=text/tab-separated-values",aggregate_string,"&sensors=station:",i)
+#   tmp_data <- data.table::fread(code1, encoding = "UTF-8", showProgress	= TRUE)
+# 
+# if(!exists("data1")) {
+#   data1 <- tmp_data
+# } else {
+#   if(nrow(tmp_data) == 0 ) { 
+#     tmp_data[1:10,2] <- NA }
+#     data1 <- dplyr::left_join(data1,tmp_data, by="datetime", all=TRUE) 
+# #} else {
+# }
+# }
   
-
 codeall <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate,"&endDate=",enddate,"&format=text/tab-separated-values",aggregate_string,
         "&sensors=station:svluwobs:fb_731101:sbe45_awi_0403:salinity",
         "&sensors=station:svluwobs:fb_731101:sbe45_awi_0403:temperature",
@@ -190,28 +179,36 @@ codeall <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",start
 
 #station:svluwobs:fb_731101:fluorometer_awi_3510:chlorophyll_a
 
-data1 <- data.table::fread(code1, encoding = "UTF-8", showProgress	= TRUE)
-data2 <- data.table::fread(code2, encoding = "UTF-8", showProgress	= TRUE)
-data3 <- data.table::fread(code3, encoding = "UTF-8", showProgress	= TRUE)
-data4 <- data.table::fread(code4, encoding = "UTF-8", showProgress	= TRUE)
+data <- data.table::fread(codeall, encoding = "UTF-8", showProgress	= TRUE)
+
+# data1 <- data.table::fread(code1, encoding = "UTF-8", showProgress	= TRUE)
+# data2 <- data.table::fread(code2, encoding = "UTF-8", showProgress	= TRUE)
+# data3 <- data.table::fread(code3, encoding = "UTF-8", showProgress	= TRUE)
+# data4 <- data.table::fread(code4, encoding = "UTF-8", showProgress	= TRUE)
+
+colnames(data) <-- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b",
+"temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007", "phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005",
+"State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215","pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515","pco2_raw_Zero_0515",
+ "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103" )
+
+# colnames(data1) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317", "InvAT_0317") 
+# colnames(data2) <- c("datetime", "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215", "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007", "phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005")
+# colnames(data3) <- c("datetime","State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215","pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515","pco2_raw_Zero_0515")
+# colnames(data4) <- c("datetime", "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103" )
+
+data$datetime <- ymd_hms(data$datetime)
+# data1$datetime <- ymd_hms(data1$datetime)
+# data2$datetime <- ymd_hms(data2$datetime)
+# data3$datetime <- ymd_hms(data3$datetime)
+# data4$datetime <- ymd_hms(data4$datetime)
 
 
-colnames(data1) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317", "InvAT_0317") 
-colnames(data2) <- c("datetime", "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215", "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007", "phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005")
-colnames(data3) <- c("datetime","State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215","pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515","pco2_raw_Zero_0515")
-colnames(data4) <- c("datetime", "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103" )
-
-data1$datetime <- ymd_hms(data1$datetime)
-data2$datetime <- ymd_hms(data2$datetime)
-data3$datetime <- ymd_hms(data3$datetime)
-data4$datetime <- ymd_hms(data4$datetime)
+# data <- left_join(data1, data2, by = "datetime")
+# data <- left_join(data, data3, by = "datetime")
+# data <- left_join(data, data4, by = "datetime")
 
 
-data <- left_join(data1, data2, by = "datetime")
-data <- left_join(data, data3, by = "datetime")
-data <- left_join(data, data4, by = "datetime")
-
-
+}
 
 previous_NRT_data <- dplyr::bind_rows(previous_NRT_data, data) %>% #save updated previous_NRT_data
   distinct(datetime, .keep_all = T)
