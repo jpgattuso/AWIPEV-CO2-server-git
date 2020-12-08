@@ -430,14 +430,14 @@ data <- data %>%
     )
 
 ## filter salinities above 28
-d_all <- d_all%>%
+data <- data %>%
   dplyr::mutate( sal_fb = ifelse(sal_fb < 28 | sal_fb > 36, NA, sal_fb),
                  sal_insitu_ctd = ifelse(sal_insitu_ctd < 28 | sal_fb > 36, NA, sal_insitu_ctd))
- d_all <- d_all%>%
+ data <- data %>%
   dplyr::mutate(sal_insitu_ctd = ifelse(datetime > "2019-12-26 00:00:00", NA, sal_insitu_ctd))
 
  ## filter temperatures above 10
-d_all <- d_all%>%
+data <- data %>%
   dplyr::mutate( temp_fb = ifelse(temp_fb > 10 | temp_fb < -2 , NA, temp_fb))
 
 ## seaFET
@@ -613,6 +613,7 @@ dygraph(d_hour_xts,
     strokeWidth = 0,
     pointSize = 2
   ) %>%
+  dyAxis("y", valueRange = c(min(var), max(var))) %>%
   dyLimit(0, color = "black", strokePattern = "dashed") %>%
   dyHighlight(
     highlightCircleSize = 8,
