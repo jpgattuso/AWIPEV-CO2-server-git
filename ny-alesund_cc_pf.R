@@ -50,60 +50,43 @@ if(agg_time=="MINUTE"){
 }
 #*********************************
 
-# read past data 
-previous_NRT_data <- readRDS(file = paste0(path, "previous_NRT_data.rds")) %>% 
-  dplyr::mutate(datetime = ymd_hms(datetime)
-  )
-
-# This is to process the whole data set, from 2015
-if (file.exists(paste0(path, "all_nydata_minute.rds")) == FALSE) {
-  data <- previous_NRT_data
-} else {
+# # read past data 
+# previous_NRT_data <- readRDS(file = paste0(path, "previous_NRT_data.rds")) %>% 
+#   dplyr::mutate(datetime = ymd_hms(datetime)
+#   )
+# 
+# # This is to process the whole data set, from 2015
+# if (file.exists(paste0(path, "all_nydata_minute.rds")) == FALSE) {
+#   data <- previous_NRT_data
+# } else {
 
   #### Download recent data ####
-start_date <- ymd_hms("2020-10-01 00:00:00") 
+start_date <- ymd_hms("2020-12-01 00:00:00") 
 #startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
 #enddate <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
 end_date <-  ymd_hms(Sys.time())
 
 
-ndays <- as.numeric(end_date - start_date)
-if (ndays < 11){ 
-n <- 1
-startdate[n] <- start_date
-enddate[n] <- end_date
+# we know that less than a million data can be downloaded at a time
+# conservatively, that is 11 days : 990000 / (62 * 1440)
+
+ndays <- as.numeric(end_date - start_date) #number of days to download
+
+if (ndays < 11){ # no problem if less tha 11 daays need to be downloaded 
+  startdate <- start_date
+  enddate <- end_date
 } else { 
   startdate <-  NULL
   enddate <-  NULL
-  n <- ceiling(ndays /11)
-  startdate[1] <- start_date
-  enddate[1] <- start_date + days(11)
-for (i in 2:n) { 
-  startdate[i] <-  enddate[i - 1]
-  enddate[i] <-  startdate[i] +11
+  startdate <- seq(from=start_date, to=end_date, by='11 days')
+  enddate <- seq(from = start_date + days(11), to = end_date, by='11 days')
+  enddate[length(enddate) + 1] <- end_date # to get the last period that is less than 11 days
 }
-}  
 
-  startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
-# ##Put the list of sensors of code1 in this vector....
-# 
-# 
-# for (i in code_1) {
-#   cat("Processing",i,"\n")
-#   code1 <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate,"&endDate=",enddate,"&format=text/tab-separated-values",aggregate_string,"&sensors=station:",i)
-#   tmp_data <- data.table::fread(code1, encoding = "UTF-8", showProgress	= TRUE)
-# 
-# if(!exists("data1")) {
-#   data1 <- tmp_data
-# } else {
-#   if(nrow(tmp_data) == 0 ) { 
-#     tmp_data[1:10,2] <- NA }
-#     data1 <- dplyr::left_join(data1,tmp_data, by="datetime", all=TRUE) 
-# #} else {
-# }
-# }
-  
-codeall <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate,"&endDate=",enddate,"&format=text/tab-separated-values",aggregate_string,
+for (i in 1:length(startdate)) {
+  print(startdate[i])
+  codeall <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate[i],"&endDate=",
+                    enddate[i],"&format=text/tab-separated-values",aggregate_string,
         "&sensors=station:svluwobs:fb_731101:sbe45_awi_0403:salinity",
         "&sensors=station:svluwobs:fb_731101:sbe45_awi_0403:temperature",
         "&sensors=station:svluwobs:svluw2:ctd_183:conductivity_awi_01:salinity",
@@ -177,14 +160,24 @@ codeall <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",start
         "&sensors=station:svluwobs:svluw2:ctd_103:temperature_awi_01:temperature"
         )
 
-#station:svluwobs:fb_731101:fluorometer_awi_3510:chlorophyll_a
+### XXX important de rajouter chlorophylle
+  #station:svluwobs:fb_731101:fluorometer_awi_3510:chlorophyll_a
 
-data <- data.table::fread(codeall, encoding = "UTF-8", showProgress	= TRUE)
+data_tmp <- data.table::fread(codeall, encoding = "UTF-8", showProgress	= TRUE)
+
+if (!exists("data")) {
+  bind_row(data, data_tmp)
+} else {
+  data <- data_tmp
+}
+}
 
 # data1 <- data.table::fread(code1, encoding = "UTF-8", showProgress	= TRUE)
 # data2 <- data.table::fread(code2, encoding = "UTF-8", showProgress	= TRUE)
 # data3 <- data.table::fread(code3, encoding = "UTF-8", showProgress	= TRUE)
 # data4 <- data.table::fread(code4, encoding = "UTF-8", showProgress	= TRUE)
+
+
 
 colnames(data) <-- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b",
 "temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007", "phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005",
