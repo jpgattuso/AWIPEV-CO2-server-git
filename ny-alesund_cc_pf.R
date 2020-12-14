@@ -61,7 +61,7 @@ if(agg_time=="MINUTE"){
 # } else {
 
   #### Download recent data ####
-start_date <- ymd_hms("2020-12-01 00:00:00") 
+start_date <- ymd_hms("2020-11-01 00:00:00") 
 #startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
 #enddate <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
 end_date <-  ymd_hms(Sys.time())
@@ -83,8 +83,14 @@ if (ndays < 11){ # no problem if less tha 11 daays need to be downloaded
   enddate[length(enddate) + 1] <- end_date # to get the last period that is less than 11 days
 }
 
+startdate <- format(startdate, "%Y-%m-%dT%H:%M:%S")
+enddate <- format(enddate, "%Y-%m-%dT%H:%M:%S")
+
+#rm(startdate,enddate,data_all,data_tmp)
+
 for (i in 1:length(startdate)) {
   print(startdate[i])
+  print(enddate[i])
   codeall <- paste0("https://dashboard.awi.de/data-xxl/rest/data?beginDate=",startdate[i],"&endDate=",
                     enddate[i],"&format=text/tab-separated-values",aggregate_string,
         "&sensors=station:svluwobs:fb_731101:sbe45_awi_0403:salinity",
@@ -165,10 +171,12 @@ for (i in 1:length(startdate)) {
 
 data_tmp <- data.table::fread(codeall, encoding = "UTF-8", showProgress	= TRUE)
 
-if (!exists("data")) {
-  bind_row(data, data_tmp)
+if (!exists("data_all")) {
+  data_all <- data_tmp
 } else {
-  data <- data_tmp
+
+  data_all <- bind_rows(data_all, data_tmp)
+  
 }
 }
 
