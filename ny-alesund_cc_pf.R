@@ -61,10 +61,11 @@ if(agg_time=="MINUTE"){
 # } else {
 
   #### Download recent data ####
-start_date <- ymd_hms("2020-11-01 00:00:00") 
+start_date <- ymd_hms("2015-01-01 00:00:00") 
 #startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
 #enddate <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
 end_date <-  ymd_hms(Sys.time())
+#end_date <- ymd_hms("2015-08-15 00:00:00") 
 
 
 # we know that less than a million data can be downloaded at a time
@@ -163,11 +164,9 @@ for (i in 1:length(startdate)) {
         "&sensors=station:svluwobs:svluw2:ctd_578:temperature_awi_03:temperature",
         "&sensors=station:svluwobs:svluw2:ctd_964:temperature_awi_04:temperature",
         "&sensors=station:svluwobs:svluw2:ctd_awi_964:temperature_002",
-        "&sensors=station:svluwobs:svluw2:ctd_103:temperature_awi_01:temperature"
+        "&sensors=station:svluwobs:svluw2:ctd_103:temperature_awi_01:temperature",
+        "&sensors=station:svluwobs:fb_731101:fluorometer_awi_3510:chlorophyll_a"
         )
-
-### XXX important de rajouter chlorophylle
-  #station:svluwobs:fb_731101:fluorometer_awi_3510:chlorophyll_a
 
 data_tmp <- data.table::fread(codeall, encoding = "UTF-8", showProgress	= TRUE)
 
@@ -185,12 +184,12 @@ if (!exists("data_all")) {
 # data3 <- data.table::fread(code3, encoding = "UTF-8", showProgress	= TRUE)
 # data4 <- data.table::fread(code4, encoding = "UTF-8", showProgress	= TRUE)
 
-
+data <- data_all 
 
 colnames(data) <-- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b",
 "temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007", "phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005",
 "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215","pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515","pco2_raw_Zero_0515",
- "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103" )
+ "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103", "chla_3510")
 
 # colnames(data1) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b" ,"pH_AT_0317", "AT_0317", "InvSal_0317", "InvpH_0317", "InvAT_0317") 
 # colnames(data2) <- c("datetime", "pH_AT_1215", "AT_1215", "InvSal_1215", "InvpH_1215", "InvAT_1215","temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007", "phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005")
@@ -203,18 +202,19 @@ data$datetime <- ymd_hms(data$datetime)
 # data3$datetime <- ymd_hms(data3$datetime)
 # data4$datetime <- ymd_hms(data4$datetime)
 
-
 # data <- left_join(data1, data2, by = "datetime")
 # data <- left_join(data, data3, by = "datetime")
 # data <- left_join(data, data4, by = "datetime")
-
-
+if (!file.exists("previous_NRT_data.rds")) {
+  saveRDS(data, file = paste0(path,"previous_NRT_data.rds"), version = 2)
+} else {  
+  previous_NRT_data <- dplyr::bind_rows(previous_NRT_data, data) %>% #save updated previous_NRT_data
+    distinct(datetime, .keep_all = T)
+  saveRDS(previous_NRT_data, file = paste0(path,"previous_NRT_data.rds"), version = 2)
 }
 
-previous_NRT_data <- dplyr::bind_rows(previous_NRT_data, data) %>% #save updated previous_NRT_data
-  distinct(datetime, .keep_all = T)
-saveRDS(previous_NRT_data, file = paste0(path,"previous_NRT_data.rds"), version = 2)
-}
+
+
 
 # Create instrument column as flag
 data <- data %>%
