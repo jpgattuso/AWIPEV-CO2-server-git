@@ -1,11 +1,10 @@
 
 ##Philipp: I suggest below to first look if a package is already intstalled prior to instaööing it new. This safes much time
 
-if (!"tidyverse" %in% installed.packages) install.packages("tidyverse")
-require("tidyverse")
-if (!"lubridate" %in% installed.packages) install.packages("lubridate")
-require("lubridate")
-
+if (!require("tidyverse")) install.packages("tidyverse")
+library(tidyverse)
+if (!require("lubridate")) install.packages("lubridate")
+library(lubridate)
 if (!require("hms")) install.packages("hms")
 library(hms)
 if (!require("oce")) install.packages("oce")
@@ -61,11 +60,11 @@ if(agg_time=="MINUTE"){
 # } else {
 
   #### Download recent data ####
-start_date <- ymd_hms("2015-01-01 00:00:00") 
+start_date <- ymd_hms("2015-07-01 00:00:00") 
 #startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
 #enddate <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
 end_date <-  ymd_hms(Sys.time())
-#end_date <- ymd_hms("2015-08-15 00:00:00") 
+#end_date <- ymd_hms("2017-09-30 00:00:00") 
 
 
 # we know that less than a million data can be downloaded at a time
@@ -73,7 +72,7 @@ end_date <-  ymd_hms(Sys.time())
 
 ndays <- as.numeric(end_date - start_date) #number of days to download
 
-if (ndays < 11){ # no problem if less tha 11 daays need to be downloaded 
+if (ndays < 11){ # no problem if less tha 11 days need to be downloaded 
   startdate <- start_date
   enddate <- end_date
 } else { 
@@ -186,7 +185,7 @@ if (!exists("data_all")) {
 
 data <- data_all 
 
-colnames(data) <-- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b",
+colnames(data) <- c("datetime", "sal_fb", "temp_fb", "sal_insitu_183", "sal_insitu_181", "sal_insitu_578", "sal_insitu_964", "sal_insitu_964b","sal_insitu_103", "pressure_insitu_103", "pressure_insitu_181" ,"pressure_insitu_183", "pressure_insitu_578", "pressure_insitu_964" ,"pressure_insitu_964b",
 "temp_insitu_11m", "phINT_007","phEXT_007","voltINT_007","voltEXT_007", "T_seaF_007", "Humidity_007", "phINT_1005","phEXT_1005","voltINT_1005","voltEXT_1005", "T_seaF_1005", "Humidity_1005",
 "State_Zero_0215", "Signal_Proc_0215", "Signal_Raw_0215", "Signal_Ref_0215", "State_Flush_0215", "P_In_0215", "P_NDIR_0215", "T_Gas_0215", "pco2_raw_0215", "pco2_raw_Flush_0215","pco2_raw_Zero_0215","State_Zero_0515", "Signal_Proc_0515", "Signal_Raw_0515", "Signal_Ref_0515", "State_Flush_0515", "P_In_0515", "P_NDIR_0515", "T_Gas_0515", "pco2_raw_0515", "pco2_raw_Flush_0515","pco2_raw_Zero_0515",
  "ph_dur", "temp_dur","par_insitu_profile", "par_insitu_10m", "par_air", "turb_fb", "temp_insitu_183", "temp_insitu_181", "temp_insitu_578", "temp_insitu_964", "temp_insitu_964b","temp_insitu_103", "chla_3510")
@@ -419,11 +418,7 @@ data <- data %>%
   )
  )
 
-##### Binding several TA instruments (different Serial Number) in one for each parameter ####
-# bind TA_0317 and TA_1215 data = AT
-data <- data %>%
- dplyr::mutate(AT= ifelse(!is.na(AT_1215), AT_1215,
-              ifelse(!is.na(AT_0317), AT_0317,NA)))
+
 ## seaFET ##
 # phINT et ph_EXT _007 et _1005
 data <- data %>%
@@ -745,36 +740,39 @@ data <- data %>%
                           TRUE ~ 1),
     ph_dur = ifelse(ph_dur_qf != 1 , NA, ph_dur)
   )
+
+# #### Binding data (previous + new) ####
+# data <- dplyr::bind_rows(previous_all_nydata_minute, data) 
+# #Remove duplicate due to binding
+# data <- data %>%
+#   distinct(datetime, .keep_all = T)
+
 ##########  Despike() ###########
 data <- data %>%   
   dplyr::mutate(pco2_raw_filtered= despike(data$pco2_raw, reference= "median", n=2, k=5761, replace="NA"),
-         pco2_corr_filtered= despike(data$pco2_corr, reference= "median", n=2, k=5761, replace="NA"),
-         sal_fb_filtered= despike(data$sal_fb, reference= "median", n=2, k=5761, replace="NA"),
-         temp_fb_filtered= despike(data$temp_fb, reference= "median", n=2, k=5761, replace="NA"),
-         ph_dur_filtered= despike(data$ph_dur, reference= "median", n=2, k=5761, replace="NA"),
-         temp_dur_filtered= despike(data$temp_dur, reference= "median", n=2, k=5761, replace="NA"),
-         temp_insitu_11m_filtered= despike(data$temp_insitu_11m, reference= "median", n=2, k=5761, replace="NA"),
-         date = as.Date(data$datetime),
-         hour = hour(data$datetime)
- ) %>% #Now one adds flag 12 when new NAs were introduced by despike
- dplyr::mutate(pco2_raw_qf = ifelse(!is.na(pco2_raw) & is.na(pco2_raw_filtered), 12, pco2_raw_qf),
-        pco2_corr_qf = ifelse(!is.na(pco2_corr) & is.na(pco2_corr_filtered), 12, pco2_corr_qf),
-        sal_fb_qf = ifelse(!is.na(sal_fb) & is.na(sal_fb_filtered), 12, sal_fb_qf),
-        temp_fb_qf = ifelse(!is.na(temp_fb) & is.na(temp_fb_filtered), 12, temp_fb_qf),
-        ph_dur_qf = ifelse(!is.na(ph_dur) & is.na(ph_dur_filtered), 12, ph_dur_qf),
-        temp_dur_qf = ifelse(!is.na(temp_dur) & is.na(temp_dur_filtered), 12, temp_dur_qf),
-        temp_insitu_11m_qf = ifelse(!is.na(temp_insitu_11m) & is.na(temp_insitu_11m_filtered), 12, temp_insitu_11m_qf))
+                pco2_corr_filtered= despike(data$pco2_corr, reference= "median", n=2, k=5761, replace="NA"),
+                sal_fb_filtered= despike(data$sal_fb, reference= "median", n=2, k=5761, replace="NA"),
+                temp_fb_filtered= despike(data$temp_fb, reference= "median", n=2, k=5761, replace="NA"),
+                ph_dur_filtered= despike(data$ph_dur, reference= "median", n=2, k=5761, replace="NA"),
+                temp_dur_filtered= despike(data$temp_dur, reference= "median", n=2, k=5761, replace="NA"),
+                temp_insitu_11m_filtered= despike(data$temp_insitu_11m, reference= "median", n=2, k=5761, replace="NA"),
+                date = as.Date(data$datetime),
+                hour = hour(data$datetime)
+  ) %>% #Now one adds flag 12 when new NAs were introduced by despike
+  dplyr::mutate(pco2_raw_qf = ifelse(!is.na(pco2_raw) & is.na(pco2_raw_filtered), 12, pco2_raw_qf),
+                pco2_corr_qf = ifelse(!is.na(pco2_corr) & is.na(pco2_corr_filtered), 12, pco2_corr_qf),
+                sal_fb_qf = ifelse(!is.na(sal_fb) & is.na(sal_fb_filtered), 12, sal_fb_qf),
+                temp_fb_qf = ifelse(!is.na(temp_fb) & is.na(temp_fb_filtered), 12, temp_fb_qf),
+                ph_dur_qf = ifelse(!is.na(ph_dur) & is.na(ph_dur_filtered), 12, ph_dur_qf),
+                temp_dur_qf = ifelse(!is.na(temp_dur) & is.na(temp_dur_filtered), 12, temp_dur_qf),
+                temp_insitu_11m_qf = ifelse(!is.na(temp_insitu_11m) & is.na(temp_insitu_11m_filtered), 12, temp_insitu_11m_qf))
 
 #MINUTE: save all parameters in long format (not selected data)
 if (file.exists(paste0(path, "all_nydata_minute.rds")) == TRUE) {
  previous_all_nydata_minute <- readRDS(paste0(path, "all_nydata_minute.rds")) %>%
    dplyr::filter(datetime < "2020-01-01 00:00:00" ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
 
- #### Binding data (previous + new) ####
- data <- dplyr::bind_rows(previous_all_nydata_minute, data) 
- #Remove duplicate due to binding
- data <- data %>%
- distinct(datetime, .keep_all = T)
+
 saveRDS(data, file= paste0(path, "all_nydata_minute.rds"), version = 2)
 } else {
   saveRDS(data, file= paste0(path, "all_nydata_minute.rds"), version = 2)
