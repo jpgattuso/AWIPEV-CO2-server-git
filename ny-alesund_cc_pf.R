@@ -21,6 +21,8 @@ if (!require("tsibble")) install.packages("tsibble")
 library(tsibble)
 if (!require("stringr")) install.packages("stringr")
 library(stringr)
+if (!require("xlsx")) install.packages("xlsx")
+library(xlsx)
 
 ####define who is the user and define path
 rm(list = ls())
@@ -49,10 +51,11 @@ if(agg_time=="MINUTE"){
 }
 #*********************************
 
-# # read past data 
-# previous_NRT_data <- readRDS(file = paste0(path, "previous_NRT_data.rds")) %>% 
-#   dplyr::mutate(datetime = ymd_hms(datetime)
-#   )
+# read past data
+previous_NRT_data <- readRDS(file = paste0(path, "previous_NRT_data.rds")) %>%
+  dplyr::mutate(datetime = ymd_hms(datetime)
+  )
+previous_NRT_data1 <- previous_NRT_data #back up
 # 
 # # This is to process the whole data set, from 2015
 # if (file.exists(paste0(path, "all_nydata_minute.rds")) == FALSE) {
@@ -60,7 +63,7 @@ if(agg_time=="MINUTE"){
 # } else {
 
   #### Download recent data ####
-start_date <- ymd_hms("2015-07-01 00:00:00") 
+start_date <- ymd_hms("2020-12-01 00:00:00") 
 #startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
 #enddate <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
 end_date <-  ymd_hms(Sys.time())
@@ -460,7 +463,13 @@ data <- data %>%
  
  # Adding manualy data into Data_Processing_sheet_pCO2 file.
  # Open the data calibration sheet and convert the dates. 
-data_process <- read_xlsx(range="A1:AF8", na = "NA", paste0(path, "Data_Processing_sheet_pCO2.xlsx"), col_types = c("text","text","text","text", "date","date", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "date", "date", "numeric",  "date","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric"))
+data_process <- read_xlsx(range="A1:AF8", na = "NA", paste0(path, "Data_Processing_sheet_pCO2.xlsx"), col_types = c("text","text","text","text", "text","text", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "text", "text", "numeric",  "text","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric"))
+data_process$DateCalibration  <- ymd(data_process$DateCalibration)
+data_process$DateDelivery  <- ymd(data_process$DateDelivery)
+data_process$StartDeployment  <- ymd_hms(data_process$StartDeployment)
+data_process$EndDeployment  <- ymd_hms(data_process$EndDeployment)
+data_process$DateCalibrationPost  <- ymd(data_process$DateCalibrationPost)
+
 
  # Adding the PeriodDeplpCO2 column to z first.
  # Adding the others parameters according to the Contros formula PDF
