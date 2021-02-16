@@ -1,5 +1,6 @@
 
-##Philipp: I suggest below to first look if a package is already intstalled prior to instaööing it new. This safes much time
+# 2021-02-16 : last script used to update final data from december 2020 to now (February 2021).
+# Data are downloaded each periode of 11 days to avoid a full memory
 
 if (!require("tidyverse")) install.packages("tidyverse")
 library(tidyverse)
@@ -49,10 +50,11 @@ if(agg_time=="MINUTE"){
 }
 #*********************************
 
-# # read past data 
-# previous_NRT_data <- readRDS(file = paste0(path, "previous_NRT_data.rds")) %>% 
+# read past data
+# previous_NRT_data <- readRDS(file = paste0(path, "previous_NRT_data.rds")) %>%
 #   dplyr::mutate(datetime = ymd_hms(datetime)
 #   )
+# previous_NRT_data1 <- previous_NRT_data #back up
 # 
 # # This is to process the whole data set, from 2015
 # if (file.exists(paste0(path, "all_nydata_minute.rds")) == FALSE) {
@@ -60,7 +62,7 @@ if(agg_time=="MINUTE"){
 # } else {
 
   #### Download recent data ####
-start_date <- ymd_hms("2015-07-01 00:00:00") 
+start_date <- ymd_hms("2020-12-01 00:00:00") 
 #startdate <- format(start_date, "%Y-%m-%dT%H:%M:%S")
 #enddate <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
 end_date <-  ymd_hms(Sys.time())
@@ -240,14 +242,19 @@ data <- data %>%
        "0215" ,
        ifelse(
         datetime >= as.POSIXct("2019-09-03 17:00:00") &
-         datetime <= as.POSIXct("2099-12-02 23:59:59"),
+         datetime <= as.POSIXct("2020-09-24 12:00:00"),
         "0515" ,
+        ifelse(
+          datetime >= as.POSIXct("2019-09-24 12:01:00") &
+            datetime <= as.POSIXct("2099-01-01 00:00:00"),
+          "0215" ,
         NA
        )
       )
      )
     )
    )
+  )
   ),
   
   seafet_inst = ifelse(
@@ -358,6 +365,10 @@ data <- data %>%
 
 ########### Correction pCO2 Contros ########### 
 # Bind different pCO2 sensors (column with S/N) in the same column (without S/N): 0215 + 0515
+
+# dataa <- data
+# data <- dataa
+
 data <- data %>%
  dplyr::mutate(
   State_Zero = ifelse(
@@ -460,7 +471,13 @@ data <- data %>%
  
  # Adding manualy data into Data_Processing_sheet_pCO2 file.
  # Open the data calibration sheet and convert the dates. 
-data_process <- read_xlsx(range="A1:AF8", na = "NA", paste0(path, "Data_Processing_sheet_pCO2.xlsx"), col_types = c("text","text","text","text", "date","date", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "date", "date", "numeric",  "date","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric"))
+data_process <- read_xlsx(range="A1:AF8", na = "NA", paste0(path, "Data_Processing_sheet_pCO2.xlsx"), col_types = c("text","text","text","text", "text","text", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "text", "text", "numeric",  "text","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric","numeric"))
+data_process$DateCalibration  <- ymd(data_process$DateCalibration)
+data_process$DateDelivery  <- ymd(data_process$DateDelivery)
+data_process$StartDeployment  <- ymd_hms(data_process$StartDeployment)
+data_process$EndDeployment  <- ymd_hms(data_process$EndDeployment)
+data_process$DateCalibrationPost  <- ymd(data_process$DateCalibrationPost)
+
 
  # Adding the PeriodDeplpCO2 column to z first.
  # Adding the others parameters according to the Contros formula PDF
@@ -767,11 +784,16 @@ data <- data %>%
                 temp_dur_qf = ifelse(!is.na(temp_dur) & is.na(temp_dur_filtered), 12, temp_dur_qf),
                 temp_insitu_11m_qf = ifelse(!is.na(temp_insitu_11m) & is.na(temp_insitu_11m_filtered), 12, temp_insitu_11m_qf))
 
+
 #MINUTE: save all parameters in long format (not selected data)
 if (file.exists(paste0(path, "all_nydata_minute.rds")) == TRUE) {
  previous_all_nydata_minute <- readRDS(paste0(path, "all_nydata_minute.rds")) %>%
-   dplyr::filter(datetime < "2020-01-01 00:00:00" ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
-
+   dplyr::filter(datetime < end_date - days(60) ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
+                   #"2020-01-01 00:00:00"
+   data <- rbind(previous_all_nydata_minute, data) #save updated previous_NRT_data
+   data <-data %>% 
+       dplyr::distinct(datetime, .keep_all = T)
+  
 
 saveRDS(data, file= paste0(path, "all_nydata_minute.rds"), version = 2)
 } else {
@@ -817,7 +839,7 @@ data_hour <- data%>%
 #### Download previous data ####
 if (file.exists(paste0(path, "all_nydata_hour.rds")) == TRUE) {
  previous_all_nydata_hour <- readRDS(paste0(path, "all_nydata_hour.rds")) %>%
- dplyr::filter(datetime < "2020-01-01 00:00:00" ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
+ dplyr::filter(datetime <  end_date - days(60) ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
  
  #### Binding data (previous + new) ####
  data_hour <- dplyr::bind_rows(previous_all_nydata_hour, data_hour)
@@ -889,7 +911,7 @@ selected_nydata_minute <- data %>%
 #### Download previous data ####
 if (file.exists(paste0(path, "nydata_minute.rds")) == TRUE) {
   previous_nydata_minute <- readRDS(paste0(path, "nydata_minute.rds")) %>%
-  dplyr::filter(datetime < "2020-01-01 00:00:00" ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
+  dplyr::filter(datetime <  end_date - days(60)) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
   
   #### Binding data (previous + new) ####
   selected_nydata_minute <- dplyr::bind_rows(previous_nydata_minute, selected_nydata_minute)
@@ -1018,7 +1040,7 @@ d_hour <- selected_nydata_hour
 #### Download previous data ####
 if (file.exists(paste0(path, "nydata_hour.rds")) == TRUE) {
   previous_nydata_hour <- readRDS(paste0(path, "nydata_hour.rds")) %>%
-  dplyr::filter(datetime < "2020-01-01 00:00:00" ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
+  dplyr::filter(datetime <  end_date - days(60) ) # remove 60 days to avoid duplicate with despike newly done and old despike in the RDS
   
   #### Binding data (previous + new) ####
   d_hour <- dplyr::bind_rows(previous_nydata_hour, d_hour)
