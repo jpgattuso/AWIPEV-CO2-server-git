@@ -204,6 +204,7 @@ dySeries("PCO2_clean_2", label = " PCO2_clean_2",color = "green", strokeWidth = 
   dyHighlight(highlightCircleSize = 8, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = TRUE) %>%
   dyOptions(useDataTimezone = TRUE,drawGrid = TRUE, drawPoints = TRUE, strokeWidth= 0, digitsAfterDecimal = 5) %>%
   dyRangeSelector(height = 30)
+
 ```
 
 
