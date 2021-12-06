@@ -940,11 +940,13 @@ selected_nydata_minute <- selected_nydata_minute %>%
           ifelse(
             pressure_insitu_ctd > 6 & pressure_insitu_ctd <= 8,
             7,
-            ifelse(pressure_insitu_ctd > 8, 9, NA)
+            ifelse(pressure_insitu_ctd > 8, 9, NA) # should be 10, not 9
           )
         )
       )
     ),
+    # NOTE that the following needs to be redone when processing data because Philipp 
+    # has provided a supplementary file to fill gaps in pressure_insitu_ctd
     sal_insitu_ctd_1m = ifelse(depth == 1, sal_insitu_ctd, NA),
     sal_insitu_ctd_3m = ifelse(depth == 3, sal_insitu_ctd, NA),
     sal_insitu_ctd_5m = ifelse(depth == 5, sal_insitu_ctd, NA),
